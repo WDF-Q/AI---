@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小瑪莉機台 (Little Mary)</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 頂部: 標題與 Reset -->
+        <header class="game-header">
+            <h1>小瑪莉機台</h1>
+            <button id="btn-reset-stats" class="btn-small text-gray">Reset</button>
+        </header>
+
+        <!-- 主機台區塊 -->
+        <main class="machine-board">
+            <!-- 24 個跑馬燈格子將由 JavaScript 動態生成到這個 grid 裡 -->
+            <div id="board-grid" class="board-grid">
+                <!-- 中間資訊面板 (跨越 Grid 中間區域) -->
+                <div class="center-panel">
+                    <div class="score-display">
+                        <div class="score-item">
+                            <span class="label">總分</span>
+                            <span id="display-credits" class="value yellow">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="label">得分</span>
+                            <span id="display-win" class="value green">0</span>
+                        </div>
+                    </div>
+                    <div id="grand-prize-banner" class="grand-prize-banner hidden">
+                        爆發吧小宇宙
+                    </div>
+                    <div class="jackpot-display">
+                        <span class="label">JACKPOT:</span>
+                        <span id="display-jackpot" class="value cyan">500</span>
+                    </div>
+                    <div class="stats-display">
+                        <div class="stat">總押分: <span id="display-total-bets" class="orange">0</span></div>
+                        <div class="stat">總洗分: <span id="display-total-cashout" class="pink">0</span></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部控制區 -->
+        <section class="controls-section">
+            <!-- 押注按鈕區 -->
+            <div id="bet-panel" class="bet-panel">
+                <!-- JS 動態產生 -->
+            </div>
+
+            <!-- 動作按鈕區 -->
+            <div class="action-panel">
+                <button id="btn-insert-coin" class="btn action-btn bg-dark-red">投幣</button>
+                <button id="btn-cash-out" class="btn action-btn bg-purple">洗分</button>
+                <button id="btn-clear-bets" class="btn action-btn bg-blue">退押</button>
+                <button id="btn-take-score" class="btn action-btn bg-orange text-black">得分</button>
+                <button id="btn-start" class="btn start-btn bg-green text-black">啟動</button>
+            </div>
+        </section>
+
+        <!-- 對話框 (洗分 / 歸零) -->
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <h2 id="modal-message">確定要洗分歸零嗎？</h2>
+                <div class="modal-buttons">
+                    <button id="modal-btn-confirm" class="btn bg-green text-black">確定</button>
+                    <button id="modal-btn-cancel" class="btn bg-red text-white">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
