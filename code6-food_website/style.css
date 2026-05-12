@@ -118,7 +118,7 @@ nav a:hover::after {
     justify-content: center;
     text-align: center;
     position: relative;
-    background-image: url('../網站測試/ikigai-大食怪拼盤.jpg'); /* 預設背景圖 */
+    background-image: url('./網站測試/ikigai-大食怪拼盤.jpg'); /* 預設背景圖 */
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* 視差滾動效果 */

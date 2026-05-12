@@ -126,4 +126,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 6. 點擊卡片文字區域跳轉至店家資訊頁面
+    document.querySelectorAll('.photo-card').forEach(card => {
+        const infoArea = card.querySelector('.card-info');
+        const tag = card.querySelector('.restaurant-tag');
+        
+        if (infoArea && tag && tag.tagName.toLowerCase() === 'a' && tag.getAttribute('href')) {
+            // 讓整個文字區塊的游標變成 pointer
+            infoArea.style.cursor = 'pointer';
+            infoArea.addEventListener('click', (e) => {
+                // 如果點擊的不是 a 標籤本身，我們手動觸發跳轉
+                if (e.target !== tag) {
+                    window.location.href = tag.getAttribute('href');
+                }
+            });
+        }
+    });
+
 });

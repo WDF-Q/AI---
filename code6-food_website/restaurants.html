@@ -50,7 +50,7 @@
         }
 
         .restaurant-item {
-            scroll-margin-top: 100px; /* 修正被標頭遮擋的問題 */
+            scroll-margin-top: 100px;
             padding: 20px 0;
             border-bottom: 1px dashed rgba(0,0,0,0.1);
             transition: var(--transition);
@@ -77,6 +77,7 @@
             margin-bottom: 8px;
             color: var(--text-light);
             font-size: 1.05rem;
+            align-items: flex-start;
         }
 
         .info-icon {
@@ -84,6 +85,25 @@
             color: var(--primary-color);
             width: 80px;
             flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .address-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .address-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .branch-name {
+            display: inline-block;
+            width: 85px;
+            font-weight: 500;
+            color: var(--text-main);
         }
 
         .back-btn {
@@ -120,6 +140,7 @@
             <nav>
                 <ul>
                     <li><a href="index.html">返回首頁</a></li>
+                    <li><a href="ai_seafood.html">AI 吃海鮮</a></li>
                 </ul>
             </nav>
         </div>
@@ -141,23 +162,15 @@
             <div class="district-group">
                 <h3 class="district-title">東區</h3>
                 
-                <div id="京岐燒肉" class="restaurant-item">
-                    <h4 class="restaurant-name">京岐燒肉</h4>
-                    <div class="info-row">
-                        <span class="info-icon">📍 地址</span>
-                        <span>台南市東區中華東路三段 350 號</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-icon">🕒 時間</span>
-                        <span>週一至週日 17:00 - 01:00</span>
-                    </div>
-                </div>
-
                 <div id="毛丼" class="restaurant-item">
-                    <h4 class="restaurant-name">毛丼</h4>
+                    <h4 class="restaurant-name">毛丼 丼飯專門店</h4>
                     <div class="info-row">
                         <span class="info-icon">📍 地址</span>
-                        <span>台南市東區東榮街 105 號</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%9D%B1%E5%8D%80%E6%9D%B1%E6%A6%AE%E8%A1%97105%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市東區東榮街 105 號</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-icon">🕒 時間</span>
@@ -166,16 +179,74 @@
                 </div>
 
                 <div id="海港城" class="restaurant-item">
-                    <h4 class="restaurant-name">海港城 (漢來海港)</h4>
+                    <h4 class="restaurant-name">海港城 (漢來海港 台南店)</h4>
                     <div class="info-row">
                         <span class="info-icon">📍 地址</span>
-                        <span>台南市東區中華東路一段 366 號 (南紡購物中心)</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%9D%B1%E5%8D%80%E4%B8%AD%E8%8F%AF%E6%9D%B1%E8%B7%AF%E4%B8%80%E6%AE%B5366%E8%99%9F4%E6%A8%93(%E5%8D%97%E7%B4%A1%E8%B3%BC%E7%89%A9%E4%B8%AD%E5%BF%83A1%E9%A4%A8)" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市東區中華東路一段 366 號 4樓 (南紡購物中心 A1館)</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-icon">🕒 時間</span>
-                        <span>週一至週日 11:30 - 21:30</span>
+                        <span>11:30 - 21:30</span>
                     </div>
                 </div>
+
+                <div id="IKIGAI" class="restaurant-item">
+                    <h4 class="restaurant-name">IKIGAI 燒肉專門店</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%9D%B1%E5%8D%80%E4%B8%AD%E8%8F%AF%E6%9D%B1%E8%B7%AF%E4%B8%80%E6%AE%B5366%E8%99%9F5%E6%A8%93(%E5%8D%97%E7%B4%A1%E8%B3%BC%E7%89%A9%E4%B8%AD%E5%BF%83A1%E9%A4%A8)" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市東區中華東路一段 366 號 5樓 (南紡購物中心 A1館)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>11:00 - 22:00</span>
+                    </div>
+                </div>
+
+                <div id="京九食堂" class="restaurant-item">
+                    <h4 class="restaurant-name">京九食堂</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%9D%B1%E5%8D%80%E6%9D%B1%E5%B9%B3%E8%B7%AF223%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市東區東平路 223 號</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>11:30 - 14:00, 17:30 - 21:00 (週三公休)</span>
+                    </div>
+                </div>
+
+                <div id="我家牛排" class="restaurant-item">
+                    <h4 class="restaurant-name">我家牛排</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span class="branch-name">後甲店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%9D%B1%E5%8D%80%E8%A3%95%E8%BE%B2%E8%B7%AF578%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市東區裕農路 578 號</span>
+                            </div>
+                            <div class="address-item">
+                                <span class="branch-name">文賢店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E5%8C%97%E5%8D%80%E6%96%87%E8%B3%A2%E8%B7%AF837%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市北區文賢路 837 號</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>11:00 - 22:00</span>
+                    </div>
+                </div>
+
             </div>
 
             <!-- 南區 -->
@@ -186,88 +257,102 @@
                     <h4 class="restaurant-name">鴻公公越南河粉專賣店</h4>
                     <div class="info-row">
                         <span class="info-icon">📍 地址</span>
-                        <span>台南市南區水交社路 352 號</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E5%8D%97%E5%8D%80%E6%B0%B4%E4%BA%A4%E7%A4%BE%E8%B7%AF352%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市南區水交社路 352 號</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-icon">🕒 時間</span>
                         <span>16:00 - 22:00 (週一、二公休)</span>
                     </div>
                 </div>
+
             </div>
 
             <!-- 北區 -->
             <div class="district-group">
                 <h3 class="district-title">北區</h3>
                 
-                <div id="京九食堂" class="restaurant-item">
-                    <h4 class="restaurant-name">京九食堂</h4>
-                    <div class="info-row">
-                        <span class="info-icon">📍 地址</span>
-                        <span>台南市北區公園路 120 號</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-icon">🕒 時間</span>
-                        <span>11:30 - 14:00, 17:30 - 21:00 (週三公休)</span>
-                    </div>
-                </div>
-
                 <div id="金三益" class="restaurant-item">
                     <h4 class="restaurant-name">金三益健康茶飲</h4>
                     <div class="info-row">
                         <span class="info-icon">📍 地址</span>
-                        <span>台南市北區林森路三段 185 號</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span class="branch-name">林森總店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E5%8C%97%E5%8D%80%E6%9E%97%E6%A3%AE%E8%B7%AF%E4%B8%89%E6%AE%B5185%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市北區林森路三段 185 號</span>
+                            </div>
+                            <div class="address-item">
+                                <span class="branch-name">成功店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E4%B8%AD%E8%A5%BF%E5%8D%80%E6%88%90%E5%8A%9F%E8%B7%AF541%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市中西區成功路 541 號</span>
+                            </div>
+                            <div class="address-item">
+                                <span class="branch-name">新營健康店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%96%B0%E7%87%9F%E5%8D%80%E5%81%A5%E5%BA%B7%E8%B7%AF16%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市新營區健康路 16 號</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-icon">🕒 時間</span>
-                        <span>09:00 - 20:30 (週二公休)</span>
+                        <span>09:00 - 20:30 (依分店而異)</span>
                     </div>
                 </div>
+
             </div>
 
             <!-- 中西區 -->
             <div class="district-group">
                 <h3 class="district-title">中西區</h3>
                 
-                <div id="IKIGAI" class="restaurant-item">
-                    <h4 class="restaurant-name">IKIGAI 燒肉</h4>
+                <div id="京岐燒肉" class="restaurant-item">
+                    <h4 class="restaurant-name">京岐燒肉</h4>
                     <div class="info-row">
                         <span class="info-icon">📍 地址</span>
-                        <span>台南市中西區西門路一段 658 號 (新光三越新天地)</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E4%B8%AD%E8%A5%BF%E5%8D%80%E6%B5%B7%E5%AE%89%E8%B7%AF%E4%BA%8C%E6%AE%B553%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市中西區海安路二段 53 號</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-icon">🕒 時間</span>
-                        <span>週一至週日 11:00 - 22:00</span>
+                        <span>17:00 - 01:00</span>
                     </div>
                 </div>
 
-                <div id="麵屋高" class="restaurant-item">
-                    <h4 class="restaurant-name">麵屋高</h4>
+                <div id="點爭鮮" class="restaurant-item">
+                    <h4 class="restaurant-name">點爭鮮 (Magic Touch)</h4>
                     <div class="info-row">
                         <span class="info-icon">📍 地址</span>
-                        <span>台南市中西區民族路二段 208 號</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span class="branch-name">府前店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E4%B8%AD%E8%A5%BF%E5%8D%80%E5%BA%9C%E5%89%8D%E8%B7%AF%E4%BA%8C%E6%AE%B5372%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市中西區府前路二段 372 號</span>
+                            </div>
+                            <div class="address-item">
+                                <span class="branch-name">文化店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%9D%B1%E5%8D%80%E4%B8%AD%E8%8F%AF%E6%9D%B1%E8%B7%AF%E4%B8%89%E6%AE%B5258%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市東區中華東路三段 258 號</span>
+                            </div>
+                            <div class="address-item">
+                                <span class="branch-name">中華店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E5%8F%B0%E5%8D%97%E5%B8%82%E6%B0%B8%E5%BA%B7%E5%8D%80%E4%B8%AD%E8%8F%AF%E8%B7%AF181%E8%99%9F" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>台南市永康區中華路 181 號</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-icon">🕒 時間</span>
-                        <span>11:30 - 14:00, 17:00 - 20:30 (週四公休)</span>
+                        <span>11:00 - 21:30</span>
                     </div>
                 </div>
+
             </div>
 
             <!-- 安平區 -->
             <div class="district-group">
                 <h3 class="district-title">安平區</h3>
-                
-                <div id="點爭鮮" class="restaurant-item">
-                    <h4 class="restaurant-name">點爭鮮</h4>
-                    <div class="info-row">
-                        <span class="info-icon">📍 地址</span>
-                        <span>台南市安平區中華西路二段 16 號 (家樂福安平店)</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-icon">🕒 時間</span>
-                        <span>週一至週日 11:00 - 21:30</span>
-                    </div>
-                </div>
+                <div class="empty-message">目前尚無推薦店家，持續探索中...</div>
             </div>
 
             <!-- 安南區 -->
@@ -276,21 +361,27 @@
                 <div class="empty-message">目前尚無推薦店家，持續探索中...</div>
             </div>
 
-            <!-- 其它區 -->
+            <!-- 其它區 (含高雄) -->
             <div class="district-group">
-                <h3 class="district-title">其它區</h3>
+                <h3 class="district-title">其它區 (外縣市特選)</h3>
                 
-                <div id="我家牛排" class="restaurant-item">
-                    <h4 class="restaurant-name">我家牛排 (永康區)</h4>
+                <div id="麵屋高" class="restaurant-item">
+                    <h4 class="restaurant-name">麵屋高</h4>
                     <div class="info-row">
                         <span class="info-icon">📍 地址</span>
-                        <span>台南市永康區中華路 550 號</span>
+                        <div class="address-group">
+                            <div class="address-item">
+                                <span class="branch-name">高雄店</span>
+                                <span><a href="https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E9%9B%84%E5%B8%82%E6%96%B0%E8%88%88%E5%8D%80%E4%B8%AD%E5%B1%B1%E4%B8%80%E8%B7%AF115%E8%99%9FB1(%E6%8D%B7%E9%81%8B%E7%BE%8E%E9%BA%97%E5%B3%B6%E7%AB%99%E5%85%A7)" target="_blank" class="map-link" style="text-decoration:none; margin-right:5px;" title="在地圖中開啟"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px; margin-bottom: 2px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>地圖</a>高雄市新興區中山一路 115 號 B1 (捷運美麗島站內)</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-icon">🕒 時間</span>
-                        <span>週一至週日 11:00 - 22:00</span>
+                        <span>11:00 - 22:00</span>
                     </div>
                 </div>
+
             </div>
 
             <div style="text-align: center; margin-top: 40px;">

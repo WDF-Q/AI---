@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 吃海鮮 | 宅生活的悠閒時光</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .page-header {
+            padding: 120px 0 60px;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(231, 111, 81, 0.1), var(--bg-color));
+        }
+        .page-header h2 {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+        .category-title {
+            font-size: 2rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin: 60px 0 30px;
+            border-bottom: 2px solid rgba(244, 162, 97, 0.2);
+            padding-bottom: 15px;
+        }
+        .ai-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            padding-bottom: 60px;
+        }
+    </style>
+</head>
+<body>
+    <header id="navbar" class="scrolled">
+        <div class="container">
+            <h1 class="logo">宅生活的悠閒時光</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">返回首頁</a></li>
+                    <li><a href="ai_seafood.html">AI 吃海鮮</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-header">
+        <div class="container">
+            <h2>AI 吃海鮮 頂級冷盤特輯</h2>
+            <p>感受極致新鮮！各大吃到飽、居酒屋必備的高級海鮮冷盤全收錄</p>
+        </div>
+    </section>
+
+    <section class="container">
+        <h3 class="category-title">極致單品海鮮冷盤 (20選)</h3>
+        <div class="ai-grid" id="single-seafood-grid">
+            <!-- 20 items -->
+            <script>
+                const singles = [
+                    "日本廣島生蠔", "北海道大干貝", "馬糞海膽", "阿根廷天使紅蝦", "挪威鮭魚腹刺身", 
+                    "黑鮪魚大腹 (Otoro)", "頂級活鮑魚", "松葉蟹腳冷盤", "澎湖冰卷", "章魚柔煮冷盤",
+                    "北寄貝刺身", "赤貝刺身", "真鯛薄切", "比目魚緣側", "鯖魚醋漬",
+                    "青甘 (鰤魚) 刺身", "鮭魚卵寶石盒", "活龍蝦刺身", "象拔蚌刺身", "蝦蛄冷盤"
+                ];
+                
+                const availableImages = [
+                    "./網站測試/seafood_single_1_1778557758646.png",
+                    "./網站測試/seafood_single_2_1778557818058.png",
+                    "./網站測試/seafood_single_3_1778558017952.png",
+                    "./網站測試/seafood_single_4_1778558032402.png",
+                    "./網站測試/seafood_single_5_1778558046203.png",
+                    "./網站測試/seafood_single_6_1778558373842.png",
+                    "./網站測試/點爭鮮-海膽.jpg",
+                    "./網站測試/海港城-生蠔.jpg",
+                    "./網站測試/京九食堂-石斑魚.jpg",
+                    "./網站測試/京岐燒肉.jpg",
+                    "./網站測試/金三益-爆蛋紅蟳鍋燒意麵.jpg"
+                ];
+
+                const singleGrid = document.getElementById('single-seafood-grid');
+                singles.forEach((name, idx) => {
+                    const imgPath = availableImages[idx % availableImages.length];
+                    singleGrid.innerHTML += `
+                        <div class="photo-card">
+                            <div class="image-wrapper">
+                                <img src="${imgPath}" alt="${name}" loading="lazy" onerror="this.src='./網站測試/ikigai-大食怪拼盤.jpg'">
+                            </div>
+                            <div class="card-info">
+                                <span class="restaurant-tag">新鮮直送</span>
+                                <h3 class="food-name">${name}</h3>
+                            </div>
+                        </div>
+                    `;
+                });
+            </script>
+        </div>
+
+        <h3 class="category-title">豪華綜合海鮮冷盤 (10選)</h3>
+        <div class="ai-grid" id="mixed-seafood-grid">
+            <!-- 10 items -->
+            <script>
+                const mixed = [
+                    "龍蝦豪華冷盤", "霸王級生魚片船", "居酒屋綜合刺身塔", "日式頂級海鮮珠寶盒", "帝王蟹極致拼盤",
+                    "痛風海鮮大盛合", "特上刺身七點盛", "海神波塞頓冷盤", "百萬夜景海鮮塔", "究極海陸雙拼冷盤"
+                ];
+                const mixedGrid = document.getElementById('mixed-seafood-grid');
+                mixed.forEach((name, idx) => {
+                    const imgPath = availableImages[(idx + 5) % availableImages.length];
+                    mixedGrid.innerHTML += `
+                        <div class="photo-card">
+                            <div class="image-wrapper">
+                                <img src="${imgPath}" alt="${name}" loading="lazy" onerror="this.src='./網站測試/ikigai-大食怪拼盤.jpg'">
+                            </div>
+                            <div class="card-info">
+                                <span class="restaurant-tag">極致奢華</span>
+                                <h3 class="food-name">${name}</h3>
+                            </div>
+                        </div>
+                    `;
+                });
+            </script>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 宅生活的悠閒時光. All Rights Reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
