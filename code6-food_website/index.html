@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宅生活的悠閒時光</title>
+    <!-- 引入 Google Fonts: Noto Serif TC (帶有溫文儒雅的感覺) 與 Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 導覽列 -->
+    <header id="navbar">
+        <div class="container">
+            <h1 class="logo">宅生活的悠閒時光</h1>
+            <nav>
+                <ul>
+                    <li><a href="#home">首頁</a></li>
+                    <li><a href="#gallery">美食圖鑑</a></li>
+                    <li><a href="#about">關於</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 首頁主視覺 -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h2 class="hero-title">慢品生活，品味美好</h2>
+            <p class="hero-subtitle">記錄每一頓療癒身心的美味瞬間</p>
+        </div>
+    </section>
+
+    <!-- 美食圖庫 -->
+    <section id="gallery" class="gallery-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>精選美食圖鑑</h2>
+                <p>那些讓心情變好的療癒美食</p>
+            </div>
+            
+            <div class="grid-container" id="photo-grid">
+                <!-- 照片卡片將由 JS 或直接在這裡手動寫入，這裡我們直接用 HTML 生成以利 SEO -->
+                
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/ikigai-大食怪拼盤.jpg" alt="IKIGAI - 大食怪拼盤" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#IKIGAI" class="restaurant-tag">IKIGAI</a>
+                        <h3 class="food-name">大食怪拼盤</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/京九食堂-海雞母套餐.jpg" alt="京九食堂 - 海雞母套餐" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#京九食堂" class="restaurant-tag">京九食堂</a>
+                        <h3 class="food-name">海雞母套餐</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/京九食堂-石斑魚.jpg" alt="京九食堂 - 石斑魚" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#京九食堂" class="restaurant-tag">京九食堂</a>
+                        <h3 class="food-name">石斑魚</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/京九食堂-魚蛋沙拉.jpg" alt="京九食堂 - 魚蛋沙拉" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#京九食堂" class="restaurant-tag">京九食堂</a>
+                        <h3 class="food-name">魚蛋沙拉</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/京岐燒肉.jpg" alt="京岐燒肉 - 和牛盛合" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#京岐燒肉" class="restaurant-tag">京岐燒肉</a>
+                        <h3 class="food-name">和牛盛合</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/我家牛排-鮭魚.jpg" alt="我家牛排 - 香煎鮭魚" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#我家牛排" class="restaurant-tag">我家牛排</a>
+                        <h3 class="food-name">香煎鮭魚</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/毛丼-招牌毛丼.jpg" alt="毛丼 - 招牌毛丼" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#毛丼" class="restaurant-tag">毛丼</a>
+                        <h3 class="food-name">招牌毛丼</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/海港城-生蠔.jpg" alt="海港城 - 新鮮生蠔" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#海港城" class="restaurant-tag">海港城</a>
+                        <h3 class="food-name">新鮮生蠔</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/海港城.jpg" alt="海港城 - 波霸奶茶" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#海港城" class="restaurant-tag">海港城</a>
+                        <h3 class="food-name">波霸奶茶</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/金三益-胡椒蝦.jpg" alt="金三益 - 胡椒蝦" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#金三益" class="restaurant-tag">金三益</a>
+                        <h3 class="food-name">胡椒蝦</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/金三益-爆蛋紅蟳鍋燒意麵.jpg" alt="金三益 - 爆蛋紅蟳鍋燒意麵" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#金三益" class="restaurant-tag">金三益</a>
+                        <h3 class="food-name">爆蛋紅蟳鍋燒意麵</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/鴻公公-什錦酸辣河粉.jpg" alt="鴻公公 - 什錦酸辣河粉" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#鴻公公" class="restaurant-tag">鴻公公</a>
+                        <h3 class="food-name">什錦酸辣河粉</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/麵屋高-豚骨拉麵.jpg" alt="麵屋高 - 天堂叉燒拉麵" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#麵屋高" class="restaurant-tag">麵屋高</a>
+                        <h3 class="food-name">天堂叉燒拉麵</h3>
+                    </div>
+                </div>
+
+                <div class="photo-card">
+                    <div class="image-wrapper">
+                        <img src="../網站測試/點爭鮮-海膽.jpg" alt="點爭鮮 - 鮮甜海膽" loading="lazy">
+                    </div>
+                    <div class="card-info">
+                        <a href="restaurants.html#點爭鮮" class="restaurant-tag">點爭鮮</a>
+                        <h3 class="food-name">鮮甜海膽</h3>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 關於區塊 -->
+    <section id="about" class="about-section">
+        <div class="container about-container">
+            <div class="about-text">
+                <h2>關於這裡</h2>
+                <p>歡迎來到「宅生活的悠閒時光」。這裡記錄著我在日常生活中，那些令人怦然心動的美食瞬間。無論是熱騰騰的拉麵、精緻的日式定食，還是讓人食指大動的海鮮，每一張照片背後都藏著一段悠閒的時光與美好的回憶。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 頁尾 -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 宅生活的悠閒時光. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+
+    <!-- 圖片放大顯示區塊 -->
+    <div id="image-modal">
+        <img id="modal-img" src="" alt="放大圖片">
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

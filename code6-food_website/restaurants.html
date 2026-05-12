@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店家資訊 | 宅生活的悠閒時光</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 店家頁面專用樣式 */
+        .page-header {
+            padding: 120px 0 60px;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(244, 162, 97, 0.1), var(--bg-color));
+        }
+        
+        .page-header h2 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .restaurant-list-section {
+            padding-bottom: 100px;
+        }
+
+        .district-group {
+            max-width: 900px;
+            margin: 0 auto 50px;
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .district-title {
+            font-size: 2rem;
+            color: var(--accent-color);
+            border-bottom: 2px solid rgba(231, 111, 81, 0.2);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .district-title::before {
+            content: '📌';
+            font-size: 1.5rem;
+        }
+
+        .restaurant-item {
+            scroll-margin-top: 100px; /* 修正被標頭遮擋的問題 */
+            padding: 20px 0;
+            border-bottom: 1px dashed rgba(0,0,0,0.1);
+            transition: var(--transition);
+        }
+
+        .restaurant-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .restaurant-item:first-of-type {
+            padding-top: 0;
+        }
+
+        .restaurant-name {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+            color: var(--text-light);
+            font-size: 1.05rem;
+        }
+
+        .info-icon {
+            font-weight: bold;
+            color: var(--primary-color);
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background-color: var(--text-main);
+            color: white;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+        .back-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .empty-message {
+            color: #999;
+            font-style: italic;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 導覽列 -->
+    <header id="navbar" class="scrolled">
+        <div class="container">
+            <h1 class="logo">宅生活的悠閒時光</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">返回首頁</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 頁面標題 -->
+    <section class="page-header">
+        <div class="container">
+            <h2>台南推薦店家資訊</h2>
+            <p>按行政區分類，循著地址找到這些療癒美食吧！</p>
+        </div>
+    </section>
+
+    <!-- 店家分區清單 -->
+    <section class="restaurant-list-section">
+        <div class="container">
+            
+            <!-- 東區 -->
+            <div class="district-group">
+                <h3 class="district-title">東區</h3>
+                
+                <div id="京岐燒肉" class="restaurant-item">
+                    <h4 class="restaurant-name">京岐燒肉</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市東區中華東路三段 350 號</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>週一至週日 17:00 - 01:00</span>
+                    </div>
+                </div>
+
+                <div id="毛丼" class="restaurant-item">
+                    <h4 class="restaurant-name">毛丼</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市東區東榮街 105 號</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>11:30 - 14:00, 17:30 - 21:00</span>
+                    </div>
+                </div>
+
+                <div id="海港城" class="restaurant-item">
+                    <h4 class="restaurant-name">海港城 (漢來海港)</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市東區中華東路一段 366 號 (南紡購物中心)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>週一至週日 11:30 - 21:30</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 南區 -->
+            <div class="district-group">
+                <h3 class="district-title">南區</h3>
+                
+                <div id="鴻公公" class="restaurant-item">
+                    <h4 class="restaurant-name">鴻公公越南河粉專賣店</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市南區水交社路 352 號</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>16:00 - 22:00 (週一、二公休)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 北區 -->
+            <div class="district-group">
+                <h3 class="district-title">北區</h3>
+                
+                <div id="京九食堂" class="restaurant-item">
+                    <h4 class="restaurant-name">京九食堂</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市北區公園路 120 號</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>11:30 - 14:00, 17:30 - 21:00 (週三公休)</span>
+                    </div>
+                </div>
+
+                <div id="金三益" class="restaurant-item">
+                    <h4 class="restaurant-name">金三益健康茶飲</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市北區林森路三段 185 號</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>09:00 - 20:30 (週二公休)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中西區 -->
+            <div class="district-group">
+                <h3 class="district-title">中西區</h3>
+                
+                <div id="IKIGAI" class="restaurant-item">
+                    <h4 class="restaurant-name">IKIGAI 燒肉</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市中西區西門路一段 658 號 (新光三越新天地)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>週一至週日 11:00 - 22:00</span>
+                    </div>
+                </div>
+
+                <div id="麵屋高" class="restaurant-item">
+                    <h4 class="restaurant-name">麵屋高</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市中西區民族路二段 208 號</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>11:30 - 14:00, 17:00 - 20:30 (週四公休)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 安平區 -->
+            <div class="district-group">
+                <h3 class="district-title">安平區</h3>
+                
+                <div id="點爭鮮" class="restaurant-item">
+                    <h4 class="restaurant-name">點爭鮮</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市安平區中華西路二段 16 號 (家樂福安平店)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>週一至週日 11:00 - 21:30</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 安南區 -->
+            <div class="district-group">
+                <h3 class="district-title">安南區</h3>
+                <div class="empty-message">目前尚無推薦店家，持續探索中...</div>
+            </div>
+
+            <!-- 其它區 -->
+            <div class="district-group">
+                <h3 class="district-title">其它區</h3>
+                
+                <div id="我家牛排" class="restaurant-item">
+                    <h4 class="restaurant-name">我家牛排 (永康區)</h4>
+                    <div class="info-row">
+                        <span class="info-icon">📍 地址</span>
+                        <span>台南市永康區中華路 550 號</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon">🕒 時間</span>
+                        <span>週一至週日 11:00 - 22:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="index.html" class="back-btn">回首頁看美食</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 頁尾 -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 宅生活的悠閒時光. All Rights Reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
