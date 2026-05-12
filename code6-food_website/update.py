@@ -1,4 +1,4 @@
- import re
+import re
 file_path = 'd:\\AI 相關資料\\Antigravity 軟體\\AI工作區\\code6-food_website\\restaurants.html'
 with open(file_path, 'r', encoding='utf-8') as f:
     content = f.read()
@@ -14,7 +14,8 @@ def replace_address(match):
 content = re.sub(r'<span>(台南市.*?)</span>', replace_address, content)
 
 # Add navbar link
-content = content.replace('<li><a href="index.html">返回首頁</a></li>', '<li><a href="index.html">返回首頁</a></li>\n                    <li><a href="ai_seafood.html">AI 吃海鮮</a></li>')
+if 'ai_seafood.html' not in content:
+    content = content.replace('<li><a href="index.html">返回首頁</a></li>', '<li><a href="index.html">返回首頁</a></li>\n                    <li><a href="ai_seafood.html">AI 吃海鮮</a></li>')
 
 with open(file_path, 'w', encoding='utf-8') as f:
     f.write(content)
