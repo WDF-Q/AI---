@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <!-- Use Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="glass-panel">
+            <div class="header">
+                <div class="logo-icon">
+                    <i class="fa-brands fa-youtube"></i>
+                </div>
+                <h1>YT Downloader</h1>
+                <p>輕鬆下載 YouTube 影片與音樂</p>
+            </div>
+
+            <div class="input-group">
+                <i class="fa-solid fa-link input-icon"></i>
+                <input type="text" id="url-input" placeholder="貼上 YouTube 影片網址...">
+            </div>
+
+            <div class="format-selection">
+                <label class="format-radio">
+                    <input type="radio" name="format" value="video" checked>
+                    <div class="radio-card">
+                        <i class="fa-solid fa-video"></i>
+                        <span>影片 (MP4)</span>
+                    </div>
+                </label>
+                <label class="format-radio">
+                    <input type="radio" name="format" value="audio">
+                    <div class="radio-card">
+                        <i class="fa-solid fa-music"></i>
+                        <span>音樂 (MP3)</span>
+                    </div>
+                </label>
+            </div>
+
+            <button id="download-btn" class="btn-primary">
+                <i class="fa-solid fa-cloud-arrow-down"></i> 開始處理
+            </button>
+
+            <div id="status-container" class="status-container hidden">
+                <div class="progress-info">
+                    <span id="status-text">正在請求伺服器處理...</span>
+                </div>
+                <div class="spinner-container">
+                    <i class="fa-solid fa-circle-notch fa-spin status-spinner"></i>
+                    <p class="wait-text">這可能需要幾十秒鐘，請稍候</p>
+                </div>
+            </div>
+
+            <div id="result-container" class="result-container hidden">
+                <i class="fa-solid fa-circle-check success-icon"></i>
+                <p class="success-text">處理完成！</p>
+                <a id="download-link" href="#" target="_blank" class="btn-success">
+                    <i class="fa-solid fa-download"></i> 點擊下載檔案
+                </a>
+                <button id="reset-btn" class="btn-text">下載另一個影片</button>
+            </div>
+            
+            <div id="error-container" class="error-container hidden">
+                <i class="fa-solid fa-circle-exclamation error-icon"></i>
+                <p id="error-text">發生錯誤</p>
+                <button id="retry-btn" class="btn-text">重試</button>
+            </div>
+        </div>
+        <div class="footer">
+            Powered by <a href="https://cobalt.tools" target="_blank">Cobalt API</a>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
