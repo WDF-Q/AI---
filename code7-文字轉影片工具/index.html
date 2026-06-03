@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Storyboard | AI 影片分鏡工具</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal-overlay">
+            <div class="modal-content glass-panel">
+                <h2><i class="fa-solid fa-gear"></i> 系統設定</h2>
+                <p>請輸入您的 Gemini API Key 以啟用 AI 轉換功能。</p>
+                <div class="input-group">
+                    <label for="apiKeyInput">Gemini API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="AIzaSy...">
+                </div>
+                <div class="modal-actions">
+                    <button id="saveSettingsBtn" class="btn btn-primary">儲存設定</button>
+                    <button id="closeSettingsBtn" class="btn btn-secondary">關閉</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="app-header glass-panel">
+            <div class="logo">
+                <h1>🎬 Text to Storyboard</h1>
+                <span class="badge">AI Powered</span>
+            </div>
+            <div class="header-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                <a href="https://hailuoai.video/" target="_blank" class="btn btn-secondary btn-sm" title="Hailuo (MiniMax) - 每日免費額度"><i class="fa-solid fa-video"></i> Hailuo</a>
+                <a href="https://klingai.com/video/text-to-video" target="_blank" class="btn btn-secondary btn-sm" title="Kling AI - 每日免費額度"><i class="fa-solid fa-bolt"></i> Kling</a>
+                <a href="https://lumalabs.ai/dream-machine/creations" target="_blank" class="btn btn-secondary btn-sm" title="Luma Dream Machine - 免費額度"><i class="fa-solid fa-moon"></i> Luma</a>
+                <a href="https://app.pixverse.ai/text-to-video" target="_blank" class="btn btn-secondary btn-sm" title="PixVerse - 免費額度"><i class="fa-solid fa-wand-magic-sparkles"></i> PixVerse</a>
+                <a href="https://pika.art/" target="_blank" class="btn btn-secondary btn-sm" title="Pika - 免費額度"><i class="fa-solid fa-rabbit"></i> Pika</a>
+                <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 5px;"></div>
+                <button id="openSettingsBtn" class="btn btn-icon" title="設定 API Key"><i class="fa-solid fa-key"></i></button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <!-- Left Column: Input -->
+            <div class="panel input-panel glass-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-book-open"></i> 小說原文輸入</h2>
+                    <div class="panel-actions">
+                        <button id="clearBtn" class="btn btn-secondary btn-sm">清除</button>
+                        <button id="generateBtn" class="btn btn-primary btn-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> 產生分鏡</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <textarea id="novelInput" placeholder="請將您的小說文字貼在這裡...\n例如：《NOVA：輪迴空間》EP1..."></textarea>
+                    <div style="text-align: right; font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                        目前字數: <span id="wordCount" style="font-weight: bold; color: #a5b4fc;">0</span> / 建議每次貼上 &lt; 2000 字
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Output -->
+            <div class="panel output-panel glass-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-film"></i> 影片分鏡腳本</h2>
+                    <div class="panel-actions">
+                        <button id="copyAllBtn" class="btn btn-secondary btn-sm" disabled><i class="fa-regular fa-copy"></i> 全部複製</button>
+                    </div>
+                </div>
+                <div class="panel-body" id="storyboardContainer">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-clapperboard"></i>
+                        <p>貼上文字並點擊「產生分鏡」，AI 將為您自動拆解畫面。</p>
+                    </div>
+                    <!-- Cards will be injected here via JS -->
+                </div>
+                
+                <!-- Loading State (Hidden by default) -->
+                <div id="loadingOverlay" class="loading-overlay hidden">
+                    <div class="loader"></div>
+                    <p>AI 正在進行劇本拆解，這可能需要幾十秒鐘的時間...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Marked.js for markdown rendering if needed, though we will parse JSON -->
+    <script src="app.js"></script>
+</body>
+</html>

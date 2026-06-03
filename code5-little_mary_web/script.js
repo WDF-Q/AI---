@@ -1,5 +1,8 @@
 // script.js
 
+// === 系統設定 ===
+// 機台管理員密碼 (用於洗分與重設機台)，如果忘記可以來這裡查看或修改
+const ADMIN_PASSWORD = "787878"; 
 const ITEMS = [
     { name: "BAR", color: "var(--color-red)", odds: 50, has_image: false },
     { name: "77", color: "var(--color-blue)", odds: 40, has_image: false },
@@ -24,47 +27,58 @@ const BOARD_CONFIG = [
 
 const BET_OPTIONS = ["APPLE", "WATERMELON", "STAR", "77", "BAR", "BELL", "MANGO", "ORANGE", "CHERRY"];
 
-// Game State
-let game = {
-    credits: 0,
-    jackpot: 500.0,
-    win_amount: 0,
-    bets: {},
-    total_accumulated_bets: 0,
-    total_accumulated_cashout: 0,
-    saved_bets_before_die: {},
-    bets_modified_this_round: false,
-    last_win_was_grand_prize: false,
-    state: "IDLE", // IDLE, SPINNING, TRAIN_SPINNING, TRAIN_PAUSE, TRAIN_BLINK, TRAIN_BOUNCING, SHOW_WIN, GRAND_PRIZE_START
-    
-    current_pos: 0,
-    target_pos: 0,
-    spin_timer: 0,
-    spin_delay: 50,
-    steps_remaining: 0,
-    
-    train_lights_left: 0,
-    train_blink_count: 0,
-    is_blinking_on: true,
-    extra_spins_left: 0,
-    bounce_steps: 0,
-    bounce_delay: 50,
-    
-    multi_active_pos: [],
-    bouncing_targets: [],
-    
-    grand_prize_blink_count: 0,
-    is_blinking_left: true,
-    left_half_pos: [],
-    right_half_pos: [],
-    grand_prize_half: ""
-};
+// Game State Management
+let currentMachineId = null;
+let allMachinesData = {};
+let game = null;
+let globalVisits = 0;
+let globalPlayTime = 0;
 
-// Initialize empty bets
-BET_OPTIONS.forEach(opt => {
-    game.bets[opt] = 0;
-    game.saved_bets_before_die[opt] = 0;
-});
+function createMachineData() {
+    let state = {
+        credits: 0,
+        jackpot: 500.0,
+        win_amount: 0,
+        bets: {},
+        total_accumulated_bets: 0,
+        total_accumulated_cashout: 0,
+        saved_bets_before_die: {},
+        bets_modified_this_round: false,
+        last_win_was_grand_prize: false,
+        state: "IDLE",
+        
+        current_pos: 0,
+        target_pos: 0,
+        spin_timer: 0,
+        spin_delay: 50,
+        steps_remaining: 0,
+        
+        train_lights_left: 0,
+        train_blink_count: 0,
+        is_blinking_on: true,
+        extra_spins_left: 0,
+        bounce_steps: 0,
+        bounce_delay: 50,
+        
+        multi_active_pos: [],
+        bouncing_targets: [],
+        
+        grand_prize_blink_count: 0,
+        is_blinking_left: true,
+        left_half_pos: [],
+        right_half_pos: [],
+        grand_prize_half: ""
+    };
+    BET_OPTIONS.forEach(opt => {
+        state.bets[opt] = 0;
+        state.saved_bets_before_die[opt] = 0;
+    });
+    return {
+        game: state,
+        visits: 0,
+        playTime: 0
+    };
+}
 
 // DOM Elements
 const boardGrid = document.getElementById('board-grid');
@@ -85,7 +99,15 @@ const modalOverlay = document.getElementById('modal-overlay');
 const modalMessage = document.getElementById('modal-message');
 const modalBtnConfirm = document.getElementById('modal-btn-confirm');
 const modalBtnCancel = document.getElementById('modal-btn-cancel');
+const modalInputPassword = document.getElementById('modal-input-password');
 let pendingModalAction = null;
+
+// Lobby
+const lobbyContainer = document.getElementById('lobby-container');
+const gameWrapper = document.getElementById('game-wrapper');
+const btnBackLobby = document.getElementById('btn-back-lobby');
+const gameTitle = document.getElementById('game-title');
+const machineCards = document.querySelectorAll('.machine-card');
 
 // Helpers
 const getItemInfo = (name) => ITEMS.find(i => i.name === name);
@@ -128,19 +150,24 @@ function initLayout() {
         const btn = document.createElement('div');
         btn.className = 'bet-btn';
         
+        const iconWrapper = document.createElement('div');
+        iconWrapper.className = 'bet-icon-wrapper';
+        
         if (info.has_image) {
             const img = document.createElement('img');
             img.src = `assets/${opt}.png`;
             img.onerror = () => { img.style.display = 'none'; };
-            btn.appendChild(img);
+            iconWrapper.appendChild(img);
         } else {
             const txt = document.createElement('div');
             txt.textContent = opt;
             txt.style.color = info.color;
             txt.style.fontWeight = 'bold';
-            txt.style.margin = '10px 0';
-            btn.appendChild(txt);
+            txt.style.fontSize = '0.75rem';
+            txt.style.whiteSpace = 'nowrap';
+            iconWrapper.appendChild(txt);
         }
+        btn.appendChild(iconWrapper);
         
         const odds = document.createElement('div');
         odds.className = 'bet-odds';
@@ -158,8 +185,12 @@ function initLayout() {
         betEls[opt] = val;
     });
 
-    loadStats();
+    // Initial UI Setup
+    let dummy = createMachineData();
+    game = dummy.game;
     updateUI();
+    updateHeaderStats();
+    game = null;
 }
 
 function drawFallback(cell, name, info) {
@@ -193,24 +224,62 @@ function drawFallback(cell, name, info) {
 }
 
 // Local Storage
-function loadStats() {
-    const data = localStorage.getItem('littleMaryStats');
+function loadStats(machineId) {
+    const data = localStorage.getItem(`littleMaryStats_${machineId}`);
+    let mData = allMachinesData[machineId];
     if (data) {
         const parsed = JSON.parse(data);
-        game.total_accumulated_bets = parsed.bets || 0;
-        game.total_accumulated_cashout = parsed.cashout || 0;
+        mData.game.total_accumulated_bets = parsed.bets || 0;
+        mData.game.total_accumulated_cashout = parsed.cashout || 0;
     }
+    
+    let visits = localStorage.getItem(`globalVisits_${machineId}`);
+    mData.visits = visits ? parseInt(visits) : 0;
+
+    let pTime = localStorage.getItem(`globalPlayTime_${machineId}`);
+    mData.playTime = pTime ? parseInt(pTime) : 0;
 }
 
 function saveStats() {
-    localStorage.setItem('littleMaryStats', JSON.stringify({
-        bets: game.total_accumulated_bets,
-        cashout: game.total_accumulated_cashout
+    if (!currentMachineId) return;
+    let mData = allMachinesData[currentMachineId];
+    localStorage.setItem(`littleMaryStats_${currentMachineId}`, JSON.stringify({
+        bets: mData.game.total_accumulated_bets,
+        cashout: mData.game.total_accumulated_cashout
     }));
+    localStorage.setItem(`globalVisits_${currentMachineId}`, mData.visits);
+    localStorage.setItem(`globalPlayTime_${currentMachineId}`, mData.playTime);
+}
+
+// Update play time every second
+setInterval(() => {
+    if (currentMachineId && game) {
+        allMachinesData[currentMachineId].playTime += 1;
+        globalPlayTime = allMachinesData[currentMachineId].playTime;
+        localStorage.setItem(`globalPlayTime_${currentMachineId}`, globalPlayTime);
+        updateHeaderStats();
+    }
+}, 1000);
+
+function updateHeaderStats() {
+    const elVisits = document.getElementById('stat-visits');
+    const elTime = document.getElementById('stat-time');
+    if (elVisits) elVisits.textContent = globalVisits;
+    if (elTime) {
+        let h = Math.floor(globalPlayTime / 3600);
+        let m = Math.floor((globalPlayTime % 3600) / 60);
+        let s = globalPlayTime % 60;
+        let timeStr = "";
+        if (h > 0) timeStr += h + "時";
+        if (m > 0 || h > 0) timeStr += m + "分";
+        timeStr += s + "秒";
+        elTime.textContent = timeStr;
+    }
 }
 
 // Interactions
 function handleBetClick(opt) {
+    if (!game) return;
     if (game.win_amount > 0) return;
     if (game.state !== "IDLE" && game.state !== "SHOW_WIN") return;
     
@@ -224,6 +293,7 @@ function handleBetClick(opt) {
 }
 
 function handleStart() {
+    if (!game) return;
     if (game.state === "IDLE" || game.state === "SHOW_WIN") {
         if (game.win_amount > 0) {
             game.credits += game.win_amount;
@@ -270,18 +340,28 @@ function processStart() {
 }
 
 function getRandomTargetPos() {
-    let r = Math.random();
-    if (r < 0.05) return 3;
-    else if (r < 0.25) return 21;
-    else if (r < 0.35) return 9;
-    else if (r < 0.38) return 4;
-    else {
-        let r2 = Math.random() * 0.62;
-        if (r2 < 0.10) return [15, 19, 7][Math.floor(Math.random()*3)];
-        else if (r2 < 0.25) return [1, 13, 6, 18, 0, 12][Math.floor(Math.random()*6)];
-        else if (r2 < 0.45) return [10, 16, 22][Math.floor(Math.random()*3)];
-        else return [2, 5, 8, 11, 14, 17, 20, 23][Math.floor(Math.random()*8)];
+    let rand = Math.random() * 100;
+    let targetItem = "";
+    if (rand < 1) targetItem = "BAR";
+    else if (rand < 4) targetItem = "77";
+    else if (rand < 7) targetItem = "STAR";
+    else if (rand < 10) targetItem = "WATERMELON";
+    else if (rand < 17) targetItem = "BELL";
+    else if (rand < 24) targetItem = "MANGO";
+    else if (rand < 31) targetItem = "ORANGE";
+    else if (rand < 71) targetItem = "APPLE";
+    else if (rand < 91) targetItem = "CHERRY";
+    else if (rand < 91.5) targetItem = "TRAIN";
+    else if (rand < 99.5) targetItem = "LOSE";
+    else targetItem = "JACKPOT";
+
+    let positions = [];
+    for (let i = 0; i < BOARD_CONFIG.length; i++) {
+        if (BOARD_CONFIG[i] === targetItem) {
+            positions.push(i);
+        }
     }
+    return positions[Math.floor(Math.random() * positions.length)];
 }
 
 function startSpin() {
@@ -413,6 +493,7 @@ function fastForward() {
 // Game Loop Update
 function gameLoop() {
     requestAnimationFrame(gameLoop);
+    if (!game) return;
     
     const currentTime = Date.now();
     let needsUIUpdate = false;
@@ -522,6 +603,7 @@ function gameLoop() {
 
 // UI Updates
 function updateUI() {
+    if (!game) return;
     // Top Info
     elCredits.textContent = game.credits;
     elWin.textContent = game.win_amount;
@@ -585,6 +667,12 @@ function updateBoardCells() {
 function showModal(msg, action) {
     modalMessage.textContent = msg;
     pendingModalAction = action;
+    if (action === "RESET" || action === "CASH_OUT") {
+        modalInputPassword.classList.remove('hidden');
+        modalInputPassword.value = '';
+    } else {
+        modalInputPassword.classList.add('hidden');
+    }
     modalOverlay.classList.remove('hidden');
 }
 
@@ -595,6 +683,7 @@ function hideModal() {
 
 // Event Listeners for Actions
 document.getElementById('btn-insert-coin').addEventListener('click', () => {
+    if (!game) return;
     if (game.state === "IDLE" || game.state === "SHOW_WIN") {
         game.credits += 10;
         if (game.state === "SHOW_WIN") {
@@ -606,24 +695,26 @@ document.getElementById('btn-insert-coin').addEventListener('click', () => {
 });
 
 document.getElementById('btn-cash-out').addEventListener('click', () => {
-    if (game.state === "IDLE" && game.win_amount === 0 && game.credits > 0) {
-        showModal("確定要洗分歸零嗎？", "CASH_OUT");
+    if (!game) return;
+    if (game.state !== "IDLE") {
+        alert("請等待轉盤停止後再進行洗分！");
+        return;
     }
+    if (game.win_amount > 0) {
+        alert("您還有未領取的得分！請先點擊「得分」按鈕將分數轉為總分。");
+        return;
+    }
+    if (game.credits <= 0) {
+        alert("目前總分為 0，沒有分數可以洗喔！");
+        return;
+    }
+    showModal("請輸入密碼以洗分", "CASH_OUT");
 });
 
-document.getElementById('btn-clear-bets').addEventListener('click', () => {
-    if (game.state === "IDLE") {
-        BET_OPTIONS.forEach(opt => {
-            game.credits += game.bets[opt];
-            game.bets[opt] = 0;
-            game.saved_bets_before_die[opt] = 0;
-        });
-        game.bets_modified_this_round = false;
-        updateUI();
-    }
-});
+
 
 document.getElementById('btn-take-score').addEventListener('click', () => {
+    if (!game) return;
     if (game.win_amount > 0) {
         game.credits += game.win_amount;
         game.win_amount = 0;
@@ -635,35 +726,93 @@ document.getElementById('btn-take-score').addEventListener('click', () => {
 document.getElementById('btn-start').addEventListener('click', handleStart);
 
 document.getElementById('btn-reset-stats').addEventListener('click', () => {
+    if (!game) return;
     if ((game.state === "IDLE" || game.state === "SHOW_WIN") && game.win_amount === 0) {
-        showModal("確定要累計歸零嗎？", "RESET");
+        showModal("請輸入密碼以重設機台", "RESET");
     }
 });
 
 modalBtnConfirm.addEventListener('click', () => {
+    if (!game) return;
     if (pendingModalAction === "CASH_OUT") {
+        if (modalInputPassword.value !== ADMIN_PASSWORD) {
+            alert("密碼錯誤！");
+            return;
+        }
+        let cashedAmount = game.credits;
         game.total_accumulated_cashout += game.credits;
         game.credits = 0;
         saveStats();
         game.state = "IDLE";
+        hideModal();
+        updateUI();
+        alert("洗分成功！共洗出 " + cashedAmount + " 分。");
     } else if (pendingModalAction === "RESET") {
+        if (modalInputPassword.value !== ADMIN_PASSWORD) {
+            alert("密碼錯誤！");
+            return;
+        }
         game.total_accumulated_bets = 0;
         game.total_accumulated_cashout = 0;
         saveStats();
         game.state = "IDLE";
+        hideModal();
+        updateUI();
     }
-    hideModal();
-    updateUI();
 });
 
 modalBtnCancel.addEventListener('click', hideModal);
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
-        e.preventDefault();
-        handleStart();
+        if (!gameWrapper.classList.contains('hidden')) {
+            e.preventDefault();
+            handleStart();
+        }
     }
 });
+
+// Lobby Interactions
+machineCards.forEach(card => {
+    card.addEventListener('click', () => {
+        const machineId = card.dataset.machine;
+        enterGame(machineId);
+    });
+});
+
+btnBackLobby.addEventListener('click', () => {
+    exitGame();
+});
+
+function enterGame(machineId) {
+    if (!allMachinesData[machineId]) {
+        allMachinesData[machineId] = createMachineData();
+        loadStats(machineId);
+    }
+    
+    currentMachineId = machineId;
+    allMachinesData[machineId].visits += 1;
+    saveStats();
+    
+    game = allMachinesData[machineId].game;
+    globalVisits = allMachinesData[machineId].visits;
+    globalPlayTime = allMachinesData[machineId].playTime;
+
+    // 更新標題
+    gameTitle.textContent = `${machineId}號機台`;
+    lobbyContainer.classList.add('hidden');
+    gameWrapper.classList.remove('hidden');
+    
+    updateUI();
+    updateHeaderStats();
+}
+
+function exitGame() {
+    currentMachineId = null;
+    game = null;
+    lobbyContainer.classList.remove('hidden');
+    gameWrapper.classList.add('hidden');
+}
 
 // Boot
 initLayout();

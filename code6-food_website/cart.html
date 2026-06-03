@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>購物車 - 宅生活的悠閒時光</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .cart-container {
+            max-width: 800px;
+            margin: 120px auto 50px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        .cart-title {
+            color: #333;
+            font-family: 'Noto Serif TC', serif;
+            margin-bottom: 20px;
+        }
+        .empty-cart {
+            padding: 50px 20px;
+            color: #666;
+            font-size: 1.2rem;
+        }
+        .btn-home {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 25px;
+            background-color: #ff7e67;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        .btn-home:hover {
+            background-color: #ff5c42;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 126, 103, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <header id="navbar">
+        <div class="container">
+            <h1 class="logo">宅生活的悠閒時光</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html#home">首頁</a></li>
+                    <li><a href="index.html#gallery">美食圖鑑</a></li>
+                    <li><a href="index.html#about">關於</a></li>
+                    <li><a href="ai_seafood.html">AI 吃海鮮</a></li>
+                    <li><a href="cart.html" style="color: #ff7e67; font-weight: bold;">🛒 購物車</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="cart-container">
+        <h2 class="cart-title">您的購物車</h2>
+        <div class="empty-cart">
+            <p>目前購物車空空如也，快去挑選一些美食吧！😋</p>
+            <a href="index.html" class="btn-home">去逛逛</a>
+        </div>
+    </div>
+</body>
+</html>
