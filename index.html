@@ -165,10 +165,38 @@
         /* Content Area */
         .content {
             flex: 1;
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             display: flex;
             flex-direction: column;
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+            min-height: 40px; /* reserve space */
+        }
+        
+        .btn-open-full {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+        
+        .btn-open-full:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
+            filter: brightness(1.1);
         }
 
         .iframe-wrapper {
@@ -255,6 +283,11 @@
         
         <!-- 右方展示區 -->
         <div class="content">
+            <div class="preview-header">
+                <a id="open-full-btn" href="#" target="_blank" class="btn-open-full" style="display:none;">
+                    🔗 在新分頁獨立開啟此專案
+                </a>
+            </div>
             <div class="iframe-wrapper">
                 <div class="welcome-screen" id="welcome">
                     <h2>WELCOME</h2>
@@ -274,6 +307,11 @@
             
             // Show a brief loading effect or just hide welcome
             document.getElementById('welcome').style.opacity = '0';
+
+            // Update open full button
+            const openBtn = document.getElementById('open-full-btn');
+            openBtn.href = element.getAttribute('href');
+            openBtn.style.display = 'inline-flex';
         }
         
         function hideWelcome() {
