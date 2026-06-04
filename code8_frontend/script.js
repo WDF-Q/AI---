@@ -192,7 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 scales: {
                     x: {
-                        grid: { display: false },
+                        grid: { 
+                            display: true,
+                            color: 'rgba(148, 163, 184, 0.4)'
+                        },
                         ticks: {
                             maxTicksLimit: 8,
                             color: '#94a3b8',
@@ -201,8 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     y: {
                         grid: {
-                            color: 'rgba(241, 245, 249, 0.5)',
-                            drawBorder: false,
+                            color: 'rgba(148, 163, 184, 0.4)',
+                            drawBorder: true,
                         },
                         ticks: {
                             color: '#94a3b8',
@@ -366,6 +369,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     refreshBtn.addEventListener('click', fetchData);
+
+    const clearInputsBtn = document.getElementById('clear-inputs-btn');
+    if (clearInputsBtn) {
+        clearInputsBtn.addEventListener('click', () => {
+            const inputs = document.querySelectorAll('.input-field');
+            inputs.forEach(input => input.value = '');
+        });
+    }
 
     inputsContainer.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') fetchData();
