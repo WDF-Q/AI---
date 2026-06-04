@@ -3,86 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>賓果彩虹 - 精靈消消樂</title>
-    <link rel="stylesheet" href="./style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <title>🌈 賓果彩虹消消樂 - 專業版</title>
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=5">
 </head>
 <body>
-    <div class="app-bg"></div>
-    
-    <div class="game-wrapper">
-        <header class="game-header">
-            <h1 class="game-title">✨ BINGO RAINBOW <span>消消樂</span> ✨</h1>
+    <div class="app-wrapper">
+        <!-- 頂部資訊列 -->
+        <header class="top-bar">
+            <div class="title-section">
+                <h1>🌈 賓果彩虹 <span>Colotta Stone</span></h1>
+            </div>
+            <div class="info-section">
+                <div class="credit-box">
+                    <span>CREDIT (總餘額)</span>
+                    <span id="credit-display" class="value highlight">10000</span>
+                </div>
+                <div class="win-box">
+                    <span>WIN (贏分)</span>
+                    <span id="win-display" class="value win-highlight">0</span>
+                </div>
+            </div>
         </header>
 
-        <div class="game-container">
-            <!-- Left Panel: Stats and Bets -->
-            <aside class="side-panel left-panel glass-panel">
-                <div class="credit-box">
-                    <div class="label">CREDIT (餘額)</div>
-                    <div class="value" id="credit-display">10000</div>
-                </div>
+        <!-- 遊戲主要區塊 -->
+        <main class="game-container">
+            
+            <!-- LEFT PANEL: Roulette & Betting -->
+            <div class="left-panel">
                 
-                <div class="bet-box">
-                    <div class="label">BET (押分)</div>
-                    <div class="bet-controls">
-                        <button class="btn-sm" id="bet-minus">-</button>
-                        <input type="number" id="bet-input" value="100" min="10" step="10" readonly>
-                        <button class="btn-sm" id="bet-plus">+</button>
-                    </div>
+                <!-- 狀態顯示與發球指示 -->
+                <div class="status-panel">
+                    <h3 id="draw-status">等待開始...</h3>
+                    <div id="safe-indicator" class="safe-indicator">前 3 球安全保障！</div>
                 </div>
 
-                <div class="win-box">
-                    <div class="label">WIN (得分)</div>
-                    <div class="value highlight" id="win-display">0</div>
-                </div>
-
-                <div class="combo-ladder">
-                    <div class="ladder-step" data-chain="10">
-                        <div class="chain-label">10連鎖</div>
-                        <div class="reward-ball"><span id="reward-10">1000</span></div>
-                    </div>
-                    <div class="ladder-step" data-chain="9">
-                        <div class="chain-label">9連鎖</div>
-                        <div class="reward-ball"><span id="reward-9">500</span></div>
-                    </div>
-                    <div class="ladder-step" data-chain="8">
-                        <div class="chain-label">8連鎖</div>
-                        <div class="reward-ball"><span id="reward-8">200</span></div>
-                    </div>
-                    <div class="ladder-step" data-chain="7">
-                        <div class="chain-label">7連鎖</div>
-                        <div class="reward-ball"><span id="reward-7">160</span></div>
-                    </div>
-                    <div class="ladder-step" data-chain="6">
-                        <div class="chain-label">6連鎖</div>
-                        <div class="reward-ball"><span id="reward-6">120</span></div>
-                    </div>
-                    <div class="ladder-step" data-chain="5">
-                        <div class="chain-label">5連鎖</div>
-                        <div class="reward-ball"><span id="reward-5">80</span></div>
-                    </div>
-                    <div class="ladder-step" data-chain="4">
-                        <div class="chain-label">4連鎖</div>
-                        <div class="reward-ball"><span id="reward-4">40</span></div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Center Panel: The Game Board -->
-            <main class="center-panel">
-                <div class="board-wrapper">
-                    <div class="combo-overlay" id="combo-overlay"></div>
-                    <div class="drop-zone-indicator">
-                        <span>⏬ 掉落至此即可獲得獎金 WIN ⏬</span>
-                    </div>
-                    <div class="game-board" id="game-board">
-                        <!-- JS generates 8x6 grid here -->
+                <!-- 炫酷大轉盤 -->
+                <div class="roulette-container">
+                    <div class="fire-box" id="fire-box">WAIT</div>
+                    <div class="roulette-wheel" id="roulette-wheel">
+                        <!-- CSS 圓環與獎項格 -->
+                        <div class="roulette-inner">
+                            <div class="roulette-ball" id="roulette-ball"></div>
+                            <div class="roulette-center" id="roulette-result">等待發球</div>
+                        </div>
                     </div>
                 </div>
                 
+                <!-- 押分與控制區 -->
+                <div class="controls-panel">
+                    <div class="betting-panel">
+                        <div class="bet-display">
+                            <span>當前押分: </span>
+                            <span id="bet-input" class="bet-value">600</span>
+                        </div>
+                        <div class="chip-container">
+                            <button class="chip-btn" data-val="1">+1</button>
+                            <button class="chip-btn" data-val="5">+5</button>
+                            <button class="chip-btn" data-val="10">+10</button>
+                            <button class="chip-btn" data-val="20">+20</button>
+                            <button class="chip-btn" data-val="50">+50</button>
+                            <button class="chip-btn" data-val="100">+100</button>
+                            <button class="chip-btn" data-val="500">+500</button>
+                            <button class="chip-btn btn-clear" id="btn-clear-bet">重置</button>
+                        </div>
+                    </div>
+                    
+                    <button id="btn-start" class="btn-start">🚀 開始遊戲 (START)</button>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Match-3 Board & Combo Ladder -->
+            <div class="right-panel">
+                <div class="board-with-ladder">
+                    <!-- 左側獎勵塔 -->
+                    <div class="combo-ladder">
+                        <div class="ladder-step" data-chain="10">
+                            <span class="chain-label">10 連鎖</span>
+                            <span class="chain-reward" id="reward-10">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="9">
+                            <span class="chain-label">9 連鎖</span>
+                            <span class="chain-reward" id="reward-9">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="8">
+                            <span class="chain-label">8 連鎖</span>
+                            <span class="chain-reward" id="reward-8">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="7">
+                            <span class="chain-label">7 連鎖</span>
+                            <span class="chain-reward" id="reward-7">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="6">
+                            <span class="chain-label">6 連鎖</span>
+                            <span class="chain-reward" id="reward-6">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="5">
+                            <span class="chain-label">5 連鎖</span>
+                            <span class="chain-reward" id="reward-5">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="4">
+                            <span class="chain-label">4 連鎖</span>
+                            <span class="chain-reward" id="reward-4">0</span>
+                        </div>
+                        <div class="ladder-title">連鎖獎勵塔</div>
+                    </div>
+
+                    <!-- 遊戲棋盤 -->
+                    <div class="board-wrapper">
+                        <div id="combo-overlay" class="combo-overlay"></div>
+                        <div class="win-drop-zone">WIN DROP ZONE</div>
+                        <div class="game-board" id="game-board">
+                            <!-- JS generates 8x6 grid here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 底部紀錄統計區 -->
                 <div class="history-tracker">
                     <h3>本局發球紀錄統計</h3>
                     <div class="tracker-row">
@@ -116,35 +154,11 @@
                         </div>
                     </div>
                 </div>
-            </main>
-
-            <!-- Right Panel: Roulette & Controls -->
-            <aside class="side-panel right-panel glass-panel">
-                <div class="roulette-section">
-                    <h3>落球紀錄 (History)</h3>
-                    <div class="ball-history" id="ball-history">
-                        <!-- Balls added here -->
-                    </div>
-                </div>
-
-                <div class="status-section">
-                    <div class="safe-indicator" id="safe-indicator">
-                        前 3 球安全保障！
-                    </div>
-                    <div class="draw-status" id="draw-status">
-                        等待開始...
-                    </div>
-                </div>
-
-                <div class="controls-section">
-                    <button class="btn-mega" id="btn-start">
-                        START <br><small>開始遊戲</small>
-                    </button>
-                </div>
-            </aside>
-        </div>
+            </div>
+            
+        </main>
     </div>
 
-    <script src="./script.js"></script>
+    <script src="./script.js?v=5"></script>
 </body>
 </html>
