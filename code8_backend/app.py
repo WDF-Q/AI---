@@ -67,7 +67,11 @@ def get_stocks():
             continue
 
         try:
-            ticker = yf.Ticker(symbol)
+            import requests
+            session = requests.Session()
+            session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            
+            ticker = yf.Ticker(symbol, session=session)
             # If it's a foreign stock or not in twstock, fallback to yfinance info
             if company_name == symbol:
                 info = ticker.info
@@ -76,6 +80,13 @@ def get_stocks():
             if mode == 'last_30':
                 hist = ticker.history(period="3mo") 
                 if hist.empty:
+                    results.append({
+                        'symbol': symbol.replace('.TW', ''),
+                        'name': company_name,
+                        'display_title': f"{company_name} / {symbol.replace('.TW', '')}",
+                        'error': '無法取得股價資料 (雲端伺服器 IP 可能暫時被阻擋，或代號無效)',
+                        'data': []
+                    })
                     continue
                 hist = hist.tail(31)
             elif mode == 'specific_month':
@@ -169,7 +180,11 @@ def get_chart_data():
     params = range_mapping.get(range_str, {'period': '1mo', 'interval': '1d'})
     
     try:
-        ticker = yf.Ticker(symbol)
+        import requests
+        session = requests.Session()
+        session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        
+        ticker = yf.Ticker(symbol, session=session)
         hist = ticker.history(period=params['period'], interval=params['interval'])
         
         if hist.empty:
