@@ -88,7 +88,19 @@ function updateHistoryUI() {
     document.getElementById('track-rainbow').textContent = historyTracker.rainbow;
 }
 
-function getRandomColor() {
+function getRandomColor(r, c) {
+    // 10% chance to match a neighbor's color (to prevent dead boards)
+    if (r !== undefined && c !== undefined && Math.random() < 0.10) {
+        let neighbors = [];
+        if (r > 0 && board[r-1][c] && !board[r-1][c].isMoney) neighbors.push(board[r-1][c].color);
+        if (r < ROWS-1 && board[r+1][c] && !board[r+1][c].isMoney) neighbors.push(board[r+1][c].color);
+        if (c > 0 && board[r][c-1] && !board[r][c-1].isMoney) neighbors.push(board[r][c-1].color);
+        if (c < COLS-1 && board[r][c+1] && !board[r][c+1].isMoney) neighbors.push(board[r][c+1].color);
+        
+        if (neighbors.length > 0) {
+            return neighbors[Math.floor(Math.random() * neighbors.length)];
+        }
+    }
     return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
@@ -148,14 +160,14 @@ function initBoard() {
                 continue;
             }
             
-            let color = getRandomColor();
+            let color = getRandomColor(r, c);
             // Simple heuristic to avoid large clusters initially
             while (
                 (c >= 2 && board[r][c-1]?.color === color && board[r][c-2]?.color === color) ||
                 (r >= 2 && board[r-1][c]?.color === color && board[r-2][c]?.color === color) ||
                 (r >= 1 && c >= 1 && board[r-1][c]?.color === color && board[r][c-1]?.color === color)
             ) {
-                color = getRandomColor();
+                color = getRandomColor(r, c);
             }
             board[r][c] = createBlock(r, c, color, false);
         }
@@ -357,11 +369,11 @@ async function processElimination(colors) {
     }
     
     if (!eliminatedAny) {
-        await sleep(500);
+        await sleep(1000);
         return;
     }
     
-    await sleep(400); // Wait for eliminate animation
+    await sleep(1000); // Wait for eliminate animation
     await applyGravity();
     await checkMatchesAndChain();
 }
@@ -387,7 +399,7 @@ async function applyGravity() {
     }
     
     if (moved) {
-        await sleep(300); // Wait for drop animation
+        await sleep(800); // Wait for drop animation
     }
 
     // 金錢球觸底得分判定 (Drop Zone = Row 7)
@@ -411,7 +423,7 @@ async function applyGravity() {
     }
     
     if (collectedMoney) {
-        await sleep(400);
+        await sleep(1000);
         await applyGravity(); // Recursive gravity in case things fell above the collected money
     }
 }
@@ -502,11 +514,11 @@ async function checkMatchesAndChain() {
             // Eliminate
             for (let block of blocksToEliminate) {
                 block.el.classList.add('eliminating');
-                setTimeout((el) => el.remove(), 300, block.el);
+                setTimeout((el) => el.remove(), 500, block.el);
                 board[block.r][block.c] = null;
             }
             
-            await sleep(400);
+            await sleep(1000);
             await applyGravity();
         } else {
             hasMatches = false;
@@ -540,7 +552,12 @@ async function refillBoard() {
     
     if (!hasEmpty) return;
     
-    DOM.drawStatus.textContent = `補滿盤面...`;
+    if (spawnRewardValue > 0) {
+        DOM.drawStatus.textContent = `⭐ 生成 ${currentCombo} 連鎖獎金球！`;
+        await sleep(1500);
+    } else {
+        DOM.drawStatus.textContent = `補滿盤面...`;
+    }
 
     // Choose one random spot in upper half (r: 0~3) for the money ball if needed
     let rewardSpotIndex = -1;
@@ -568,7 +585,7 @@ async function refillBoard() {
         if (i === rewardSpotIndex) {
             block = createBlock(-1, c, null, true, spawnRewardValue);
         } else {
-            let color = getRandomColor();
+            let color = getRandomColor(r, c); // use r,c for neighbor matching
             let isFlash = false;
             if (flashBallsCount > 0) {
                 isFlash = true;
@@ -585,7 +602,7 @@ async function refillBoard() {
         board[r][c] = block;
     }
     
-    await sleep(400); // wait for refill drop
+    await sleep(1000); // wait for refill drop
     
     // After refill, check if new matches formed (bonus matching, resets combo counter to 0)
     currentCombo = 0; // These don't count towards combo ladder for money balls!
