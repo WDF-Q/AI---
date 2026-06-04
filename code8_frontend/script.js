@@ -1,4 +1,7 @@
-const API_BASE_URL = 'http://127.0.0.1:5000'; // 將來可以換成您的 Render 網址 (如 https://my-code8.onrender.com)
+// 動態判斷 API 網址：如果在本機執行就連本機伺服器，如果在 GitHub 上就連 Render 伺服器
+const API_BASE_URL = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:5000'
+    : 'https://code8-rhsc.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputsContainer = document.getElementById('inputs-container');
