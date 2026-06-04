@@ -4,8 +4,17 @@ const BLOCK_SIZE = 60; // 60px
 const GAP = 4; // 4px
 
 const COLORS = ['red', 'pink', 'blue', 'green', 'yellow'];
-// Optional symbols for blocks just for visuals
 const SYMBOLS = ['★', '●', '▲', '◆', '♥'];
+
+const COMBO_MULTIPLIERS = {
+    4: 0.4,
+    5: 0.8,
+    6: 1.2,
+    7: 1.6,
+    8: 2.0,
+    9: 5.0,
+    10: 10.0
+};
 
 let board = [];
 let isPlaying = false;
@@ -33,6 +42,7 @@ const DOM = {
 DOM.betMinus.addEventListener('click', () => adjustBet(-10));
 DOM.betPlus.addEventListener('click', () => adjustBet(10));
 DOM.btnStart.addEventListener('click', startGame);
+updateLadderRewards(parseInt(DOM.betInput.value));
 
 function adjustBet(amount) {
     if (isPlaying) return;
@@ -41,6 +51,17 @@ function adjustBet(amount) {
     if (currentBet < 10) currentBet = 10;
     if (currentBet > credit) currentBet = credit;
     DOM.betInput.value = currentBet;
+    updateLadderRewards(currentBet);
+}
+
+function updateLadderRewards(bet) {
+    for (let chain = 4; chain <= 10; chain++) {
+        let el = document.getElementById(`reward-${chain}`);
+        if (el) {
+            let mult = COMBO_MULTIPLIERS[chain] || 10.0;
+            el.textContent = Math.floor(bet * mult);
+        }
+    }
 }
 
 function updateCreditDisplay() {
@@ -61,36 +82,84 @@ function getSymbolForColor(color) {
 }
 
 // 建立方塊 DOM
-function createBlock(r, c, color) {
+function createBlock(r, c, color, isMoney = false, moneyValue = 0) {
     const el = document.createElement('div');
-    el.className = `block color-${color}`;
-    el.textContent = getSymbolForColor(color);
+    el.className = `block`;
+    
+    if (isMoney) {
+        el.classList.add('money-ball');
+        el.textContent = moneyValue;
+    } else {
+        el.classList.add(`color-${color}`);
+        // el.textContent = getSymbolForColor(color); // Optional: if we want cute faces instead of symbols, we can leave textContent empty
+    }
+    
     // Position using absolute coordinates based on row and col
     el.style.left = `${c * (BLOCK_SIZE + GAP)}px`;
     el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
     
     DOM.board.appendChild(el);
-    return { r, c, color, el };
+    return { r, c, color, isMoney, moneyValue, el };
+}
+
+function getRandomEmptyPosition(excludeBottom = false) {
+    let emptySpots = [];
+    let maxR = excludeBottom ? ROWS - 2 : ROWS - 1; // don't spawn at absolute bottom if excluded
+    for(let r=0; r<=maxR; r++) {
+        for(let c=0; c<COLS; c++) {
+            if (!board[r] || board[r][c] === null || board[r][c] === undefined) {
+                emptySpots.push({r, c});
+            }
+        }
+    }
+    if (emptySpots.length === 0) return null;
+    return emptySpots[Math.floor(Math.random() * emptySpots.length)];
 }
 
 // 初始化 8x6 盤面
 function initBoard() {
     DOM.board.innerHTML = '';
     board = [];
+    
+    // Create empty board structure
     for (let r = 0; r < ROWS; r++) {
-        let row = [];
+        board.push(new Array(COLS).fill(null));
+    }
+    
+    const bet = parseInt(DOM.betInput.value);
+    const initialMoneyValue = Math.floor(bet / 5);
+
+    // Place 4 initial money balls randomly
+    let placedMoney = 0;
+    while (placedMoney < 4) {
+        // Place anywhere from row 0 to row 6 (don't place immediately on row 7 so they don't drop out immediately)
+        let r = Math.floor(Math.random() * (ROWS - 1));
+        let c = Math.floor(Math.random() * COLS);
+        if (board[r][c] === null) {
+            board[r][c] = { isMoney: true, moneyValue: initialMoneyValue, r, c }; // temp object
+            placedMoney++;
+        }
+    }
+
+    // Fill the rest with colors, avoiding 3-matches
+    for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
+            if (board[r][c] !== null && board[r][c].isMoney) {
+                // Instantiate the money ball
+                board[r][c] = createBlock(r, c, null, true, initialMoneyValue);
+                continue;
+            }
+            
             let color = getRandomColor();
-            // 避免一開始就有 3 連線 (簡單檢查左邊跟上面)
+            // Avoid initial matches
             while (
-                (c >= 2 && row[c-1].color === color && row[c-2].color === color) ||
-                (r >= 2 && board[r-1][c].color === color && board[r-2][c].color === color)
+                (c >= 2 && board[r][c-1]?.color === color && board[r][c-2]?.color === color && !board[r][c-1]?.isMoney && !board[r][c-2]?.isMoney) ||
+                (r >= 2 && board[r-1][c]?.color === color && board[r-2][c]?.color === color && !board[r-1][c]?.isMoney && !board[r-2][c]?.isMoney)
             ) {
                 color = getRandomColor();
             }
-            row.push(createBlock(r, c, color));
+            board[r][c] = createBlock(r, c, color, false);
         }
-        board.push(row);
     }
 }
 
@@ -108,8 +177,8 @@ async function startGame() {
     isPlaying = true;
     totalWin = 0;
     ballCount = 0;
-    currentCombo = 0;
     updateWinDisplay();
+    updateLadderActive(0);
     
     DOM.btnStart.disabled = true;
     DOM.betMinus.disabled = true;
@@ -120,10 +189,18 @@ async function startGame() {
     
     initBoard();
     
-    // 延遲一下後開始自動抽球
     DOM.drawStatus.textContent = '準備開始...';
     await sleep(1000);
     scheduleNextDraw();
+}
+
+function updateLadderActive(combo) {
+    document.querySelectorAll('.ladder-step').forEach(step => {
+        step.classList.remove('active');
+        if (parseInt(step.dataset.chain) === combo) {
+            step.classList.add('active');
+        }
+    });
 }
 
 function scheduleNextDraw() {
@@ -131,7 +208,7 @@ function scheduleNextDraw() {
     
     // 隨機 1~3 秒
     const delay = Math.floor(Math.random() * 2000) + 1000;
-    DOM.drawStatus.textContent = `下一球將在 ${delay/1000} 秒後抽出...`;
+    DOM.drawStatus.textContent = `下一球將在 ${(delay/1000).toFixed(1)} 秒後抽出...`;
     
     drawTimeout = setTimeout(drawBall, delay);
 }
@@ -140,11 +217,12 @@ function scheduleNextDraw() {
 async function drawBall() {
     if (!isPlaying) return;
     ballCount++;
+    currentCombo = 0;
+    updateLadderActive(0);
     
     let isOut = false;
     let drawnColor = '';
     
-    // 前 3 球絕對安全。第 4 球開始有 15% 機率是 OUT
     if (ballCount > 3) {
         DOM.safeIndicator.textContent = '危險區：隨時可能 OUT！';
         DOM.safeIndicator.className = 'safe-indicator danger';
@@ -165,55 +243,53 @@ async function drawBall() {
         return;
     }
     
-    // 安全球，隨機顏色
     drawnColor = getRandomColor();
     ballEl.classList.add(`color-${drawnColor}`);
-    ballEl.textContent = getSymbolForColor(drawnColor);
     DOM.ballHistory.appendChild(ballEl);
     
-    DOM.drawStatus.textContent = `抽中 ${drawnColor}！消除底層...`;
+    DOM.drawStatus.textContent = `抽中顏色！消除底層...`;
     
     // 處理消除與連鎖
     await processElimination(drawnColor);
+    
+    // 回合結束後，進行補球機制
+    await refillBoard();
     
     if (isPlaying) {
         scheduleNextDraw();
     }
 }
 
-// 核心邏輯：底部消除 -> 掉落 -> 連鎖
+// 底層消除 -> 掉落 -> 連鎖
 async function processElimination(color) {
-    currentCombo = 0;
-    
-    // 1. 找出每一排最底層的該顏色方塊並消除
     let eliminatedAny = false;
+    // Find the lowest standard block of that color in each column
     for (let c = 0; c < COLS; c++) {
-        // 從最底層(ROWS-1)往上找，找到第一個方塊
         for (let r = ROWS - 1; r >= 0; r--) {
-            if (board[r][c] !== null) {
-                if (board[r][c].color === color) {
-                    // 消除
-                    board[r][c].el.classList.add('eliminating');
-                    setTimeout((el) => el.remove(), 300, board[r][c].el);
+            let block = board[r][c];
+            if (block !== null) {
+                if (!block.isMoney && block.color === color) {
+                    block.el.classList.add('eliminating');
+                    setTimeout((el) => el.remove(), 300, block.el);
                     board[r][c] = null;
                     eliminatedAny = true;
                 }
-                break; // 只看最底層露出來的，看完就換下一行
+                break; // only look at the lowest block exposed in this column
             }
         }
     }
     
     if (!eliminatedAny) {
         await sleep(500);
-        return; // 底層沒這個顏色
+        return;
     }
     
-    await sleep(400); // 等待消除動畫
+    await sleep(400); // Wait for eliminate animation
     await applyGravity();
     await checkMatchesAndChain();
 }
 
-// 物理掉落
+// 物理掉落 & 金錢球觸底判定
 async function applyGravity() {
     let moved = false;
     for (let c = 0; c < COLS; c++) {
@@ -222,7 +298,6 @@ async function applyGravity() {
             if (board[r][c] === null) {
                 emptySpots++;
             } else if (emptySpots > 0) {
-                // 移動方塊
                 const block = board[r][c];
                 board[r + emptySpots][c] = block;
                 board[r][c] = null;
@@ -233,8 +308,34 @@ async function applyGravity() {
             }
         }
     }
+    
     if (moved) {
-        await sleep(300); // 等待掉落動畫
+        await sleep(300); // Wait for drop animation
+    }
+
+    // 金錢球觸底得分判定 (Drop Zone = Row 7)
+    let collectedMoney = false;
+    for (let c = 0; c < COLS; c++) {
+        let block = board[ROWS - 1][c];
+        if (block && block.isMoney) {
+            // Collect it
+            totalWin += block.moneyValue;
+            updateWinDisplay();
+            
+            // Effect
+            block.el.style.transform = 'scale(1.5)';
+            block.el.style.opacity = '0';
+            setTimeout((el) => el.remove(), 300, block.el);
+            board[ROWS - 1][c] = null;
+            collectedMoney = true;
+            
+            DOM.drawStatus.textContent = `獲得獎金 +${block.moneyValue}！`;
+        }
+    }
+    
+    if (collectedMoney) {
+        await sleep(400);
+        await applyGravity(); // Recursive gravity in case things fell above the collected money
     }
 }
 
@@ -245,47 +346,46 @@ async function checkMatchesAndChain() {
     while (hasMatches && isPlaying) {
         let matchedBlocks = new Set();
         
-        // 橫向檢查
+        // Horizontal
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS - 2; c++) {
                 let b1 = board[r][c];
-                if (!b1) continue;
+                if (!b1 || b1.isMoney) continue; // Money balls don't match
                 let color = b1.color;
-                if (board[r][c+1]?.color === color && board[r][c+2]?.color === color) {
+                
+                let b2 = board[r][c+1];
+                let b3 = board[r][c+2];
+                if (b2 && !b2.isMoney && b2.color === color && b3 && !b3.isMoney && b3.color === color) {
                     matchedBlocks.add(b1);
-                    matchedBlocks.add(board[r][c+1]);
-                    matchedBlocks.add(board[r][c+2]);
+                    matchedBlocks.add(b2);
+                    matchedBlocks.add(b3);
                 }
             }
         }
         
-        // 縱向檢查
+        // Vertical
         for (let c = 0; c < COLS; c++) {
             for (let r = 0; r < ROWS - 2; r++) {
                 let b1 = board[r][c];
-                if (!b1) continue;
+                if (!b1 || b1.isMoney) continue;
                 let color = b1.color;
-                if (board[r+1][c]?.color === color && board[r+2][c]?.color === color) {
+                
+                let b2 = board[r+1][c];
+                let b3 = board[r+2][c];
+                if (b2 && !b2.isMoney && b2.color === color && b3 && !b3.isMoney && b3.color === color) {
                     matchedBlocks.add(b1);
-                    matchedBlocks.add(board[r+1][c]);
-                    matchedBlocks.add(board[r+2][c]);
+                    matchedBlocks.add(b2);
+                    matchedBlocks.add(b3);
                 }
             }
         }
         
         if (matchedBlocks.size > 0) {
             currentCombo++;
+            updateLadderActive(currentCombo >= 10 ? 10 : currentCombo);
             DOM.drawStatus.textContent = `${currentCombo} 連鎖！`;
-            
             showComboOverlay(currentCombo);
             
-            // 計算得分 (押分 * 倍率)
-            let multiplier = getMultiplier(currentCombo);
-            let bet = parseInt(DOM.betInput.value);
-            totalWin += bet * multiplier;
-            updateWinDisplay();
-            
-            // 消除
             for (let block of matchedBlocks) {
                 block.el.classList.add('eliminating');
                 setTimeout((el) => el.remove(), 300, block.el);
@@ -300,13 +400,73 @@ async function checkMatchesAndChain() {
     }
 }
 
-function getMultiplier(combo) {
-    if (combo === 1 || combo === 2) return 0; // 前兩次連線可能沒倍率，或算小分，這裡依照簡化：3連鎖才算錢
-    if (combo === 3) return 2;
-    if (combo === 4) return 5;
-    if (combo === 5) return 10;
-    if (combo >= 6) return 30;
-    return 0;
+// 回合結束後補滿盤面
+async function refillBoard() {
+    let hasEmpty = false;
+    let bet = parseInt(DOM.betInput.value);
+    
+    // Check if we need to spawn a reward money ball for the previous combo chain
+    let spawnRewardValue = 0;
+    if (currentCombo >= 4) {
+        let lookupChain = currentCombo >= 10 ? 10 : currentCombo;
+        let mult = COMBO_MULTIPLIERS[lookupChain];
+        spawnRewardValue = Math.floor(bet * mult);
+    }
+
+    // Determine target spots
+    let emptySpots = [];
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            if (board[r][c] === null) {
+                emptySpots.push({r, c});
+                hasEmpty = true;
+            }
+        }
+    }
+    
+    if (!hasEmpty) return;
+    
+    DOM.drawStatus.textContent = `補滿盤面...`;
+
+    // Choose one random spot in upper half (r: 0~3) for the money ball if needed
+    let rewardSpotIndex = -1;
+    if (spawnRewardValue > 0) {
+        let upperSpots = emptySpots.filter(spot => spot.r >= 0 && spot.r <= 3);
+        if (upperSpots.length > 0) {
+            let choice = upperSpots[Math.floor(Math.random() * upperSpots.length)];
+            rewardSpotIndex = emptySpots.findIndex(s => s.r === choice.r && s.c === choice.c);
+        } else {
+            // fallback if upper is full, just pick any empty spot
+            rewardSpotIndex = Math.floor(Math.random() * emptySpots.length);
+        }
+    }
+
+    // Create new blocks above the board and drop them in
+    for (let i = 0; i < emptySpots.length; i++) {
+        let {r, c} = emptySpots[i];
+        
+        let block;
+        if (i === rewardSpotIndex) {
+            block = createBlock(-1, c, null, true, spawnRewardValue);
+        } else {
+            let color = getRandomColor();
+            block = createBlock(-1, c, color, false);
+        }
+        
+        // Animate from top (-1) to target r
+        block.r = r;
+        setTimeout(() => {
+            block.el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
+        }, 50);
+        
+        board[r][c] = block;
+    }
+    
+    await sleep(400); // wait for refill drop
+    
+    // After refill, check if new matches formed (bonus matching, resets combo counter to 0)
+    currentCombo = 0; // These don't count towards combo ladder for money balls!
+    await checkMatchesAndChain();
 }
 
 function showComboOverlay(combo) {

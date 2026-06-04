@@ -162,34 +162,53 @@ body {
     background: #64748b;
 }
 
-.combo-table h3 {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-    color: #38bdf8;
-    border-bottom: 1px solid rgba(56, 189, 248, 0.3);
-    padding-bottom: 0.5rem;
-}
-
-.combo-table ul {
-    list-style: none;
+/* Combo Ladder */
+.combo-ladder {
     display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
+    flex-direction: column-reverse; /* Bottom to top */
+    gap: 0.5rem;
+    margin-top: 1rem;
 }
 
-.combo-table li {
+.ladder-step {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-weight: 700;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem;
+    border-radius: 12px;
+    transition: all 0.3s;
 }
 
-.badge {
-    background: linear-gradient(90deg, #f59e0b, #ea580c);
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
+.ladder-step.active {
+    background: rgba(245, 158, 11, 0.3);
+    border-color: #f59e0b;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    transform: scale(1.05);
+}
+
+.chain-label {
+    font-weight: 900;
+    color: #38bdf8;
+    font-size: 1.1rem;
+    text-shadow: 0 0 5px rgba(56, 189, 248, 0.5);
+}
+
+.reward-ball {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fbbf24, #b45309);
+    border: 2px solid #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 900;
     font-size: 0.9rem;
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(0,0,0,0.5), inset 2px 2px 6px rgba(255,255,255,0.8);
 }
 
 /* Center Panel (Board) */
@@ -205,9 +224,36 @@ body {
     border: 4px solid #334155;
     border-radius: 16px;
     padding: 10px;
+    padding-bottom: 74px; /* Extra space for drop zone */
     box-shadow: 
         0 0 20px rgba(0,0,0,0.8) inset,
         0 0 30px rgba(56, 189, 248, 0.2);
+}
+
+.drop-zone-indicator {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    height: 64px;
+    border: 2px dashed #eab308;
+    background: rgba(234, 179, 8, 0.15);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fef08a;
+    font-weight: 900;
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px #ca8a04;
+    animation: pulseBorder 1.5s infinite;
+    z-index: 1;
+}
+
+@keyframes pulseBorder {
+    0% { box-shadow: 0 0 0 rgba(234, 179, 8, 0); border-color: rgba(234, 179, 8, 0.5); }
+    50% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.5) inset; border-color: rgba(234, 179, 8, 1); }
+    100% { box-shadow: 0 0 0 rgba(234, 179, 8, 0); border-color: rgba(234, 179, 8, 0.5); }
 }
 
 .game-board {
@@ -217,21 +263,38 @@ body {
     grid-template-rows: repeat(8, 60px);
     gap: 4px;
     position: relative;
+    z-index: 2;
 }
 
 .block {
     width: 60px;
     height: 60px;
-    border-radius: 12px;
+    border-radius: 50%; /* Make them round */
     position: absolute; /* Using absolute positioning for smooth falling */
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1.5rem;
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2), inset 0 4px 0 rgba(255,255,255,0.3);
+    box-shadow: 
+        inset -5px -5px 15px rgba(0,0,0,0.5), 
+        inset 5px 5px 15px rgba(255,255,255,0.7),
+        0 4px 6px rgba(0,0,0,0.4);
     transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                 left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.2s, opacity 0.2s;
+}
+
+/* Add a cute glossy reflection */
+.block::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 20%;
+    width: 30%;
+    height: 15%;
+    background: rgba(255,255,255,0.8);
+    border-radius: 50%;
+    transform: rotate(-30deg);
 }
 
 .block.eliminating {
@@ -239,11 +302,27 @@ body {
     opacity: 0;
 }
 
-.block.color-red { background-color: var(--color-red); }
-.block.color-pink { background-color: var(--color-pink); }
-.block.color-blue { background-color: var(--color-blue); }
-.block.color-green { background-color: var(--color-green); }
-.block.color-yellow { background-color: var(--color-yellow); }
+.block.color-red { background: radial-gradient(circle at 30% 30%, #ff6b6b, var(--color-red)); }
+.block.color-pink { background: radial-gradient(circle at 30% 30%, #ff99cc, var(--color-pink)); }
+.block.color-blue { background: radial-gradient(circle at 30% 30%, #66b3ff, var(--color-blue)); }
+.block.color-green { background: radial-gradient(circle at 30% 30%, #85e085, var(--color-green)); }
+.block.color-yellow { background: radial-gradient(circle at 30% 30%, #ffff99, var(--color-yellow)); }
+
+.block.money-ball {
+    background: radial-gradient(circle at 30% 30%, #fde047, #a16207);
+    border: 3px solid #fef08a;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000, 0 0 10px #000;
+    font-size: 1.2rem;
+    box-shadow: 
+        inset -5px -5px 15px rgba(0,0,0,0.6), 
+        inset 5px 5px 15px rgba(255,255,255,0.9),
+        0 0 15px rgba(250, 204, 21, 0.8);
+}
+.block.money-ball::after {
+    display: none; /* Unique style for money ball, remove standard reflection */
+}
 
 .combo-overlay {
     position: absolute;

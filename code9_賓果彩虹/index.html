@@ -39,14 +39,35 @@
                     <div class="value highlight" id="win-display">0</div>
                 </div>
 
-                <div class="combo-table">
-                    <h3>連鎖倍率表 (Combo)</h3>
-                    <ul id="combo-list">
-                        <li>3 連鎖 <span class="badge">x 2</span></li>
-                        <li>4 連鎖 <span class="badge">x 5</span></li>
-                        <li>5 連鎖 <span class="badge">x 10</span></li>
-                        <li>6+ 連鎖 <span class="badge">x 30</span></li>
-                    </ul>
+                <div class="combo-ladder">
+                    <div class="ladder-step" data-chain="10">
+                        <div class="chain-label">10連鎖</div>
+                        <div class="reward-ball"><span id="reward-10">1000</span></div>
+                    </div>
+                    <div class="ladder-step" data-chain="9">
+                        <div class="chain-label">9連鎖</div>
+                        <div class="reward-ball"><span id="reward-9">500</span></div>
+                    </div>
+                    <div class="ladder-step" data-chain="8">
+                        <div class="chain-label">8連鎖</div>
+                        <div class="reward-ball"><span id="reward-8">200</span></div>
+                    </div>
+                    <div class="ladder-step" data-chain="7">
+                        <div class="chain-label">7連鎖</div>
+                        <div class="reward-ball"><span id="reward-7">160</span></div>
+                    </div>
+                    <div class="ladder-step" data-chain="6">
+                        <div class="chain-label">6連鎖</div>
+                        <div class="reward-ball"><span id="reward-6">120</span></div>
+                    </div>
+                    <div class="ladder-step" data-chain="5">
+                        <div class="chain-label">5連鎖</div>
+                        <div class="reward-ball"><span id="reward-5">80</span></div>
+                    </div>
+                    <div class="ladder-step" data-chain="4">
+                        <div class="chain-label">4連鎖</div>
+                        <div class="reward-ball"><span id="reward-4">40</span></div>
+                    </div>
                 </div>
             </aside>
 
@@ -54,6 +75,9 @@
             <main class="center-panel">
                 <div class="board-wrapper">
                     <div class="combo-overlay" id="combo-overlay"></div>
+                    <div class="drop-zone-indicator">
+                        <span>⏬ 掉落至此即可獲得獎金 WIN ⏬</span>
+                    </div>
                     <div class="game-board" id="game-board">
                         <!-- JS generates 8x6 grid here -->
                     </div>
