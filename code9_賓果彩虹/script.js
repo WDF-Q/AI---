@@ -140,15 +140,17 @@ function initBoard() {
     const bet = parseInt(DOM.betInput.value);
     const initialMoneyValue = Math.floor(bet / 5);
 
-    // Place 4 initial money balls randomly in rows 0~2 (top 3 rows, user specified 6~8層)
-    let placedMoney = 0;
-    while (placedMoney < 4) {
+    // Place 4 initial money balls in 4 distinct columns, rows 0~2
+    let colsPool = [0, 1, 2, 3, 4, 5];
+    for (let i = colsPool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [colsPool[i], colsPool[j]] = [colsPool[j], colsPool[i]];
+    }
+    
+    for (let i = 0; i < 4; i++) {
+        let c = colsPool[i];
         let r = Math.floor(Math.random() * 3); // 0, 1, 2
-        let c = Math.floor(Math.random() * COLS);
-        if (board[r][c] === null) {
-            board[r][c] = { isMoney: true, moneyValue: initialMoneyValue, r, c }; // temp object
-            placedMoney++;
-        }
+        board[r][c] = { isMoney: true, moneyValue: initialMoneyValue, r, c }; // temp object
     }
 
     // Fill the rest with colors, avoiding initial matches (flood-fill check is complex, we just avoid standard 3-lines for now to minimize instant matches)
@@ -369,11 +371,11 @@ async function processElimination(colors) {
     }
     
     if (!eliminatedAny) {
-        await sleep(1000);
+        await sleep(500);
         return;
     }
     
-    await sleep(1000); // Wait for eliminate animation
+    await sleep(500); // Wait for eliminate animation
     await applyGravity();
     await checkMatchesAndChain();
 }
@@ -399,7 +401,7 @@ async function applyGravity() {
     }
     
     if (moved) {
-        await sleep(800); // Wait for drop animation
+        await sleep(400); // Wait for drop animation
     }
 
     // 金錢球觸底得分判定 (Drop Zone = Row 7)
@@ -423,7 +425,7 @@ async function applyGravity() {
     }
     
     if (collectedMoney) {
-        await sleep(1000);
+        await sleep(500);
         await applyGravity(); // Recursive gravity in case things fell above the collected money
     }
 }
@@ -514,11 +516,11 @@ async function checkMatchesAndChain() {
             // Eliminate
             for (let block of blocksToEliminate) {
                 block.el.classList.add('eliminating');
-                setTimeout((el) => el.remove(), 500, block.el);
+                setTimeout((el) => el.remove(), 400, block.el);
                 board[block.r][block.c] = null;
             }
             
-            await sleep(1000);
+            await sleep(500);
             await applyGravity();
         } else {
             hasMatches = false;
@@ -554,7 +556,7 @@ async function refillBoard() {
     
     if (spawnRewardValue > 0) {
         DOM.drawStatus.textContent = `⭐ 生成 ${currentCombo} 連鎖獎金球！`;
-        await sleep(1500);
+        await sleep(1000);
     } else {
         DOM.drawStatus.textContent = `補滿盤面...`;
     }
@@ -602,7 +604,7 @@ async function refillBoard() {
         board[r][c] = block;
     }
     
-    await sleep(1000); // wait for refill drop
+    await sleep(500); // wait for refill drop
     
     // After refill, check if new matches formed (bonus matching, resets combo counter to 0)
     currentCombo = 0; // These don't count towards combo ladder for money balls!
