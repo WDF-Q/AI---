@@ -214,8 +214,10 @@ body {
 /* Center Panel (Board) */
 .center-panel {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
+    gap: 1.5rem;
 }
 
 .board-wrapper {
@@ -324,6 +326,79 @@ body {
     display: none; /* Unique style for money ball, remove standard reflection */
 }
 
+/* 發光球 (Flash Ball) */
+.block.flash-ball {
+    animation: flashGlow 0.8s infinite alternate;
+}
+.block.flash-ball::before {
+    content: '⚡';
+    position: absolute;
+    font-size: 2rem;
+    z-index: 5;
+    text-shadow: 0 0 10px #fff;
+    opacity: 0.9;
+}
+@keyframes flashGlow {
+    0% { filter: brightness(1) drop-shadow(0 0 5px #fff); }
+    100% { filter: brightness(1.8) drop-shadow(0 0 20px #fff); }
+}
+
+/* History Tracker */
+.history-tracker {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+.history-tracker h3 {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    letter-spacing: 1px;
+}
+.tracker-row {
+    display: flex;
+    gap: 10px;
+}
+.track-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+.track-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 900;
+}
+.track-count {
+    font-weight: 900;
+    font-family: 'Fredoka', sans-serif;
+    color: #fff;
+    background: rgba(0,0,0,0.5);
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.track-item.color-red .track-icon { background: var(--color-red); }
+.track-item.color-pink .track-icon { background: var(--color-pink); }
+.track-item.color-blue .track-icon { background: var(--color-blue); }
+.track-item.color-green .track-icon { background: var(--color-green); }
+.track-item.color-yellow .track-icon { background: var(--color-yellow); }
+.track-item.white-ball .track-icon { background: #fff; color: #000; }
+.track-item.rainbow-ball .track-icon { background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff); border: none; }
+
 .combo-overlay {
     position: absolute;
     top: 50%;
@@ -383,10 +458,21 @@ body {
     font-size: 0.8rem;
 }
 
-.ball.out-ball {
-    background: #333 !important;
-    color: #ff3333;
-    font-size: 0.7rem;
+.ball.color-red { background: var(--color-red); }
+.ball.color-pink { background: var(--color-pink); }
+.ball.color-blue { background: var(--color-blue); }
+.ball.color-green { background: var(--color-green); }
+.ball.color-yellow { background: var(--color-yellow); }
+
+.ball.white-ball {
+    background: #fff !important;
+    color: #000;
+    text-shadow: none;
+}
+
+.ball.rainbow-ball {
+    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) !important;
+    color: #fff;
 }
 
 @keyframes popIn {

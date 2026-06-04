@@ -4,7 +4,7 @@ const BLOCK_SIZE = 60; // 60px
 const GAP = 4; // 4px
 
 const COLORS = ['red', 'pink', 'blue', 'green', 'yellow'];
-const SYMBOLS = ['★', '●', '▲', '◆', '♥'];
+const ALL_DRAW_OPTIONS = ['red', 'pink', 'blue', 'green', 'yellow', 'white', 'roulette'];
 
 const COMBO_MULTIPLIERS = {
     4: 0.4,
@@ -23,6 +23,12 @@ let totalWin = 0;
 let ballCount = 0;
 let drawTimeout = null;
 let credit = 10000;
+
+let historyTracker = {
+    red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0
+};
+
+let isRainbowActive = false; // Next draw will draw 3 balls
 
 const DOM = {
     board: document.getElementById('game-board'),
@@ -72,17 +78,22 @@ function updateWinDisplay() {
     DOM.win.textContent = totalWin;
 }
 
+function updateHistoryUI() {
+    document.getElementById('track-red').textContent = historyTracker.red;
+    document.getElementById('track-pink').textContent = historyTracker.pink;
+    document.getElementById('track-blue').textContent = historyTracker.blue;
+    document.getElementById('track-green').textContent = historyTracker.green;
+    document.getElementById('track-yellow').textContent = historyTracker.yellow;
+    document.getElementById('track-white').textContent = historyTracker.white;
+    document.getElementById('track-rainbow').textContent = historyTracker.rainbow;
+}
+
 function getRandomColor() {
     return COLORS[Math.floor(Math.random() * COLORS.length)];
 }
 
-function getSymbolForColor(color) {
-    const idx = COLORS.indexOf(color);
-    return SYMBOLS[idx];
-}
-
 // 建立方塊 DOM
-function createBlock(r, c, color, isMoney = false, moneyValue = 0) {
+function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = false) {
     const el = document.createElement('div');
     el.className = `block`;
     
@@ -91,7 +102,9 @@ function createBlock(r, c, color, isMoney = false, moneyValue = 0) {
         el.textContent = moneyValue;
     } else {
         el.classList.add(`color-${color}`);
-        // el.textContent = getSymbolForColor(color); // Optional: if we want cute faces instead of symbols, we can leave textContent empty
+        if (isFlash) {
+            el.classList.add('flash-ball');
+        }
     }
     
     // Position using absolute coordinates based on row and col
@@ -99,21 +112,7 @@ function createBlock(r, c, color, isMoney = false, moneyValue = 0) {
     el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
     
     DOM.board.appendChild(el);
-    return { r, c, color, isMoney, moneyValue, el };
-}
-
-function getRandomEmptyPosition(excludeBottom = false) {
-    let emptySpots = [];
-    let maxR = excludeBottom ? ROWS - 2 : ROWS - 1; // don't spawn at absolute bottom if excluded
-    for(let r=0; r<=maxR; r++) {
-        for(let c=0; c<COLS; c++) {
-            if (!board[r] || board[r][c] === null || board[r][c] === undefined) {
-                emptySpots.push({r, c});
-            }
-        }
-    }
-    if (emptySpots.length === 0) return null;
-    return emptySpots[Math.floor(Math.random() * emptySpots.length)];
+    return { r, c, color, isMoney, moneyValue, isFlash, el };
 }
 
 // 初始化 8x6 盤面
@@ -129,11 +128,10 @@ function initBoard() {
     const bet = parseInt(DOM.betInput.value);
     const initialMoneyValue = Math.floor(bet / 5);
 
-    // Place 4 initial money balls randomly
+    // Place 4 initial money balls randomly in rows 0~2 (top 3 rows, user specified 6~8層)
     let placedMoney = 0;
     while (placedMoney < 4) {
-        // Place anywhere from row 0 to row 6 (don't place immediately on row 7 so they don't drop out immediately)
-        let r = Math.floor(Math.random() * (ROWS - 1));
+        let r = Math.floor(Math.random() * 3); // 0, 1, 2
         let c = Math.floor(Math.random() * COLS);
         if (board[r][c] === null) {
             board[r][c] = { isMoney: true, moneyValue: initialMoneyValue, r, c }; // temp object
@@ -141,7 +139,7 @@ function initBoard() {
         }
     }
 
-    // Fill the rest with colors, avoiding 3-matches
+    // Fill the rest with colors, avoiding initial matches (flood-fill check is complex, we just avoid standard 3-lines for now to minimize instant matches)
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
             if (board[r][c] !== null && board[r][c].isMoney) {
@@ -151,10 +149,11 @@ function initBoard() {
             }
             
             let color = getRandomColor();
-            // Avoid initial matches
+            // Simple heuristic to avoid large clusters initially
             while (
-                (c >= 2 && board[r][c-1]?.color === color && board[r][c-2]?.color === color && !board[r][c-1]?.isMoney && !board[r][c-2]?.isMoney) ||
-                (r >= 2 && board[r-1][c]?.color === color && board[r-2][c]?.color === color && !board[r-1][c]?.isMoney && !board[r-2][c]?.isMoney)
+                (c >= 2 && board[r][c-1]?.color === color && board[r][c-2]?.color === color) ||
+                (r >= 2 && board[r-1][c]?.color === color && board[r-2][c]?.color === color) ||
+                (r >= 1 && c >= 1 && board[r-1][c]?.color === color && board[r][c-1]?.color === color)
             ) {
                 color = getRandomColor();
             }
@@ -177,8 +176,11 @@ async function startGame() {
     isPlaying = true;
     totalWin = 0;
     ballCount = 0;
+    isRainbowActive = false;
+    historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
     updateWinDisplay();
     updateLadderActive(0);
+    updateHistoryUI();
     
     DOM.btnStart.disabled = true;
     DOM.betMinus.disabled = true;
@@ -213,68 +215,143 @@ function scheduleNextDraw() {
     drawTimeout = setTimeout(drawBall, delay);
 }
 
+// 小轉盤雙色組合邏輯
+function getSmallRoulettePair() {
+    // 5種顏色各2個，打亂
+    let pool = [...COLORS, ...COLORS];
+    // Fisher-Yates shuffle
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    // 找前兩個不重複的顏色
+    let color1 = pool[0];
+    let color2 = null;
+    for (let i = 1; i < pool.length; i++) {
+        if (pool[i] !== color1) {
+            color2 = pool[i];
+            break;
+        }
+    }
+    return [color1, color2];
+}
+
 // 抽球邏輯
 async function drawBall() {
     if (!isPlaying) return;
-    ballCount++;
+    
+    let drawsCount = isRainbowActive ? 3 : 1;
+    isRainbowActive = false; // reset flag
     currentCombo = 0;
     updateLadderActive(0);
     
-    let isOut = false;
-    let drawnColor = '';
+    let isGameOver = false;
+    let targetColorsToEliminate = new Set();
     
-    if (ballCount > 3) {
-        DOM.safeIndicator.textContent = '危險區：隨時可能 OUT！';
-        DOM.safeIndicator.className = 'safe-indicator danger';
-        if (Math.random() < 0.15) {
-            isOut = true;
+    for (let d = 0; d < drawsCount; d++) {
+        ballCount++;
+        
+        // 前 3 球安全 (白球不結束)
+        let isSafeMode = (ballCount <= 3) || (drawsCount === 3); // drawsCount === 3 implies these are rainbow extra balls, which user said are safe.
+        
+        if (!isSafeMode) {
+            DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
+            DOM.safeIndicator.className = 'safe-indicator danger';
         }
+        
+        let drawResult = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
+        
+        const ballEl = document.createElement('div');
+        ballEl.className = 'ball';
+        
+        if (drawResult === 'white') {
+            historyTracker.white++;
+            ballEl.classList.add('white-ball');
+            ballEl.textContent = 'W';
+            DOM.ballHistory.appendChild(ballEl);
+            
+            if (!isSafeMode) {
+                isGameOver = true;
+                break; // stop drawing more if game over
+            } else {
+                DOM.drawStatus.textContent = `安全期！抽中白球不結束。`;
+            }
+        } else if (drawResult === 'roulette') {
+            // 小轉盤模式
+            let r = Math.random();
+            if (r < 1/6) {
+                // 彩色球
+                historyTracker.rainbow++;
+                isRainbowActive = true;
+                ballEl.classList.add('rainbow-ball');
+                ballEl.textContent = '🌈';
+                DOM.drawStatus.textContent = `抽中彩色球！下次發射 3 顆！`;
+            } else {
+                // 雙色
+                let pair = getSmallRoulettePair();
+                historyTracker[pair[0]]++;
+                historyTracker[pair[1]]++;
+                targetColorsToEliminate.add(pair[0]);
+                targetColorsToEliminate.add(pair[1]);
+                
+                // Show a combined ball or just text
+                ballEl.style.background = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
+                ballEl.textContent = 'SP';
+                DOM.drawStatus.textContent = `小轉盤：同步消除 ${pair[0]} & ${pair[1]}！`;
+            }
+            DOM.ballHistory.appendChild(ballEl);
+        } else {
+            // 一般顏色
+            let color = drawResult;
+            historyTracker[color]++;
+            targetColorsToEliminate.add(color);
+            ballEl.classList.add(`color-${color}`);
+            DOM.ballHistory.appendChild(ballEl);
+            DOM.drawStatus.textContent = `抽中 ${color}！`;
+        }
+        
+        updateHistoryUI();
+        if (d < drawsCount - 1) await sleep(500); // delay between multiple balls visually
     }
     
-    const ballEl = document.createElement('div');
-    ballEl.className = 'ball';
-    
-    if (isOut) {
-        ballEl.classList.add('out-ball');
-        ballEl.textContent = 'OUT';
-        DOM.ballHistory.appendChild(ballEl);
-        DOM.drawStatus.textContent = '抽中 OUT！遊戲結束。';
+    if (isGameOver) {
+        DOM.drawStatus.textContent = '抽中白球 (OUT)！遊戲結束。';
         endGame();
         return;
     }
     
-    drawnColor = getRandomColor();
-    ballEl.classList.add(`color-${drawnColor}`);
-    DOM.ballHistory.appendChild(ballEl);
-    
-    DOM.drawStatus.textContent = `抽中顏色！消除底層...`;
-    
-    // 處理消除與連鎖
-    await processElimination(drawnColor);
-    
-    // 回合結束後，進行補球機制
-    await refillBoard();
+    if (targetColorsToEliminate.size > 0) {
+        DOM.drawStatus.textContent = `消除底層目標色...`;
+        await processElimination(Array.from(targetColorsToEliminate));
+        await refillBoard();
+    } else {
+        // Did not target any colors (e.g. drew safe white, or rainbow flag set but no colors targeted)
+        await sleep(1000);
+    }
     
     if (isPlaying) {
         scheduleNextDraw();
     }
 }
 
-// 底層消除 -> 掉落 -> 連鎖
-async function processElimination(color) {
+// 底層消除 -> 掉落 -> 連鎖 (支援多色同時)
+async function processElimination(colors) {
     let eliminatedAny = false;
-    // Find the lowest standard block of that color in each column
-    for (let c = 0; c < COLS; c++) {
-        for (let r = ROWS - 1; r >= 0; r--) {
-            let block = board[r][c];
-            if (block !== null) {
-                if (!block.isMoney && block.color === color) {
-                    block.el.classList.add('eliminating');
-                    setTimeout((el) => el.remove(), 300, block.el);
-                    board[r][c] = null;
-                    eliminatedAny = true;
+    
+    for (let color of colors) {
+        // Find the lowest standard block of that color in each column
+        for (let c = 0; c < COLS; c++) {
+            for (let r = ROWS - 1; r >= 0; r--) {
+                let block = board[r][c];
+                if (block !== null) {
+                    if (!block.isMoney && block.color === color) {
+                        block.el.classList.add('eliminating');
+                        setTimeout((el) => el.remove(), 300, block.el);
+                        board[r][c] = null;
+                        eliminatedAny = true;
+                    }
+                    break; // only look at the lowest block exposed in this column
                 }
-                break; // only look at the lowest block exposed in this column
             }
         }
     }
@@ -339,54 +416,91 @@ async function applyGravity() {
     }
 }
 
-// 檢查 3 連線 (上下左右)
+// 洪水填充 (Flood-fill) 找連通塊
+function findConnectedComponents() {
+    let visited = new Array(ROWS).fill(0).map(() => new Array(COLS).fill(false));
+    let components = [];
+    
+    const dr = [-1, 1, 0, 0];
+    const dc = [0, 0, -1, 1];
+    
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            let block = board[r][c];
+            if (block !== null && !block.isMoney && !visited[r][c]) {
+                let color = block.color;
+                let currentComponent = [];
+                let queue = [{r, c}];
+                visited[r][c] = true;
+                
+                while(queue.length > 0) {
+                    let curr = queue.shift();
+                    currentComponent.push(board[curr.r][curr.c]);
+                    
+                    for (let i = 0; i < 4; i++) {
+                        let nr = curr.r + dr[i];
+                        let nc = curr.c + dc[i];
+                        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                            let nextBlock = board[nr][nc];
+                            if (nextBlock !== null && !nextBlock.isMoney && !visited[nr][nc] && nextBlock.color === color) {
+                                visited[nr][nc] = true;
+                                queue.push({r: nr, c: nc});
+                            }
+                        }
+                    }
+                }
+                
+                if (currentComponent.length >= 3) {
+                    components.push(currentComponent);
+                }
+            }
+        }
+    }
+    
+    return components;
+}
+
+// 檢查連通塊連線 (包含發光球邏輯)
 async function checkMatchesAndChain() {
     let hasMatches = true;
     
     while (hasMatches && isPlaying) {
-        let matchedBlocks = new Set();
+        let components = findConnectedComponents();
         
-        // Horizontal
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS - 2; c++) {
-                let b1 = board[r][c];
-                if (!b1 || b1.isMoney) continue; // Money balls don't match
-                let color = b1.color;
-                
-                let b2 = board[r][c+1];
-                let b3 = board[r][c+2];
-                if (b2 && !b2.isMoney && b2.color === color && b3 && !b3.isMoney && b3.color === color) {
-                    matchedBlocks.add(b1);
-                    matchedBlocks.add(b2);
-                    matchedBlocks.add(b3);
-                }
-            }
-        }
-        
-        // Vertical
-        for (let c = 0; c < COLS; c++) {
-            for (let r = 0; r < ROWS - 2; r++) {
-                let b1 = board[r][c];
-                if (!b1 || b1.isMoney) continue;
-                let color = b1.color;
-                
-                let b2 = board[r+1][c];
-                let b3 = board[r+2][c];
-                if (b2 && !b2.isMoney && b2.color === color && b3 && !b3.isMoney && b3.color === color) {
-                    matchedBlocks.add(b1);
-                    matchedBlocks.add(b2);
-                    matchedBlocks.add(b3);
-                }
-            }
-        }
-        
-        if (matchedBlocks.size > 0) {
+        if (components.length > 0) {
             currentCombo++;
             updateLadderActive(currentCombo >= 10 ? 10 : currentCombo);
             DOM.drawStatus.textContent = `${currentCombo} 連鎖！`;
             showComboOverlay(currentCombo);
             
-            for (let block of matchedBlocks) {
+            let blocksToEliminate = new Set();
+            let flashColorsTriggered = new Set();
+            
+            // Collect blocks to eliminate
+            for (let comp of components) {
+                for (let block of comp) {
+                    blocksToEliminate.add(block);
+                    if (block.isFlash) {
+                        flashColorsTriggered.add(block.color);
+                    }
+                }
+            }
+            
+            // If flash ball triggered, add ALL balls of that color to elimination set
+            if (flashColorsTriggered.size > 0) {
+                DOM.drawStatus.textContent = `⚡ 發光球引爆全盤同色！ ⚡`;
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        let block = board[r][c];
+                        if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                            blocksToEliminate.add(block);
+                        }
+                    }
+                }
+            }
+            
+            // Eliminate
+            for (let block of blocksToEliminate) {
                 block.el.classList.add('eliminating');
                 setTimeout((el) => el.remove(), 300, block.el);
                 board[block.r][block.c] = null;
@@ -400,7 +514,7 @@ async function checkMatchesAndChain() {
     }
 }
 
-// 回合結束後補滿盤面
+// 回合結束後補滿盤面 (包含 1% 發光球生成機率)
 async function refillBoard() {
     let hasEmpty = false;
     let bet = parseInt(DOM.betInput.value);
@@ -436,11 +550,16 @@ async function refillBoard() {
             let choice = upperSpots[Math.floor(Math.random() * upperSpots.length)];
             rewardSpotIndex = emptySpots.findIndex(s => s.r === choice.r && s.c === choice.c);
         } else {
-            // fallback if upper is full, just pick any empty spot
             rewardSpotIndex = Math.floor(Math.random() * emptySpots.length);
         }
     }
 
+    // 決定這次補球是否帶有發光球 (1% 機率出現 1~3 顆)
+    let flashBallsCount = 0;
+    if (Math.random() < 0.01) {
+        flashBallsCount = Math.floor(Math.random() * 3) + 1; // 1 to 3
+    }
+    
     // Create new blocks above the board and drop them in
     for (let i = 0; i < emptySpots.length; i++) {
         let {r, c} = emptySpots[i];
@@ -450,10 +569,14 @@ async function refillBoard() {
             block = createBlock(-1, c, null, true, spawnRewardValue);
         } else {
             let color = getRandomColor();
-            block = createBlock(-1, c, color, false);
+            let isFlash = false;
+            if (flashBallsCount > 0) {
+                isFlash = true;
+                flashBallsCount--;
+            }
+            block = createBlock(-1, c, color, false, 0, isFlash);
         }
         
-        // Animate from top (-1) to target r
         block.r = r;
         setTimeout(() => {
             block.el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
