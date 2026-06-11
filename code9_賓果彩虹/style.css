@@ -171,6 +171,21 @@ body {
     height: 250px;
 }
 
+.sp-flash-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fcd34d 0%, #ef4444 100%);
+    animation: spFlash 0.3s infinite alternate;
+    z-index: 0;
+}
+
+@keyframes spFlash {
+    0% { opacity: 0.2; transform: scale(0.98); }
+    100% { opacity: 1; transform: scale(1.02); }
+}
+
 /* 外圈大轉盤 */
 .roulette-wheel-outer {
     position: absolute;
@@ -179,7 +194,7 @@ body {
     border-radius: 50%;
     border: 8px solid #334155;
     box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
-    /* 動態 JS 賦予 background: conic-gradient */
+    z-index: 1; /* 位於 sp-flash-bg 之上 */
 }
 
 /* 內圈小轉盤 */
@@ -193,13 +208,18 @@ body {
     border-radius: 50%;
     border: 6px solid #1e293b;
     box-shadow: 0 0 15px rgba(0,0,0,0.8) inset, 0 0 10px rgba(0,0,0,0.8);
-    background: conic-gradient(
-        #a855f7 0deg 90deg, 
-        linear-gradient(45deg, #ff0000, #ffff00, #0000ff) 90deg 180deg, 
-        #a855f7 180deg 270deg,
-        linear-gradient(45deg, #ff0000, #ffff00, #0000ff) 270deg 360deg
-    );
     z-index: 5;
+    overflow: hidden; /* 確保 border 不會溢出 */
+}
+
+/* 內圈的 6 格分隔白線 */
+.inner-borders {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from -1deg, #fff 0deg, #fff 2deg, transparent 2deg, transparent 60deg);
+    z-index: 10;
 }
 
 /* 球的軌道容器 */
@@ -224,6 +244,8 @@ body {
     border-radius: 50%;
     position: absolute;
     top: 8px; /* 外圍軌道 */
+    left: 50%; /* Fix centering */
+    transform: translateX(-50%); /* Fix centering */
     box-shadow: 0 0 15px #fff;
     opacity: 0;
     transition: top 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.3s, opacity 0.3s;
@@ -233,10 +255,10 @@ body {
     opacity: 1;
 }
 
-/* 進入內圈動畫 (修改 top 距離，從外圍潛入中心) */
+/* 進入內圈動畫 */
 .roulette-ball.dive-inner {
     top: 60px; /* 內圈軌道距離 */
-    transform: scale(0.8);
+    transform: translateX(-50%) scale(0.8); /* Keep centered while scaling */
     box-shadow: 0 0 20px #a855f7, 0 0 10px #fff inset;
     background: #e9d5ff;
 }
@@ -528,14 +550,14 @@ body {
 }
 
 .block.money-ball {
-    background: radial-gradient(circle at 30% 30%, #fef08a, #eab308 60%, #a16207);
-    border: 3px solid #fef08a;
-    color: #fff;
+    background: radial-gradient(circle at 30% 30%, #f1f5f9, #94a3b8 60%, #334155);
+    border: 3px solid #cbd5e1;
+    color: #fcd34d;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     font-family: 'Fredoka', sans-serif;
     font-size: 1.2rem;
     z-index: 2;
-    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 0 0 15px rgba(234, 179, 8, 0.8);
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 0 0 15px rgba(148, 163, 184, 0.8);
 }
 .block.money-ball::after {
     display: none;

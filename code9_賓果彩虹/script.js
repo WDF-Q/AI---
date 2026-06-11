@@ -11,6 +11,17 @@ const OUTER_WHEEL_SLOTS = [
     'red', 'pink', 'blue', 'green', 'yellow', 'white', 'sp'
 ];
 
+const INNER_WHEEL_PAIRS = [
+    ['rainbow', 'rainbow'], // 1
+    ['red', 'pink'],        // 2
+    ['pink', 'blue'],       // 3
+    ['blue', 'green'],      // 4
+    ['green', 'yellow'],    // 5
+    ['yellow', 'red']       // 6
+];
+
+const ALL_DRAW_OPTIONS = ['red', 'pink', 'blue', 'green', 'yellow', 'white', 'roulette'];
+
 const CSS_VAR_MAP = {
     'red': 'var(--color-red)',
     'pink': 'var(--color-pink)',
@@ -18,7 +29,7 @@ const CSS_VAR_MAP = {
     'green': 'var(--color-green)',
     'yellow': 'var(--color-yellow)',
     'white': '#ffffff',
-    'sp': 'var(--color-sp)' // Inner track hole (dark)
+    'sp': 'transparent' // SP Hole transparent to show flashing background!
 };
 
 const COMBO_MULTIPLIERS = {
@@ -39,7 +50,7 @@ let historyTracker = {
 
 // ** Decoupled Engine States **
 let leftEngineActive = false;
-let boardState = 'IDLE'; // 'IDLE' or 'BUSY'
+let boardState = 'IDLE'; 
 let pendingColorsQueue = []; 
 let isGameOverTriggered = false; 
 let pendingInitialBatch = 0; 
@@ -48,6 +59,8 @@ let pendingDrawsQueue = 0;
 // Roulette animation tracking
 let outerWheelRotation = 0;
 let innerWheelRotation = 0;
+let ballState = 'idle'; // 'idle', 'spinning_outer', 'landed_outer', 'spinning_inner', 'landed_inner'
+let ballOffsetAngle = 0; // The angle offset of the ball relative to the wheel it's stuck on
 
 const DOM = {
     board: document.getElementById('game-board'),
@@ -60,7 +73,6 @@ const DOM = {
     comboOverlay: document.getElementById('combo-overlay'),
     outOverlay: document.getElementById('out-overlay'),
     
-    // Roulette Elements
     rouletteOuter: document.getElementById('roulette-wheel-outer'),
     rouletteInner: document.getElementById('roulette-wheel-inner'),
     rouletteBallOrbit: document.getElementById('roulette-ball-orbit'),
@@ -71,28 +83,62 @@ const DOM = {
     ballHistory: document.getElementById('ball-history')
 };
 
-// Initialize Outer Wheel Gradient
 function initRouletteVisuals() {
-    let gradientStops = [];
-    let anglePerSlot = 360 / 21;
+    // Outer Wheel
+    let gradientStopsOuter = [];
+    let anglePerSlotOuter = 360 / 21;
     for (let i = 0; i < 21; i++) {
         let color = CSS_VAR_MAP[OUTER_WHEEL_SLOTS[i]];
-        let startAngle = i * anglePerSlot;
-        let endAngle = (i + 1) * anglePerSlot;
-        gradientStops.push(`${color} ${startAngle}deg ${endAngle}deg`);
+        let startAngle = i * anglePerSlotOuter;
+        let endAngle = (i + 1) * anglePerSlotOuter;
+        gradientStopsOuter.push(`${color} ${startAngle}deg ${endAngle}deg`);
     }
-    DOM.rouletteOuter.style.background = `conic-gradient(${gradientStops.join(', ')})`;
+    DOM.rouletteOuter.style.background = `conic-gradient(${gradientStopsOuter.join(', ')})`;
     
-    // Start continuous slow rotations via JS `requestAnimationFrame` for accurate tracking
+    // Inner Wheel
+    let gradientStopsInner = [];
+    let anglePerSlotInner = 360 / 6; 
+    for (let i = 0; i < 6; i++) {
+        let pair = INNER_WHEEL_PAIRS[i];
+        let startAngle = i * anglePerSlotInner;
+        let midAngle = startAngle + (anglePerSlotInner / 2);
+        let endAngle = (i + 1) * anglePerSlotInner;
+        
+        if (pair[0] === 'rainbow') {
+            let c0 = CSS_VAR_MAP['red'], c1 = CSS_VAR_MAP['pink'], c2 = CSS_VAR_MAP['blue'], c3 = CSS_VAR_MAP['green'], c4 = CSS_VAR_MAP['yellow'];
+            let step = 60 / 5;
+            gradientStopsInner.push(`${c0} ${startAngle}deg ${startAngle+step}deg`);
+            gradientStopsInner.push(`${c1} ${startAngle+step}deg ${startAngle+step*2}deg`);
+            gradientStopsInner.push(`${c2} ${startAngle+step*2}deg ${startAngle+step*3}deg`);
+            gradientStopsInner.push(`${c3} ${startAngle+step*3}deg ${startAngle+step*4}deg`);
+            gradientStopsInner.push(`${c4} ${startAngle+step*4}deg ${endAngle}deg`);
+        } else {
+            let color1 = CSS_VAR_MAP[pair[0]];
+            let color2 = CSS_VAR_MAP[pair[1]];
+            gradientStopsInner.push(`${color1} ${startAngle}deg ${midAngle}deg`);
+            gradientStopsInner.push(`${color2} ${midAngle}deg ${endAngle}deg`);
+        }
+    }
+    // Set background to the pseudo element or the div itself
+    DOM.rouletteInner.style.background = `conic-gradient(${gradientStopsInner.join(', ')})`;
+    
     startWheelRotations();
 }
 
 function startWheelRotations() {
     function animate() {
-        outerWheelRotation = (outerWheelRotation + 0.5) % 360; // slow outer
-        innerWheelRotation = (innerWheelRotation + 1.5) % 360; // fast inner
+        outerWheelRotation = (outerWheelRotation + 0.5) % 360; 
+        innerWheelRotation = (innerWheelRotation + 1.5) % 360; 
         DOM.rouletteOuter.style.transform = `rotate(${outerWheelRotation}deg)`;
-        DOM.rouletteInner.style.transform = `rotate(${innerWheelRotation}deg)`;
+        DOM.rouletteInner.style.transform = `translate(-50%, -50%) rotate(${innerWheelRotation}deg)`;
+        
+        // Physics tracking for the ball!
+        if (ballState === 'landed_outer') {
+            DOM.rouletteBallOrbit.style.transform = `rotate(${outerWheelRotation + ballOffsetAngle}deg)`;
+        } else if (ballState === 'landed_inner') {
+            DOM.rouletteBallOrbit.style.transform = `rotate(${innerWheelRotation + ballOffsetAngle}deg)`;
+        }
+        
         requestAnimationFrame(animate);
     }
     animate();
@@ -100,7 +146,6 @@ function startWheelRotations() {
 
 initRouletteVisuals();
 
-// Initialize Betting UI
 document.querySelectorAll('.chip-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         if (isPlaying) return;
@@ -251,17 +296,8 @@ function updateLadderActive(combo) {
 }
 
 function getSmallRoulettePair() {
-    let pool = [...COLORS, ...COLORS];
-    for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    let color1 = pool[0];
-    let color2 = null;
-    for (let i = 1; i < pool.length; i++) {
-        if (pool[i] !== color1) { color2 = pool[i]; break; }
-    }
-    return [color1, color2];
+    // Exclude rainbow (index 0), randomly pick from 1 to 5
+    return INNER_WHEEL_PAIRS[Math.floor(Math.random() * 5) + 1];
 }
 
 function addBallToHistoryUI(typeText, colorClass, gradient = null) {
@@ -294,71 +330,111 @@ function updateResultText(resultText, colorClass) {
     else DOM.rouletteResultText.style.color = '#a855f7'; // SP
 }
 
-// 物理感落球動畫 (Concentric Roulette)
-async function spinVegasRoulette(targetMain, isInner = false, innerTargetText = null, innerTargetColor = null) {
+async function spinVegasRoulette(targetMain, isInner = false, innerTargetText = null, innerTargetColor = null, innerTargetPair = null) {
     DOM.fireBox.classList.add('active');
     DOM.fireBox.textContent = '發球！';
     DOM.rouletteResultText.textContent = '???';
     DOM.rouletteResultText.style.color = '#fff';
     
-    // Reset ball orbit
+    ballState = 'spinning_outer';
     DOM.rouletteBallOrbit.style.transition = 'none';
     DOM.rouletteBallOrbit.style.transform = `rotate(0deg)`;
     DOM.rouletteBall.classList.remove('dive-inner');
-    void DOM.rouletteBallOrbit.offsetWidth; // force reflow
+    void DOM.rouletteBallOrbit.offsetWidth; 
     
     DOM.rouletteBall.classList.add('visible');
     
-    // Spin randomly for a bit (Fast counter-clockwise)
-    let orbitStartRotation = 0;
     let baseSpins = 3 * 360; 
     
-    // Find target slot angle on outer wheel
     let possibleIndices = [];
     for (let i = 0; i < OUTER_WHEEL_SLOTS.length; i++) {
         if (OUTER_WHEEL_SLOTS[i] === targetMain) possibleIndices.push(i);
     }
-    let targetIndex = possibleIndices[Math.floor(Math.random() * possibleIndices.length)];
-    let anglePerSlot = 360 / 21;
-    // The exact angle on the wheel where the slot is
-    let slotCenterWheelAngle = (targetIndex * anglePerSlot) + (anglePerSlot / 2);
+    let targetIndexOuter = possibleIndices[Math.floor(Math.random() * possibleIndices.length)];
+    let anglePerSlotOuter = 360 / 21;
+    let slotCenterOuter = (targetIndexOuter * anglePerSlotOuter) + (anglePerSlotOuter / 2);
     
-    // Animation Phase 1: Spin
-    DOM.rouletteBallOrbit.style.transition = 'transform 2s cubic-bezier(0.25, 1, 0.5, 1)'; // decelerate
-    // To land in the slot, the ball's absolute angle must match the outer wheel's absolute angle at the time of landing.
-    // Since the wheel is constantly rotating, we predict its angle 2 seconds from now.
-    let predictedWheelRotation = (outerWheelRotation + (0.5 * 120)) % 360; // 60fps * 2s = 120 frames
-    let finalBallAngle = predictedWheelRotation + slotCenterWheelAngle - 90; // offset top
+    // Calculate world angle exactly 2s from now
+    let predictedOuterRotation = (outerWheelRotation + (0.5 * 120)) % 360; 
+    let targetWorldAngle = predictedOuterRotation + slotCenterOuter; 
     
-    DOM.rouletteBallOrbit.style.transform = `rotate(-${baseSpins - finalBallAngle}deg)`;
+    let targetModOuter = ((targetWorldAngle % 360) + 360) % 360;
+    let orbitTargetRot = -(baseSpins + (360 - targetModOuter) % 360);
+    
+    DOM.rouletteBallOrbit.style.transition = 'transform 2s cubic-bezier(0.25, 1, 0.5, 1)'; 
+    DOM.rouletteBallOrbit.style.transform = `rotate(${orbitTargetRot}deg)`;
     await sleep(2000);
     
+    // LANDED on Outer Wheel! Follow it physically!
+    ballState = 'landed_outer';
+    ballOffsetAngle = orbitTargetRot - outerWheelRotation;
+    DOM.rouletteBallOrbit.style.transition = 'none';
+    
     if (!isInner) {
-        // Normal land
         DOM.fireBox.classList.remove('active');
         DOM.fireBox.textContent = 'WAIT';
+        ballState = 'idle';
         DOM.rouletteBall.classList.remove('visible');
         updateResultText(targetMain.toUpperCase(), targetMain);
         await sleep(500);
     } else {
-        // DIVE INTO INNER WHEEL!
+        // user requested 0.5s pause before diving in
+        await sleep(500);
+        
         DOM.rouletteResultText.textContent = '進入內圈小轉盤！';
         DOM.rouletteResultText.style.color = '#a855f7';
         DOM.rouletteBall.classList.add('dive-inner');
         
-        await sleep(800); // Wait for dive animation
+        await sleep(500); // Wait for the visual drop (CSS transition is 0.5s)
+        
+        // Now spin around the inner wheel for 1s
+        ballState = 'spinning_inner';
+        let innerSpins = 2 * 360; 
+        
+        let targetIndexInner = 0;
+        if (innerTargetPair) {
+            targetIndexInner = INNER_WHEEL_PAIRS.findIndex(p => p[0] === innerTargetPair[0] && p[1] === innerTargetPair[1]);
+            if (targetIndexInner === -1) targetIndexInner = 0;
+        }
+        let anglePerSlotInner = 360 / 6;
+        let slotCenterInner = (targetIndexInner * anglePerSlotInner) + (anglePerSlotInner / 2);
+        
+        // Predict inner wheel rotation 1s (60 frames) from now
+        let predictedInnerRotation = (innerWheelRotation + (1.5 * 60)) % 360;
+        let innerTargetWorldAngle = predictedInnerRotation + slotCenterInner;
+        
+        // Start from current orbit rotation to ensure smoothness
+        let currentBallWorldAngle = outerWheelRotation + ballOffsetAngle;
+        
+        let currentMod = ((currentBallWorldAngle % 360) + 360) % 360;
+        let targetModInner = ((innerTargetWorldAngle % 360) + 360) % 360;
+        let deltaInner = targetModInner - currentMod;
+        if (deltaInner < 0) deltaInner += 360; 
+        
+        let nextOrbitTargetRot = currentBallWorldAngle + innerSpins + deltaInner;
+        
+        DOM.rouletteBallOrbit.style.transition = 'transform 1s cubic-bezier(0.25, 1, 0.5, 1)';
+        DOM.rouletteBallOrbit.style.transform = `rotate(${nextOrbitTargetRot}deg)`;
+        
+        await sleep(1000);
+        
+        // LANDED on Inner Wheel!
+        ballState = 'landed_inner';
+        ballOffsetAngle = nextOrbitTargetRot - innerWheelRotation;
+        DOM.rouletteBallOrbit.style.transition = 'none';
+        
+        // Wait briefly to show it clearly stuck in the inner hole
+        await sleep(500);
         
         DOM.fireBox.classList.remove('active');
         DOM.fireBox.textContent = 'WAIT';
-        DOM.rouletteBall.classList.remove('visible'); // Ball disappears into the center
+        ballState = 'idle';
+        DOM.rouletteBall.classList.remove('visible'); 
         updateResultText(innerTargetText, innerTargetColor);
         await sleep(800);
     }
 }
 
-/* ========================================================
-   LEFT ENGINE: Roulette & Firing
-======================================================== */
 async function startLeftEngine() {
     leftEngineActive = true;
     
@@ -393,10 +469,9 @@ async function startLeftEngine() {
                     DOM.drawStatus.textContent = `安全期！抽中白球不結束。`;
                 }
             } else if (baseDraw === 'roulette') {
-                // SP Logic
                 let r = Math.random();
                 if (r < 1/6) {
-                    await spinVegasRoulette('sp', true, '🌈 彩色球', 'sp');
+                    await spinVegasRoulette('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
                     historyTracker.rainbow++;
                     addBallToHistoryUI('🌈', 'rainbow');
                     pendingDrawsQueue += 3;
@@ -404,7 +479,7 @@ async function startLeftEngine() {
                     DOM.drawStatus.textContent = `彩色球！獲得 3 連發！`;
                 } else {
                     let pair = getSmallRoulettePair();
-                    await spinVegasRoulette('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp');
+                    await spinVegasRoulette('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
                     historyTracker[pair[0]]++;
                     historyTracker[pair[1]]++;
                     let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
@@ -431,9 +506,6 @@ async function startLeftEngine() {
     leftEngineActive = false;
 }
 
-/* ========================================================
-   RIGHT ENGINE: Match-3 & Gravity
-======================================================== */
 async function startRightEngine() {
     while (isPlaying) {
         if (boardState === 'IDLE' && pendingInitialBatch === 0 && pendingColorsQueue.length > 0) {
@@ -473,15 +545,13 @@ async function processElimination(colors) {
     let eliminatedAny = false;
     for (let color of colors) {
         for (let c = 0; c < COLS; c++) {
-            for (let r = ROWS - 1; r >= 0; r--) {
-                let block = board[r][c];
-                if (block !== null && !block.isMoney && block.color === color) {
-                    block.el.classList.add('eliminating');
-                    setTimeout((el) => el.remove(), 400, block.el);
-                    board[r][c] = null;
-                    eliminatedAny = true;
-                    break; // Only bottom-most valid block of this color per column
-                }
+            // 只針對第 8 層 (最底層，ROWS - 1) 判定是否能消除
+            let block = board[ROWS - 1][c];
+            if (block !== null && !block.isMoney && block.color === color) {
+                block.el.classList.add('eliminating');
+                setTimeout((el) => el.remove(), 400, block.el);
+                board[ROWS - 1][c] = null;
+                eliminatedAny = true;
             }
         }
     }
@@ -530,10 +600,8 @@ async function applyGravity() {
     
     if (moneyCollectedCount > 0) {
         await sleep(500);
-        // User Request: 金錢球如果在最下方被消除，也必須被列入一次的消，累計計算！
-        for (let i = 0; i < moneyCollectedCount; i++) {
-            currentCombo++;
-        }
+        // 如果有兩個以上金錢球同時被消除，只累計 1 次的消消次數
+        currentCombo++;
         updateLadderActive(currentCombo >= 10 ? 10 : currentCombo);
         DOM.drawStatus.textContent = `${currentCombo} 連鎖！(收集金錢球)`;
         showComboOverlay(currentCombo);
@@ -628,10 +696,8 @@ async function checkMatchesAndChain() {
     }
 }
 
-// 產生隨機面額金錢球 (1%~5% 機率機制)
 function getRandomMoneyBallValue() {
-    let r = Math.random() * 100; // 0~100
-    // 機率表: 1/5 (30%), 4連(30%), 5連(20%), 6連(10%), 7連(4%), 8連(3%), 9連(2%), 10連(1%)
+    let r = Math.random() * 100; 
     if (r < 30) return Math.floor(currentBet / 5);
     if (r < 60) return Math.floor(currentBet * COMBO_MULTIPLIERS[4]);
     if (r < 80) return Math.floor(currentBet * COMBO_MULTIPLIERS[5]);
@@ -642,11 +708,32 @@ function getRandomMoneyBallValue() {
     return Math.floor(currentBet * COMBO_MULTIPLIERS[10]);
 }
 
+function getSafeColorForRefill(r, c) {
+    let availableColors = [...COLORS];
+    for (let i = availableColors.length - 1; i >= 0; i--) {
+        let color = availableColors[i];
+        let isMatch = false;
+        
+        // 水平檢查
+        if (c >= 2 && board[r][c-1] && board[r][c-1].color === color && board[r][c-2] && board[r][c-2].color === color) isMatch = true;
+        if (c >= 1 && c < COLS-1 && board[r][c-1] && board[r][c-1].color === color && board[r][c+1] && board[r][c+1].color === color) isMatch = true;
+        if (c <= COLS-3 && board[r][c+1] && board[r][c+1].color === color && board[r][c+2] && board[r][c+2].color === color) isMatch = true;
+        
+        // 垂直檢查
+        if (r >= 2 && board[r-1][c] && board[r-1][c].color === color && board[r-2][c] && board[r-2][c].color === color) isMatch = true;
+        if (r >= 1 && r < ROWS-1 && board[r-1][c] && board[r-1][c].color === color && board[r+1][c] && board[r+1][c].color === color) isMatch = true;
+        if (r <= ROWS-3 && board[r+1][c] && board[r+1][c].color === color && board[r+2][c] && board[r+2][c].color === color) isMatch = true;
+        
+        if (isMatch) availableColors.splice(i, 1);
+    }
+    if (availableColors.length === 0) return COLORS[Math.floor(Math.random() * COLORS.length)];
+    return availableColors[Math.floor(Math.random() * availableColors.length)];
+}
+
 async function refillBoard() {
     let hasEmpty = false;
     let guaranteedRewardValue = 0;
     
-    // 1. Guaranteed Combo Reward (4+)
     if (currentCombo >= 4) {
         let lookupChain = currentCombo >= 10 ? 10 : currentCombo;
         let mult = COMBO_MULTIPLIERS[lookupChain];
@@ -678,12 +765,9 @@ async function refillBoard() {
         await sleep(500);
     }
 
-    // 2. Random 1%~5% Money Ball Spawn Mechanism
-    // Determine random chance between 0.01 and 0.05
     let randomSpawnChance = (Math.random() * 0.04) + 0.01;
     let randomMoneySpotIndex = -1;
     
-    // Only spawn random money ball if it doesn't conflict with guaranteed reward spot
     if (emptySpots.length > (guaranteedRewardValue > 0 ? 1 : 0) && Math.random() < randomSpawnChance) {
         let availableIndices = [];
         for (let i = 0; i < emptySpots.length; i++) {
@@ -699,6 +783,14 @@ async function refillBoard() {
     let flashBallsCount = 0;
     if (Math.random() < 0.01) flashBallsCount = Math.floor(Math.random() * 3) + 1; 
     
+    // 預先在盤面上塞入佔位符，這樣 getSafeColorForRefill 才能判斷到剛生成的新球
+    for (let i = 0; i < emptySpots.length; i++) {
+        let {r, c} = emptySpots[i];
+        if (i === rewardSpotIndex || i === randomMoneySpotIndex) {
+            board[r][c] = { isMoney: true }; // 佔位
+        }
+    }
+    
     for (let i = 0; i < emptySpots.length; i++) {
         let {r, c} = emptySpots[i];
         let block;
@@ -709,7 +801,7 @@ async function refillBoard() {
             let randomValue = getRandomMoneyBallValue();
             block = createBlock(-1, c, null, true, randomValue);
         } else {
-            let color = getRandomColor(r, c);
+            let color = getSafeColorForRefill(r, c);
             let isFlash = false;
             if (flashBallsCount > 0) { isFlash = true; flashBallsCount--; }
             block = createBlock(-1, c, color, false, 0, isFlash);
@@ -717,16 +809,16 @@ async function refillBoard() {
         
         block.r = r;
         setTimeout(() => { block.el.style.top = `${r * (BLOCK_SIZE + GAP)}px`; }, 50);
-        board[r][c] = block;
+        board[r][c] = block; // 正式寫入完整 block，後續生成會參考到這個正確的 block
     }
     
     await sleep(500);
-    currentCombo = 0; 
-    await checkMatchesAndChain();
+    // 補球後，不重置 combo，也不自動消除，因為我們保證了補下來的球「不能」被削除
+    // await checkMatchesAndChain(); // 依照要求，補球後不應該有連鎖
 }
 
 function showComboOverlay(combo) {
-    if (combo < 3 && combo !== 1) return; // if it's 1 (from collecting money ball alone) maybe don't show huge text, or show it. Let's just show.
+    if (combo < 3 && combo !== 1) return; 
     DOM.comboOverlay.textContent = `${combo} COMBO!`;
     DOM.comboOverlay.classList.remove('show');
     void DOM.comboOverlay.offsetWidth;
