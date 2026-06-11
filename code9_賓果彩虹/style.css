@@ -7,7 +7,8 @@
     --color-blue: #3b82f6;
     --color-green: #22c55e;
     --color-yellow: #eab308;
-    --color-sp: #a855f7;
+    --color-white: #ffffff;
+    --color-sp: #1e293b; /* SP Hole dark */
     --accent: #8b5cf6;
 }
 
@@ -170,26 +171,38 @@ body {
     height: 250px;
 }
 
-.roulette-wheel {
+/* 外圈大轉盤 */
+.roulette-wheel-outer {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    /* Clockwise constant slow spin for the outer wheel */
-    animation: spinRight 10s linear infinite;
-    background: conic-gradient(
-        var(--color-red) 0deg 51deg, 
-        var(--color-pink) 51deg 102deg, 
-        var(--color-blue) 102deg 154deg, 
-        var(--color-green) 154deg 205deg, 
-        var(--color-yellow) 205deg 257deg, 
-        #ffffff 257deg 308deg, 
-        var(--color-sp) 308deg 360deg
-    );
     border: 8px solid #334155;
     box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+    /* 動態 JS 賦予 background: conic-gradient */
 }
 
+/* 內圈小轉盤 */
+.roulette-wheel-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 6px solid #1e293b;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8) inset, 0 0 10px rgba(0,0,0,0.8);
+    background: conic-gradient(
+        #a855f7 0deg 90deg, 
+        linear-gradient(45deg, #ff0000, #ffff00, #0000ff) 90deg 180deg, 
+        #a855f7 180deg 270deg,
+        linear-gradient(45deg, #ff0000, #ffff00, #0000ff) 270deg 360deg
+    );
+    z-index: 5;
+}
+
+/* 球的軌道容器 */
 .roulette-ball-orbit {
     position: absolute;
     width: 100%;
@@ -198,37 +211,34 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Transparent container for the ball */
     background: transparent;
     z-index: 10;
-}
-.roulette-ball-orbit.spinning {
-    /* Counter-clockwise fast spin */
-    animation: spinLeft 0.8s linear infinite;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+/* 球體本身 */
 .roulette-ball {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     background: #fff;
     border-radius: 50%;
     position: absolute;
-    top: 5px; /* Orbit radius near the edge */
+    top: 8px; /* 外圍軌道 */
     box-shadow: 0 0 15px #fff;
     opacity: 0;
+    transition: top 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), transform 0.3s, opacity 0.3s;
 }
+
 .roulette-ball.visible {
     opacity: 1;
 }
 
-@keyframes spinRight {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes spinLeft {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(-360deg); }
+/* 進入內圈動畫 (修改 top 距離，從外圍潛入中心) */
+.roulette-ball.dive-inner {
+    top: 60px; /* 內圈軌道距離 */
+    transform: scale(0.8);
+    box-shadow: 0 0 20px #a855f7, 0 0 10px #fff inset;
+    background: #e9d5ff;
 }
 
 /* 進洞結果顯示區 */
@@ -243,6 +253,8 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 200px;
+    justify-content: center;
 }
 .roulette-result-box span {
     font-size: 1.3rem;
@@ -658,17 +670,8 @@ body {
 .ball.color-blue { background: var(--color-blue); }
 .ball.color-green { background: var(--color-green); }
 .ball.color-yellow { background: var(--color-yellow); }
-
-.ball.white-ball {
-    background: #fff !important;
-    color: #000;
-    text-shadow: none;
-}
-
-.ball.rainbow-ball {
-    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) !important;
-    color: #fff;
-}
+.ball.white-ball { background: #fff !important; color: #000; text-shadow: none; }
+.ball.rainbow-ball { background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) !important; color: #fff; }
 
 @keyframes popIn {
     0% { transform: scale(0); }

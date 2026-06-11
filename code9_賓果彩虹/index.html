@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌈 賓果彩虹消消樂 - 專業版</title>
+    <title>🌈 賓果彩虹消消樂 - 同心輪盤版</title>
     <!-- 引入 Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=6">
+    <link rel="stylesheet" href="./style.css?v=7">
 </head>
 <body>
     <div class="app-wrapper">
@@ -43,9 +43,12 @@
                 <div class="roulette-container">
                     <div class="fire-box" id="fire-box">WAIT</div>
                     <div class="roulette-wheel-wrapper">
-                        <div class="roulette-wheel" id="roulette-wheel">
-                            <!-- 7 色的洞口區塊 -->
-                        </div>
+                        <!-- 外圈大轉盤 (21格) -->
+                        <div class="roulette-wheel-outer" id="roulette-wheel-outer"></div>
+                        <!-- 內圈小轉盤 (SP) -->
+                        <div class="roulette-wheel-inner" id="roulette-wheel-inner"></div>
+                        
+                        <!-- 球的公轉軌道 -->
                         <div class="roulette-ball-orbit" id="roulette-ball-orbit">
                             <div class="roulette-ball" id="roulette-ball"></div>
                         </div>
@@ -173,6 +176,6 @@
         </main>
     </div>
 
-    <script src="./script.js?v=6"></script>
+    <script src="./script.js?v=7"></script>
 </body>
 </html>
