@@ -6,7 +6,7 @@
     <title>🌈 賓果彩虹消消樂 - 專業版</title>
     <!-- 引入 Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=5">
+    <link rel="stylesheet" href="./style.css?v=6">
 </head>
 <body>
     <div class="app-wrapper">
@@ -42,12 +42,25 @@
                 <!-- 炫酷大轉盤 -->
                 <div class="roulette-container">
                     <div class="fire-box" id="fire-box">WAIT</div>
-                    <div class="roulette-wheel" id="roulette-wheel">
-                        <!-- CSS 圓環與獎項格 -->
-                        <div class="roulette-inner">
-                            <div class="roulette-ball" id="roulette-ball"></div>
-                            <div class="roulette-center" id="roulette-result">等待發球</div>
+                    <div class="roulette-wheel-wrapper">
+                        <div class="roulette-wheel" id="roulette-wheel">
+                            <!-- 7 色的洞口區塊 -->
                         </div>
+                        <div class="roulette-ball-orbit" id="roulette-ball-orbit">
+                            <div class="roulette-ball" id="roulette-ball"></div>
+                        </div>
+                    </div>
+                    <!-- 專屬的進洞顏色顯示區 -->
+                    <div class="roulette-result-box" id="roulette-result-box">
+                        進洞顏色：<span id="roulette-result-text">等待發球</span>
+                    </div>
+                </div>
+
+                <!-- 近期發球紀錄隊列 -->
+                <div class="recent-draws-panel">
+                    <div class="recent-title">近期發球隊列</div>
+                    <div id="ball-history" class="ball-history-container">
+                        <!-- JS 動態產生球 -->
                     </div>
                 </div>
                 
@@ -113,6 +126,7 @@
                     <!-- 遊戲棋盤 -->
                     <div class="board-wrapper">
                         <div id="combo-overlay" class="combo-overlay"></div>
+                        <div id="out-overlay" class="out-overlay">OUT</div>
                         <div class="win-drop-zone">WIN DROP ZONE</div>
                         <div class="game-board" id="game-board">
                             <!-- JS generates 8x6 grid here -->
@@ -159,6 +173,6 @@
         </main>
     </div>
 
-    <script src="./script.js?v=5"></script>
+    <script src="./script.js?v=6"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@
     --color-blue: #3b82f6;
     --color-green: #22c55e;
     --color-yellow: #eab308;
+    --color-sp: #a855f7;
     --accent: #8b5cf6;
 }
 
@@ -135,7 +136,7 @@ body {
     border-color: #ef4444;
 }
 
-/* 大轉盤 Roulette */
+/* 大轉盤 Vegas Roulette */
 .roulette-container {
     display: flex;
     flex-direction: column;
@@ -163,55 +164,47 @@ body {
     transform: scale(1.1);
 }
 
-.roulette-wheel {
+.roulette-wheel-wrapper {
+    position: relative;
     width: 250px;
     height: 250px;
-    border-radius: 50%;
-    background: conic-gradient(
-        var(--color-red) 0deg 51deg, 
-        var(--color-pink) 51deg 102deg, 
-        var(--color-blue) 102deg 154deg, 
-        var(--color-green) 154deg 205deg, 
-        var(--color-yellow) 205deg 257deg, 
-        #ffffff 257deg 308deg, 
-        linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) 308deg 360deg /* SP */
-    );
-    /* For SP gradient in conic, conic-gradient doesn't support nested linear well, so we simulate with a color */
-    background: conic-gradient(
-        var(--color-red) 0deg 51deg, 
-        var(--color-pink) 51deg 102deg, 
-        var(--color-blue) 102deg 154deg, 
-        var(--color-green) 154deg 205deg, 
-        var(--color-yellow) 205deg 257deg, 
-        #ffffff 257deg 308deg, 
-        #a855f7 308deg 360deg
-    );
-    border: 10px solid #334155;
-    position: relative;
-    box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
-.roulette-inner {
-    width: 150px;
-    height: 150px;
+.roulette-wheel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    background: #0f172a;
-    border: 5px solid #1e293b;
-    position: relative;
+    /* Clockwise constant slow spin for the outer wheel */
+    animation: spinRight 10s linear infinite;
+    background: conic-gradient(
+        var(--color-red) 0deg 51deg, 
+        var(--color-pink) 51deg 102deg, 
+        var(--color-blue) 102deg 154deg, 
+        var(--color-green) 154deg 205deg, 
+        var(--color-yellow) 205deg 257deg, 
+        #ffffff 257deg 308deg, 
+        var(--color-sp) 308deg 360deg
+    );
+    border: 8px solid #334155;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+.roulette-ball-orbit {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Transparent container for the ball */
+    background: transparent;
     z-index: 10;
 }
-
-.roulette-center {
-    font-size: 1.2rem;
-    font-weight: 900;
-    color: #fff;
-    text-align: center;
+.roulette-ball-orbit.spinning {
+    /* Counter-clockwise fast spin */
+    animation: spinLeft 0.8s linear infinite;
 }
 
 .roulette-ball {
@@ -220,23 +213,72 @@ body {
     background: #fff;
     border-radius: 50%;
     position: absolute;
-    top: -35px; /* orbit outside inner circle */
-    left: 50%;
-    transform: translateX(-50%);
+    top: 5px; /* Orbit radius near the edge */
     box-shadow: 0 0 15px #fff;
     opacity: 0;
-    transform-origin: 50% 110px; /* orbit radius */
 }
-
-.roulette-ball.spinning {
+.roulette-ball.visible {
     opacity: 1;
-    animation: spinBall 0.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
 }
 
-@keyframes spinBall {
-    0% { transform: translateX(-50%) rotate(0deg); }
-    100% { transform: translateX(-50%) rotate(360deg); }
+@keyframes spinRight {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
+
+@keyframes spinLeft {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+/* 進洞結果顯示區 */
+.roulette-result-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid #475569;
+    padding: 0.5rem 1.5rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.roulette-result-box span {
+    font-size: 1.3rem;
+    font-family: 'Fredoka', sans-serif;
+    color: #fff;
+}
+
+/* 近期發球紀錄隊列 */
+.recent-draws-panel {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.recent-title {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.ball-history-container {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 5px;
+    min-height: 50px;
+}
+.ball-history-container::-webkit-scrollbar { height: 6px; }
+.ball-history-container::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+.ball-history-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
 
 /* 控制區與押分 */
 .controls-panel {
@@ -405,7 +447,7 @@ body {
     bottom: 15px; /* align with bottom row */
     left: 15px;
     right: 15px;
-    height: 64px; /* match block size + gap roughly */
+    height: 64px;
     border: 2px dashed #f59e0b;
     border-radius: 8px;
     z-index: 0;
@@ -427,8 +469,8 @@ body {
 
 .game-board {
     position: relative;
-    width: 380px; /* 6 cols * 60px + 5 gaps * 4px */
-    height: 508px; /* 8 rows * 60px + 7 gaps * 4px */
+    width: 380px; 
+    height: 508px; 
     z-index: 1;
 }
 
@@ -445,7 +487,7 @@ body {
     font-weight: bold;
     color: white;
     cursor: default;
-    transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1); /* Bouncy drop */
+    transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
     box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), inset 10px 10px 20px rgba(255,255,255,0.6), 0 5px 15px rgba(0,0,0,0.4);
 }
 
@@ -480,14 +522,13 @@ body {
     text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     font-family: 'Fredoka', sans-serif;
     font-size: 1.2rem;
-    z-index: 2; /* money balls on top visually */
+    z-index: 2;
     box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 0 0 15px rgba(234, 179, 8, 0.8);
 }
 .block.money-ball::after {
     display: none;
 }
 
-/* 發光球 (Flash Ball) */
 .block.flash-ball {
     animation: flashGlow 0.8s infinite alternate;
 }
@@ -498,10 +539,6 @@ body {
     z-index: 5;
     text-shadow: 0 0 10px #fff;
     opacity: 0.9;
-}
-@keyframes flashGlow {
-    0% { filter: brightness(1) drop-shadow(0 0 5px #fff); }
-    100% { filter: brightness(1.8) drop-shadow(0 0 20px #fff); }
 }
 
 /* History Tracker */
@@ -578,4 +615,62 @@ body {
 .combo-overlay.show {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+}
+
+.out-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 5rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 5px 20px rgba(0,0,0,0.8), 0 0 30px #ef4444;
+    opacity: 0;
+    z-index: 20;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.out-overlay.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.ball {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), inset 5px 5px 10px rgba(255,255,255,0.6), 0 4px 8px rgba(0,0,0,0.5);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    font-size: 0.8rem;
+    padding: 0 5px;
+}
+
+.ball.color-red { background: var(--color-red); }
+.ball.color-pink { background: var(--color-pink); }
+.ball.color-blue { background: var(--color-blue); }
+.ball.color-green { background: var(--color-green); }
+.ball.color-yellow { background: var(--color-yellow); }
+
+.ball.white-ball {
+    background: #fff !important;
+    color: #000;
+    text-shadow: none;
+}
+
+.ball.rainbow-ball {
+    background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff) !important;
+    color: #fff;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
 }
