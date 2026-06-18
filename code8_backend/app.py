@@ -151,7 +151,55 @@ def get_stocks():
             })
 
         except Exception as e:
-            print(f"Error fetching {symbol}: {e}")
+            print(f"Error fetching {symbol} via yfinance: {e}. Trying twstock fallback.")
+            try:
+                clean_symbol = symbol.split('.')[0]
+                stock = twstock.Stock(clean_symbol)
+                stock_data = []
+                
+                if mode == 'last_30':
+                    dates = stock.date
+                    if len(dates) > 0:
+                        for i in range(1, len(dates)):
+                            stock_data.append({
+                                'date': dates[i].strftime('%Y-%m-%d'),
+                                'prev_close': stock.price[i-1],
+                                'open': stock.open[i],
+                                'high': stock.high[i],
+                                'low': stock.low[i],
+                                'close': stock.price[i]
+                            })
+                        stock_data = stock_data[-30:]
+                        stock_data.reverse()
+                elif mode == 'specific_month':
+                    if month_str:
+                        year, month = map(int, month_str.split('-'))
+                        fetch_data = stock.fetch(year, month)
+                        if fetch_data:
+                            for row in fetch_data:
+                                stock_data.append({
+                                    'date': row.date.strftime('%Y-%m-%d'),
+                                    'prev_close': round(row.close - row.change, 2),
+                                    'open': row.open,
+                                    'high': row.high,
+                                    'low': row.low,
+                                    'close': row.close
+                                })
+                            stock_data.reverse()
+                
+                if stock_data:
+                    display_title = f"{company_name} / {clean_symbol}"
+                    results.append({
+                        'symbol': clean_symbol,
+                        'name': company_name,
+                        'display_title': display_title,
+                        'data': stock_data
+                    })
+                    continue # Successfully used fallback, skip error append
+            except Exception as tw_e:
+                print(f"twstock fallback also failed for {symbol}: {tw_e}")
+            
+            # If all else fails
             results.append({
                 'symbol': raw_input,
                 'name': raw_input,
@@ -229,7 +277,25 @@ def get_chart_data():
         })
         
     except Exception as e:
-        print(f"Chart Error fetching {symbol}: {e}")
+        print(f"Chart Error fetching {symbol} via yfinance: {e}. Trying twstock fallback.")
+        try:
+            clean_symbol = symbol.split('.')[0]
+            stock = twstock.Stock(clean_symbol)
+            dates = stock.date
+            if len(dates) > 0:
+                labels = [d.strftime('%Y-%m-%d') for d in dates]
+                prices = stock.price
+                return jsonify({
+                    "symbol": clean_symbol,
+                    "name": company_name,
+                    "display_title": f"{company_name} / {clean_symbol} (備用線圖)",
+                    "labels": labels,
+                    "prices": prices,
+                    "range": "1M" # Force 1M for fallback as it only has 31 days easily
+                })
+        except Exception as tw_e:
+            print(f"Chart twstock fallback failed: {tw_e}")
+            
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
