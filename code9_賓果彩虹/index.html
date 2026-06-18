@@ -7,7 +7,7 @@
     <!-- 引入 Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css?v=7">
-</head>
+<script>window.onerror = function(msg, url, line, col, error) { fetch('http://127.0.0.1:8001/error', {method:'POST', body: msg + ' at ' + line + ':' + col}); return false; };</script></head>
 <body>
     <div class="app-wrapper">
         <!-- 頂部資訊列 -->
@@ -35,8 +35,10 @@
                 
                 <!-- 狀態顯示與發球指示 -->
                 <div class="status-panel">
-                    <h3 id="draw-status">等待開始...</h3>
+                    <h3>目前狀態</h3>
+                    <div id="draw-status" class="draw-status" style="margin-bottom: 10px; color: #fff; font-size: 1.1rem; font-weight: bold;">等待開始...</div>
                     <div id="safe-indicator" class="safe-indicator">前 3 球安全保障！</div>
+                    <div class="ball-count-display">投擲球數: <span id="ball-count-text">0</span></div>
                 </div>
 
                 <!-- 炫酷大轉盤 -->
@@ -134,9 +136,13 @@
                     <div class="board-wrapper">
                         <div id="combo-overlay" class="combo-overlay"></div>
                         <div id="out-overlay" class="out-overlay">OUT</div>
-                        <div class="win-drop-zone">WIN DROP ZONE</div>
-                        <div class="game-board" id="game-board">
-                            <!-- JS generates 8x6 grid here -->
+                        <div class="win-drop-zone"></div>
+                        <div class="game-board-container">
+                            <div class="game-board" id="game-board">
+                                <div id="bird-mouth" class="bird-mouth hidden"></div>
+                                <div id="laser-beam" class="laser-beam hidden"></div>
+                                <div class="elimination-zone">消除觸發區域</div>
+                            </div>
                         </div>
                     </div>
                 </div>

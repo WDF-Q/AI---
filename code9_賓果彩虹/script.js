@@ -4,6 +4,15 @@ const BLOCK_SIZE = 60;
 const GAP = 4; 
 
 const COLORS = ['red', 'pink', 'blue', 'green', 'yellow'];
+const COLOR_ZH = {
+    'red': '紅色',
+    'pink': '粉色',
+    'blue': '藍色',
+    'green': '綠色',
+    'yellow': '黃色',
+    'white': '白色',
+    'rainbow': '彩色'
+};
 // 6 base options * 3 = 18 slots, plus 3 SP slots = 21 slots.
 const OUTER_WHEEL_SLOTS = [
     'red', 'pink', 'blue', 'green', 'yellow', 'white', 'sp',
@@ -51,7 +60,7 @@ let historyTracker = {
 // ** Decoupled Engine States **
 let leftEngineActive = false;
 let boardState = 'IDLE'; 
-let pendingColorsQueue = []; 
+let pendingEventsQueue = []; 
 let isGameOverTriggered = false; 
 let pendingInitialBatch = 0; 
 let pendingDrawsQueue = 0;
@@ -68,6 +77,7 @@ const DOM = {
     betInput: document.getElementById('bet-input'),
     win: document.getElementById('win-display'),
     safeIndicator: document.getElementById('safe-indicator'),
+    ballCountText: document.getElementById('ball-count-text'),
     drawStatus: document.getElementById('draw-status'),
     btnStart: document.getElementById('btn-start'),
     comboOverlay: document.getElementById('combo-overlay'),
@@ -249,6 +259,7 @@ function initBoard() {
 }
 
 async function startGame() {
+    if (isPlaying) return;
     if (credit < currentBet) {
         alert("餘額不足！");
         return;
@@ -259,8 +270,11 @@ async function startGame() {
     isPlaying = true;
     totalWin = 0;
     ballCount = 0;
+    currentCombo = 0;
+    batchEliminatedAny = false;
+    DOM.ballCountText.textContent = ballCount;
     isGameOverTriggered = false;
-    pendingColorsQueue = [];
+    pendingEventsQueue = [];
     boardState = 'IDLE';
     
     historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
@@ -316,7 +330,9 @@ function addBallToHistoryUI(typeText, colorClass, gradient = null) {
     }
     
     DOM.ballHistory.appendChild(ballEl);
-    DOM.ballHistory.scrollLeft = DOM.ballHistory.scrollWidth;
+    while (DOM.ballHistory.children.length > 10) {
+        DOM.ballHistory.removeChild(DOM.ballHistory.firstChild);
+    }
 }
 
 function updateResultText(resultText, colorClass) {
@@ -446,6 +462,7 @@ async function startLeftEngine() {
             await sleep(randomInterval);
             
             ballCount++;
+            DOM.ballCountText.textContent = ballCount;
             let isSafeMode = (ballCount <= 3) || (pendingInitialBatch > 0 && pendingDrawsQueue > 0); 
             
             if (!isSafeMode) {
@@ -458,11 +475,11 @@ async function startLeftEngine() {
             if (baseDraw === 'white') {
                 await spinVegasRoulette('white', false);
                 historyTracker.white++;
-                addBallToHistoryUI('W', 'white');
+                addBallToHistoryUI('白色', 'white');
                 
                 if (!isSafeMode) {
                     isGameOverTriggered = true;
-                    pendingColorsQueue.push('OUT');
+                    pendingEventsQueue.push({ type: 'game_over' });
                     DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
                     break; 
                 } else {
@@ -473,95 +490,178 @@ async function startLeftEngine() {
                 if (r < 1/6) {
                     await spinVegasRoulette('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
                     historyTracker.rainbow++;
-                    addBallToHistoryUI('🌈', 'rainbow');
+                    addBallToHistoryUI('彩色', 'rainbow');
                     pendingDrawsQueue += 3;
-                    pendingInitialBatch = 3; 
-                    DOM.drawStatus.textContent = `彩色球！獲得 3 連發！`;
+                    if (pendingInitialBatch === 0) {
+                        pendingInitialBatch = 4;
+                    } else {
+                        pendingInitialBatch += 3;
+                    }
+                    DOM.drawStatus.textContent = `彩色球！獲得 3 連發與雷射！`;
+                    
+                    // 新增鳥嘴雷射事件
+                    pendingEventsQueue.push({ type: 'laser_strike' });
+                    
                 } else {
                     let pair = getSmallRoulettePair();
                     await spinVegasRoulette('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
                     historyTracker[pair[0]]++;
                     historyTracker[pair[1]]++;
                     let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
-                    addBallToHistoryUI('SP', null, gradient);
+                    addBallToHistoryUI('雙色', null, gradient);
                     
-                    pendingColorsQueue.push(pair);
+                    pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
                     DOM.drawStatus.textContent = `小轉盤：同步消除雙色！`;
                 }
             } else {
                 let color = baseDraw;
                 await spinVegasRoulette(color, false);
                 historyTracker[color]++;
-                addBallToHistoryUI(color.toUpperCase(), color);
+                addBallToHistoryUI(COLOR_ZH[color], color);
                 
-                pendingColorsQueue.push(color);
-                DOM.drawStatus.textContent = `抽中 ${color}！`;
+                pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
+                DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
             }
             
             updateHistoryUI();
             pendingDrawsQueue--;
             if (pendingInitialBatch > 0) pendingInitialBatch--;
+            
+            if (pendingInitialBatch === 0) {
+                pendingEventsQueue.push({ type: 'trigger_chains' });
+            }
         }
     }
     leftEngineActive = false;
 }
 
+let batchEliminatedAny = false;
+
 async function startRightEngine() {
     while (isPlaying) {
-        if (boardState === 'IDLE' && pendingInitialBatch === 0 && pendingColorsQueue.length > 0) {
+        if (boardState === 'IDLE' && pendingEventsQueue.length > 0) {
             boardState = 'BUSY';
             
-            let itemsToProcess = [...pendingColorsQueue];
-            pendingColorsQueue = [];
+            let event = pendingEventsQueue.shift();
             
-            if (itemsToProcess.includes('OUT')) {
-                await finishGameOverSequence();
-                break;
-            } else {
-                let colorsToEliminate = new Set();
-                for (let item of itemsToProcess) {
-                    if (Array.isArray(item)) {
-                        colorsToEliminate.add(item[0]);
-                        colorsToEliminate.add(item[1]);
-                    } else if (item !== 'OUT') {
-                        colorsToEliminate.add(item);
+            if (event.type === 'layer8_hit') {
+                let eliminatedAny = false;
+                for (let color of event.colors) {
+                    for (let c = 0; c < COLS; c++) {
+                        let block = board[ROWS - 1][c];
+                        if (block !== null && !block.isMoney && block.color === color) {
+                            block.el.classList.add('eliminating');
+                            setTimeout((el) => el.remove(), 1000, block.el);
+                            board[ROWS - 1][c] = null;
+                            eliminatedAny = true;
+                        }
+                    }
+                }
+                if (eliminatedAny) {
+                    currentCombo = 1;
+                    updateLadderActive(currentCombo);
+                    DOM.drawStatus.textContent = `${currentCombo} 連鎖！(底部引爆)`;
+                    showComboOverlay(currentCombo);
+                    await sleep(1000);
+                    batchEliminatedAny = true;
+                }
+            } else if (event.type === 'trigger_chains') {
+                if (batchEliminatedAny) {
+                    await applyGravity();
+                    await checkMatchesAndChain();
+                    await refillBoard();
+                    batchEliminatedAny = false;
+                    currentCombo = 0;
+                    updateLadderActive(0);
+                }
+            } else if (event.type === 'laser_strike') {
+                let targetCol = Math.floor(Math.random() * COLS);
+                let birdMouth = document.getElementById('bird-mouth');
+                let laserBeam = document.getElementById('laser-beam');
+                
+                birdMouth.style.left = `${targetCol * (BLOCK_SIZE + GAP)}px`;
+                laserBeam.style.left = `${targetCol * (BLOCK_SIZE + GAP)}px`;
+                
+                birdMouth.classList.remove('hidden');
+                laserBeam.classList.remove('hidden');
+                
+                // 重置動畫
+                laserBeam.style.animation = 'none';
+                void laserBeam.offsetWidth;
+                laserBeam.style.animation = 'laser-flash 0.6s ease-out forwards';
+                
+                DOM.drawStatus.textContent = `⚡ 鳥嘴雷射發射！ ⚡`;
+                await sleep(400); // 等待雷射特效到達最大
+                
+                let moneyCollected = 0;
+                for (let r = 0; r < ROWS; r++) {
+                    let block = board[r][targetCol];
+                    if (block !== null) {
+                        if (block.isMoney) {
+                            moneyCollected += block.moneyValue;
+                            totalWin += block.moneyValue;
+                            DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
+                        }
+                        block.el.classList.add('eliminating');
+                        setTimeout((el) => el.remove(), 500, block.el);
+                        board[r][targetCol] = null;
                     }
                 }
                 
-                if (colorsToEliminate.size > 0) {
-                    currentCombo = 0;
-                    updateLadderActive(0);
-                    await processElimination(Array.from(colorsToEliminate));
-                    await refillBoard();
+                if (moneyCollected > 0) {
+                    updateWinDisplay();
                 }
+                
+                await sleep(500);
+                
+                laserBeam.classList.add('hidden');
+                birdMouth.classList.add('hidden');
+                
+                await applyGravity();
+                await checkMatchesAndChain();
+                await refillBoard();
+                
+            } else if (event.type === 'game_over') {
+                await finishGameOverSequence();
+                break;
             }
+            
             boardState = 'IDLE';
         }
         await sleep(100);
     }
 }
 
-async function processElimination(colors) {
-    let eliminatedAny = false;
-    for (let color of colors) {
+function initBoard() {
+    DOM.board.innerHTML = '<div class="elimination-zone">消除觸發區域</div>';
+    board = new Array(ROWS).fill(null).map(() => new Array(COLS).fill(null));
+    
+    let moneySpots = new Set();
+    let availableCols = [];
+    for (let i = 0; i < COLS; i++) availableCols.push(i);
+    availableCols.sort(() => Math.random() - 0.5);
+    let moneyBallCount = Math.random() < 0.5 ? 4 : 5;
+    let selectedCols = availableCols.slice(0, moneyBallCount);
+    
+    for (let c of selectedCols) {
+        // 第 1~3 層 (由上往下，索引為 0, 1, 2)
+        let r = Math.floor(Math.random() * 3); 
+        moneySpots.add(`${r},${c}`);
+    }
+    
+    for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-            // 只針對第 8 層 (最底層，ROWS - 1) 判定是否能消除
-            let block = board[ROWS - 1][c];
-            if (block !== null && !block.isMoney && block.color === color) {
-                block.el.classList.add('eliminating');
-                setTimeout((el) => el.remove(), 400, block.el);
-                board[ROWS - 1][c] = null;
-                eliminatedAny = true;
+            if (moneySpots.has(`${r},${c}`)) {
+                let initialValue = Math.floor(currentBet / 5);
+                let block = createBlock(r, c, null, true, initialValue);
+                board[r][c] = block;
+            } else {
+                let color = getSafeColorForRefill(r, c);
+                let block = createBlock(r, c, color, false);
+                board[r][c] = block;
             }
         }
     }
-    if (!eliminatedAny) {
-        await sleep(500);
-        return;
-    }
-    await sleep(500); 
-    await applyGravity();
-    await checkMatchesAndChain();
 }
 
 async function applyGravity() {
@@ -582,32 +682,6 @@ async function applyGravity() {
         }
     }
     if (moved) await sleep(400);
-
-    let moneyCollectedCount = 0;
-    for (let c = 0; c < COLS; c++) {
-        let block = board[ROWS - 1][c];
-        if (block && block.isMoney) {
-            totalWin += block.moneyValue;
-            updateWinDisplay();
-            block.el.style.transform = 'scale(1.5)';
-            block.el.style.opacity = '0';
-            setTimeout((el) => el.remove(), 300, block.el);
-            board[ROWS - 1][c] = null;
-            moneyCollectedCount++;
-            DOM.drawStatus.textContent = `獲得獎金 +${block.moneyValue}！`;
-        }
-    }
-    
-    if (moneyCollectedCount > 0) {
-        await sleep(500);
-        // 如果有兩個以上金錢球同時被消除，只累計 1 次的消消次數
-        currentCombo++;
-        updateLadderActive(currentCombo >= 10 ? 10 : currentCombo);
-        DOM.drawStatus.textContent = `${currentCombo} 連鎖！(收集金錢球)`;
-        showComboOverlay(currentCombo);
-        
-        await applyGravity(); 
-    }
 }
 
 function findConnectedComponents() {
@@ -653,42 +727,75 @@ function findConnectedComponents() {
 async function checkMatchesAndChain() {
     let hasMatches = true;
     while (hasMatches && isPlaying) {
+        let moneyBlocksToEliminate = [];
+        for (let c = 0; c < COLS; c++) {
+            let block = board[ROWS - 1][c];
+            if (block && block.isMoney) {
+                moneyBlocksToEliminate.push(block);
+            }
+        }
+        
         let components = findConnectedComponents();
-        if (components.length > 0) {
+        
+        if (components.length > 0 || moneyBlocksToEliminate.length > 0) {
             currentCombo++;
             updateLadderActive(currentCombo >= 10 ? 10 : currentCombo);
-            DOM.drawStatus.textContent = `${currentCombo} 連鎖！`;
+            
+            let statusText = `${currentCombo} 連鎖！`;
+            if (components.length > 0 && moneyBlocksToEliminate.length > 0) {
+                statusText += ` (金錢+消除)`;
+            } else if (moneyBlocksToEliminate.length > 0) {
+                statusText += ` (收集金錢球)`;
+            } else {
+                statusText += ` (消除)`;
+            }
+            DOM.drawStatus.textContent = statusText;
             showComboOverlay(currentCombo);
             
-            let blocksToEliminate = new Set();
-            let flashColorsTriggered = new Set();
-            
-            for (let comp of components) {
-                for (let block of comp) {
-                    blocksToEliminate.add(block);
-                    if (block.isFlash) flashColorsTriggered.add(block.color);
-                }
+            // 處理金錢球
+            for (let block of moneyBlocksToEliminate) {
+                totalWin += block.moneyValue;
+                block.el.style.transform = 'scale(1.5)';
+                block.el.style.opacity = '0';
+                setTimeout((el) => el.remove(), 1000, block.el);
+                board[block.r][block.c] = null;
+            }
+            if (moneyBlocksToEliminate.length > 0) {
+                updateWinDisplay();
             }
             
-            if (flashColorsTriggered.size > 0) {
-                DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
-                for (let r = 0; r < ROWS; r++) {
-                    for (let c = 0; c < COLS; c++) {
-                        let block = board[r][c];
-                        if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                            blocksToEliminate.add(block);
+            // 處理色塊消除
+            if (components.length > 0) {
+                let blocksToEliminate = new Set();
+                let flashColorsTriggered = new Set();
+                
+                for (let comp of components) {
+                    for (let block of comp) {
+                        blocksToEliminate.add(block);
+                        if (block.isFlash) flashColorsTriggered.add(block.color);
+                    }
+                }
+                
+                if (flashColorsTriggered.size > 0) {
+                    DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
+                    for (let r = 0; r < ROWS; r++) {
+                        for (let c = 0; c < COLS; c++) {
+                            let block = board[r][c];
+                            if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                                blocksToEliminate.add(block);
+                            }
                         }
                     }
                 }
+                
+                for (let block of blocksToEliminate) {
+                    block.el.classList.add('eliminating');
+                    setTimeout((el) => el.remove(), 1000, block.el);
+                    board[block.r][block.c] = null;
+                }
             }
             
-            for (let block of blocksToEliminate) {
-                block.el.classList.add('eliminating');
-                setTimeout((el) => el.remove(), 400, block.el);
-                board[block.r][block.c] = null;
-            }
-            
-            await sleep(500);
+            await sleep(1000);
             await applyGravity();
         } else {
             hasMatches = false;
@@ -698,34 +805,56 @@ async function checkMatchesAndChain() {
 
 function getRandomMoneyBallValue() {
     let r = Math.random() * 100; 
-    if (r < 30) return Math.floor(currentBet / 5);
-    if (r < 60) return Math.floor(currentBet * COMBO_MULTIPLIERS[4]);
-    if (r < 80) return Math.floor(currentBet * COMBO_MULTIPLIERS[5]);
-    if (r < 90) return Math.floor(currentBet * COMBO_MULTIPLIERS[6]);
-    if (r < 94) return Math.floor(currentBet * COMBO_MULTIPLIERS[7]);
-    if (r < 97) return Math.floor(currentBet * COMBO_MULTIPLIERS[8]);
-    if (r < 99) return Math.floor(currentBet * COMBO_MULTIPLIERS[9]);
-    return Math.floor(currentBet * COMBO_MULTIPLIERS[10]);
+    if (r < 50) return Math.floor(currentBet * (1/5));
+    if (r < 75) return Math.floor(currentBet * (2/5));
+    if (r < 85) return Math.floor(currentBet * (4/5));
+    if (r < 90) return Math.floor(currentBet * (6/5));
+    if (r < 94) return Math.floor(currentBet * (8/5));
+    if (r < 97) return Math.floor(currentBet * (10/5));
+    if (r < 99) return Math.floor(currentBet * (25/5));
+    return Math.floor(currentBet * (50/5));
 }
 
 function getSafeColorForRefill(r, c) {
     let availableColors = [...COLORS];
     for (let i = availableColors.length - 1; i >= 0; i--) {
         let color = availableColors[i];
-        let isMatch = false;
         
-        // 水平檢查
-        if (c >= 2 && board[r][c-1] && board[r][c-1].color === color && board[r][c-2] && board[r][c-2].color === color) isMatch = true;
-        if (c >= 1 && c < COLS-1 && board[r][c-1] && board[r][c-1].color === color && board[r][c+1] && board[r][c+1].color === color) isMatch = true;
-        if (c <= COLS-3 && board[r][c+1] && board[r][c+1].color === color && board[r][c+2] && board[r][c+2].color === color) isMatch = true;
+        // 暫時擺放該顏色以進行洪水填充模擬
+        board[r][c] = { color: color, isMoney: false };
         
-        // 垂直檢查
-        if (r >= 2 && board[r-1][c] && board[r-1][c].color === color && board[r-2][c] && board[r-2][c].color === color) isMatch = true;
-        if (r >= 1 && r < ROWS-1 && board[r-1][c] && board[r-1][c].color === color && board[r+1][c] && board[r+1][c].color === color) isMatch = true;
-        if (r <= ROWS-3 && board[r+1][c] && board[r+1][c].color === color && board[r+2][c] && board[r+2][c].color === color) isMatch = true;
+        let visited = new Array(ROWS).fill(0).map(() => new Array(COLS).fill(false));
+        let count = 0;
+        let queue = [{r, c}];
+        visited[r][c] = true;
+        const dr = [-1, 1, 0, 0];
+        const dc = [0, 0, -1, 1];
         
-        if (isMatch) availableColors.splice(i, 1);
+        while(queue.length > 0) {
+            let curr = queue.shift();
+            count++;
+            for (let d = 0; d < 4; d++) {
+                let nr = curr.r + dr[d];
+                let nc = curr.c + dc[d];
+                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                    let nextBlock = board[nr][nc];
+                    if (nextBlock && !nextBlock.isMoney && !visited[nr][nc] && nextBlock.color === color) {
+                        visited[nr][nc] = true;
+                        queue.push({r: nr, c: nc});
+                    }
+                }
+            }
+        }
+        
+        // 移除暫時擺放的色塊
+        board[r][c] = null;
+        
+        // 如果有任何形狀達到 3 個或以上相連，就絕對禁止這個顏色！
+        if (count >= 3) {
+            availableColors.splice(i, 1);
+        }
     }
+    
     if (availableColors.length === 0) return COLORS[Math.floor(Math.random() * COLORS.length)];
     return availableColors[Math.floor(Math.random() * availableColors.length)];
 }
@@ -752,6 +881,13 @@ async function refillBoard() {
     
     if (!hasEmpty) return;
 
+    // 嚴格排序空缺：從最底層開始填，同一層由左到右
+    // 這樣在 getSafeColorForRefill 時，下方與左方的方塊都已經是確定的顏色，才能完美避開 3 連線
+    emptySpots.sort((a, b) => {
+        if (b.r !== a.r) return b.r - a.r;
+        return a.c - b.c;
+    });
+
     let rewardSpotIndex = -1;
     if (guaranteedRewardValue > 0) {
         let upperSpots = emptySpots.filter(spot => spot.r >= 0 && spot.r <= 3);
@@ -764,17 +900,25 @@ async function refillBoard() {
         DOM.drawStatus.textContent = `⭐ 生成 ${currentCombo} 連鎖獎金球！`;
         await sleep(500);
     }
-
-    let randomSpawnChance = (Math.random() * 0.04) + 0.01;
-    let randomMoneySpotIndex = -1;
     
-    if (emptySpots.length > (guaranteedRewardValue > 0 ? 1 : 0) && Math.random() < randomSpawnChance) {
+    let randomMoneySpots = new Set();
+    let spawnMoneyBallsChance = Math.random() * 100;
+    if (spawnMoneyBallsChance < 10 && emptySpots.length > 0) {
+        let count = Math.floor(Math.random() * 3) + 1; // 1 to 3 balls
+        count = Math.min(count, emptySpots.length - (rewardSpotIndex !== -1 ? 1 : 0)); // Ensure enough empty spots
+        
+        // Pick available indices avoiding the reward spot
         let availableIndices = [];
         for (let i = 0; i < emptySpots.length; i++) {
             if (i !== rewardSpotIndex) availableIndices.push(i);
         }
-        if (availableIndices.length > 0) {
-            randomMoneySpotIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+        availableIndices.sort(() => Math.random() - 0.5);
+        
+        for (let i = 0; i < count && i < availableIndices.length; i++) {
+            randomMoneySpots.add(availableIndices[i]);
+        }
+        
+        if (randomMoneySpots.size > 0) {
             DOM.drawStatus.textContent = `✨ 天降隨機金錢球！ ✨`;
             await sleep(500);
         }
@@ -786,7 +930,7 @@ async function refillBoard() {
     // 預先在盤面上塞入佔位符，這樣 getSafeColorForRefill 才能判斷到剛生成的新球
     for (let i = 0; i < emptySpots.length; i++) {
         let {r, c} = emptySpots[i];
-        if (i === rewardSpotIndex || i === randomMoneySpotIndex) {
+        if (i === rewardSpotIndex || randomMoneySpots.has(i)) {
             board[r][c] = { isMoney: true }; // 佔位
         }
     }
@@ -797,7 +941,7 @@ async function refillBoard() {
         
         if (i === rewardSpotIndex) {
             block = createBlock(-1, c, null, true, guaranteedRewardValue);
-        } else if (i === randomMoneySpotIndex) {
+        } else if (randomMoneySpots.has(i)) {
             let randomValue = getRandomMoneyBallValue();
             block = createBlock(-1, c, null, true, randomValue);
         } else {
@@ -813,17 +957,17 @@ async function refillBoard() {
     }
     
     await sleep(500);
-    // 補球後，不重置 combo，也不自動消除，因為我們保證了補下來的球「不能」被削除
-    // await checkMatchesAndChain(); // 依照要求，補球後不應該有連鎖
+    // 恢復 checkMatchesAndChain 作為安全網，雖然演算法已保證不連鎖，
+    // 若機率極低發生顏色庫耗盡而 fallback 的情況，也能正確清除避免盤面卡死
+    await checkMatchesAndChain(); 
 }
 
 function showComboOverlay(combo) {
-    if (combo < 3 && combo !== 1) return; 
     DOM.comboOverlay.textContent = `${combo} COMBO!`;
     DOM.comboOverlay.classList.remove('show');
     void DOM.comboOverlay.offsetWidth;
     DOM.comboOverlay.classList.add('show');
-    setTimeout(() => { DOM.comboOverlay.classList.remove('show'); }, 1000);
+    setTimeout(() => { DOM.comboOverlay.classList.remove('show'); }, 500);
 }
 
 async function finishGameOverSequence() {

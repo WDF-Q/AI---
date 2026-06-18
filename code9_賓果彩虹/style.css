@@ -136,6 +136,17 @@ body {
     color: #f87171;
     border-color: #ef4444;
 }
+.ball-count-display {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.1rem;
+    color: #38bdf8;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+    border: 1px solid #0284c7;
+    margin-top: 10px;
+    display: inline-block;
+}
 
 /* 大轉盤 Vegas Roulette */
 .roulette-container {
@@ -176,14 +187,14 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: radial-gradient(circle, #fcd34d 0%, #ef4444 100%);
+    background-color: #000;
     animation: spFlash 0.3s infinite alternate;
     z-index: 0;
 }
 
 @keyframes spFlash {
-    0% { opacity: 0.2; transform: scale(0.98); }
-    100% { opacity: 1; transform: scale(1.02); }
+    0% { background-color: #000; }
+    100% { background-color: #555; }
 }
 
 /* 外圈大轉盤 */
@@ -193,7 +204,7 @@ body {
     height: 100%;
     border-radius: 50%;
     border: 8px solid #334155;
-    box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5); /* 移除外發光，保留內陰影 */
     z-index: 1; /* 位於 sp-flash-bg 之上 */
 }
 
@@ -305,13 +316,10 @@ body {
 .ball-history-container {
     display: flex;
     gap: 8px;
-    overflow-x: auto;
+    overflow-x: hidden;
     padding: 5px;
     min-height: 50px;
 }
-.ball-history-container::-webkit-scrollbar { height: 6px; }
-.ball-history-container::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
-.ball-history-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
 
 
 /* 控制區與押分 */
@@ -465,6 +473,37 @@ body {
 }
 
 /* 遊戲棋盤區塊 */
+.board-wr.game-board {
+    position: relative;
+    width: 380px; 
+    height: 508px; /* ROWS(8) * 64 - 4 */
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    border: 2px solid #334155;
+    overflow: hidden;
+}
+
+.elimination-zone {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 64px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 3px dashed rgba(239, 68, 68, 0.8);
+    color: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 5px;
+    pointer-events: none;
+    z-index: 0;
+    box-sizing: border-box;
+}
+
 .board-wrapper {
     position: relative;
     background: rgba(0, 0, 0, 0.3);
@@ -546,7 +585,7 @@ body {
 .block.eliminating {
     transform: scale(0);
     opacity: 0;
-    transition: all 0.3s;
+    transition: all 1s;
 }
 
 .block.money-ball {
@@ -698,4 +737,63 @@ body {
 @keyframes popIn {
     0% { transform: scale(0); }
     100% { transform: scale(1); }
+}
+
+.history-ball {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #fff;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.5);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Bird Mouth & Laser */
+.bird-mouth {
+    position: absolute;
+    top: 0;
+    width: 60px;
+    height: 40px;
+    background: linear-gradient(to bottom, #fde047, #f59e0b);
+    clip-path: polygon(10% 0, 90% 0, 50% 100%);
+    z-index: 30;
+    transition: left 0.3s ease;
+}
+.bird-mouth::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    width: 60%;
+    height: 10px;
+    background: #451a03;
+    border-radius: 0 0 50% 50%;
+}
+.bird-mouth.hidden {
+    display: none;
+}
+.laser-beam {
+    position: absolute;
+    top: 40px;
+    width: 60px;
+    height: calc(100% - 40px);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(56, 189, 248, 0.9) 20%, rgba(56, 189, 248, 0.2) 100%);
+    z-index: 25;
+    animation: laser-flash 0.6s ease-out forwards;
+}
+.laser-beam.hidden {
+    display: none;
+}
+@keyframes laser-flash {
+    0% { transform: scaleX(0); opacity: 0; }
+    20% { transform: scaleX(1.2); opacity: 1; filter: drop-shadow(0 0 15px #38bdf8); }
+    80% { transform: scaleX(1); opacity: 0.8; filter: drop-shadow(0 0 10px #38bdf8); }
+    100% { transform: scaleX(0); opacity: 0; }
 }
