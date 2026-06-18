@@ -77,6 +77,8 @@ def get_stocks():
             session = requests.Session()
             session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
             
+            raise Exception("Forced failure to test twstock fallback")
+            
             ticker = yf.Ticker(symbol, session=session)
             # If it's a foreign stock or not in twstock, fallback to yfinance info
             if company_name == symbol:
@@ -151,9 +153,53 @@ def get_stocks():
             })
 
         except Exception as e:
-            print(f"Error fetching {symbol} via yfinance: {e}. Trying twstock fallback.")
+            print(f"Error fetching {symbol} via yfinance: {e}. Trying FinMind fallback.")
+            clean_symbol = symbol.split('.')[0]
             try:
-                clean_symbol = symbol.split('.')[0]
+                end_date = datetime.now()
+                if mode == 'last_30':
+                    start_date = end_date - timedelta(days=45)
+                else:
+                    if month_str:
+                        year, month = map(int, month_str.split('-'))
+                        start_date = datetime(year, month, 1)
+                        if month == 12:
+                            end_date = datetime(year+1, 1, 1) - timedelta(days=1)
+                        else:
+                            end_date = datetime(year, month+1, 1) - timedelta(days=1)
+                
+                fm_url = f"https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id={clean_symbol}&start_date={start_date.strftime('%Y-%m-%d')}&end_date={end_date.strftime('%Y-%m-%d')}"
+                import requests
+                fm_res = requests.get(fm_url, timeout=5).json()
+                
+                if fm_res.get('msg') == 'success' and fm_res.get('data') and len(fm_res['data']) > 0:
+                    stock_data = []
+                    for row in fm_res['data']:
+                        stock_data.append({
+                            'date': row['date'],
+                            'prev_close': round(row['close'] - row['spread'], 2),
+                            'open': row['open'],
+                            'high': row['max'],
+                            'low': row['min'],
+                            'close': row['close']
+                        })
+                    if mode == 'last_30':
+                        stock_data = stock_data[-30:]
+                    stock_data.reverse()
+                    
+                    display_title = f"{company_name} / {clean_symbol}"
+                    results.append({
+                        'symbol': clean_symbol,
+                        'name': company_name,
+                        'display_title': display_title,
+                        'data': stock_data
+                    })
+                    continue
+            except Exception as fm_e:
+                print(f"FinMind fallback failed for {symbol}: {fm_e}")
+
+            print(f"Trying twstock fallback for {symbol}...")
+            try:
                 stock = twstock.Stock(clean_symbol)
                 stock_data = []
                 
@@ -277,9 +323,30 @@ def get_chart_data():
         })
         
     except Exception as e:
-        print(f"Chart Error fetching {symbol} via yfinance: {e}. Trying twstock fallback.")
+        print(f"Chart Error fetching {symbol} via yfinance: {e}. Trying FinMind fallback.")
+        clean_symbol = symbol.split('.')[0]
         try:
-            clean_symbol = symbol.split('.')[0]
+            # 抓取過去一年的資料作為線圖備用
+            start_date = datetime.now() - timedelta(days=365)
+            fm_url = f"https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id={clean_symbol}&start_date={start_date.strftime('%Y-%m-%d')}"
+            import requests
+            fm_res = requests.get(fm_url, timeout=5).json()
+            if fm_res.get('msg') == 'success' and fm_res.get('data') and len(fm_res['data']) > 0:
+                labels = [row['date'] for row in fm_res['data']]
+                prices = [row['close'] for row in fm_res['data']]
+                return jsonify({
+                    "symbol": clean_symbol,
+                    "name": company_name,
+                    "display_title": f"{company_name} / {clean_symbol} (備用線圖)",
+                    "labels": labels,
+                    "prices": prices,
+                    "range": "1Y" # FinMind 返回過去一年的資料
+                })
+        except Exception as fm_e:
+            print(f"Chart FinMind fallback failed: {fm_e}")
+
+        print(f"Trying twstock chart fallback for {symbol}...")
+        try:
             stock = twstock.Stock(clean_symbol)
             dates = stock.date
             if len(dates) > 0:
