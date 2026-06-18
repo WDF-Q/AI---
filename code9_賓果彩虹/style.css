@@ -475,8 +475,8 @@ body {
 /* 遊戲棋盤區塊 */
 .board-wr.game-board {
     position: relative;
-    width: 380px; 
-    height: 508px; /* ROWS(8) * 64 - 4 */
+    width: 344px;
+    height: 460px;
     background: rgba(15, 23, 42, 0.6);
     border-radius: 8px;
     border: 2px solid #334155;
@@ -542,26 +542,29 @@ body {
 
 .game-board {
     position: relative;
-    width: 380px; 
-    height: 508px; 
-    z-index: 1;
+    width: 344px;
+    height: 460px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    border: 2px solid #334155;
+    overflow: hidden;
 }
 
 /* 方塊 (立體圓球) */
 .block {
     position: absolute;
-    width: 60px;
-    height: 60px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: bold;
     color: white;
     cursor: default;
     transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-    box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), inset 10px 10px 20px rgba(255,255,255,0.6), 0 5px 15px rgba(0,0,0,0.4);
+    box-shadow: inset -8px -8px 18px rgba(0,0,0,0.5), inset 8px 8px 18px rgba(255,255,255,0.6), 0 5px 15px rgba(0,0,0,0.4);
 }
 
 .block::after {
@@ -603,16 +606,11 @@ body {
 }
 
 .block.flash-ball {
-    animation: flashGlow 0.8s infinite alternate;
+    animation: flashGlow 0.4s infinite alternate;
+    box-shadow: 0 0 15px 5px white, inset 0 0 10px white;
+    border: 2px solid white;
 }
-.block.flash-ball::before {
-    content: '⚡';
-    position: absolute;
-    font-size: 2rem;
-    z-index: 5;
-    text-shadow: 0 0 10px #fff;
-    opacity: 0.9;
-}
+
 
 /* History Tracker */
 .history-tracker {
@@ -759,7 +757,7 @@ body {
 .bird-mouth {
     position: absolute;
     top: 0;
-    width: 60px;
+    width: 54px;
     height: 40px;
     background: linear-gradient(to bottom, #fde047, #f59e0b);
     clip-path: polygon(10% 0, 90% 0, 50% 100%);
@@ -781,9 +779,9 @@ body {
 }
 .laser-beam {
     position: absolute;
-    top: 40px;
-    width: 60px;
-    height: calc(100% - 40px);
+    top: 0;
+    width: 54px;
+    height: 100%;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(56, 189, 248, 0.9) 20%, rgba(56, 189, 248, 0.2) 100%);
     z-index: 25;
     animation: laser-flash 0.6s ease-out forwards;
@@ -796,4 +794,16 @@ body {
     20% { transform: scaleX(1.2); opacity: 1; filter: drop-shadow(0 0 15px #38bdf8); }
     80% { transform: scaleX(1); opacity: 0.8; filter: drop-shadow(0 0 10px #38bdf8); }
     100% { transform: scaleX(0); opacity: 0; }
+}
+
+.bird-mouth-row {
+    position: relative;
+    width: 344px;
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+@keyframes flashGlow {
+    0% { filter: brightness(1); transform: scale(1); }
+    100% { filter: brightness(1.8) hue-rotate(20deg); transform: scale(1.08); box-shadow: 0 0 25px 10px rgba(255, 255, 255, 0.8), inset 0 0 15px white; }
 }

@@ -1,7 +1,7 @@
 const COLS = 6;
 const ROWS = 8;
-const BLOCK_SIZE = 60; 
-const GAP = 4; 
+const BLOCK_SIZE = 54; 
+const GAP = 4;  
 
 const COLORS = ['red', 'pink', 'blue', 'green', 'yellow'];
 const COLOR_ZH = {
@@ -546,10 +546,13 @@ async function startRightEngine() {
             
             if (event.type === 'layer8_hit') {
                 let eliminatedAny = false;
+                let flashColorsTriggered = new Set();
+                
                 for (let color of event.colors) {
                     for (let c = 0; c < COLS; c++) {
                         let block = board[ROWS - 1][c];
                         if (block !== null && !block.isMoney && block.color === color) {
+                            if (block.isFlash) flashColorsTriggered.add(block.color);
                             block.el.classList.add('eliminating');
                             setTimeout((el) => el.remove(), 1000, block.el);
                             board[ROWS - 1][c] = null;
@@ -557,6 +560,22 @@ async function startRightEngine() {
                         }
                     }
                 }
+                
+                if (flashColorsTriggered.size > 0) {
+                    DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
+                    for (let r = 0; r < ROWS; r++) {
+                        for (let c = 0; c < COLS; c++) {
+                            let block = board[r][c];
+                            if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                                block.el.classList.add('eliminating');
+                                setTimeout((el) => el.remove(), 1000, block.el);
+                                board[r][c] = null;
+                                eliminatedAny = true;
+                            }
+                        }
+                    }
+                }
+                
                 if (eliminatedAny) {
                     currentCombo = 1;
                     updateLadderActive(currentCombo);
@@ -575,14 +594,13 @@ async function startRightEngine() {
                     updateLadderActive(0);
                 }
             } else if (event.type === 'laser_strike') {
-                let targetCol = Math.floor(Math.random() * COLS);
                 let birdMouth = document.getElementById('bird-mouth');
-                let laserBeam = document.getElementById('laser-beam');
+                let leftPx = parseInt(birdMouth.style.left || "0", 10);
+                let targetCol = Math.round(leftPx / (BLOCK_SIZE + GAP));
                 
-                birdMouth.style.left = `${targetCol * (BLOCK_SIZE + GAP)}px`;
+                let laserBeam = document.getElementById('laser-beam');
                 laserBeam.style.left = `${targetCol * (BLOCK_SIZE + GAP)}px`;
                 
-                birdMouth.classList.remove('hidden');
                 laserBeam.classList.remove('hidden');
                 
                 // 重置動畫
@@ -594,6 +612,8 @@ async function startRightEngine() {
                 await sleep(400); // 等待雷射特效到達最大
                 
                 let moneyCollected = 0;
+                let flashColorsTriggered = new Set();
+                
                 for (let r = 0; r < ROWS; r++) {
                     let block = board[r][targetCol];
                     if (block !== null) {
@@ -601,10 +621,26 @@ async function startRightEngine() {
                             moneyCollected += block.moneyValue;
                             totalWin += block.moneyValue;
                             DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
+                        } else {
+                            if (block.isFlash) flashColorsTriggered.add(block.color);
                         }
                         block.el.classList.add('eliminating');
                         setTimeout((el) => el.remove(), 500, block.el);
                         board[r][targetCol] = null;
+                    }
+                }
+                
+                if (flashColorsTriggered.size > 0) {
+                    DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
+                    for (let r = 0; r < ROWS; r++) {
+                        for (let c = 0; c < COLS; c++) {
+                            let block = board[r][c];
+                            if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                                block.el.classList.add('eliminating');
+                                setTimeout((el) => el.remove(), 500, block.el);
+                                board[r][c] = null;
+                            }
+                        }
                     }
                 }
                 
@@ -615,7 +651,6 @@ async function startRightEngine() {
                 await sleep(500);
                 
                 laserBeam.classList.add('hidden');
-                birdMouth.classList.add('hidden');
                 
                 await applyGravity();
                 await checkMatchesAndChain();
@@ -633,7 +668,17 @@ async function startRightEngine() {
 }
 
 function initBoard() {
-    DOM.board.innerHTML = '<div class="elimination-zone">消除觸發區域</div>';
+    DOM.board.innerHTML = `
+        <div id="laser-beam" class="laser-beam hidden"></div>
+        <div class="elimination-zone">消除觸發區域</div>
+    `;
+    
+    let initialBirdCol = Math.floor(Math.random() * COLS);
+    let birdMouth = document.getElementById('bird-mouth');
+    if (birdMouth) {
+        birdMouth.style.left = `${initialBirdCol * (BLOCK_SIZE + GAP)}px`;
+    }
+    
     board = new Array(ROWS).fill(null).map(() => new Array(COLS).fill(null));
     
     let moneySpots = new Set();
@@ -925,7 +970,7 @@ async function refillBoard() {
     }
 
     let flashBallsCount = 0;
-    if (Math.random() < 0.01) flashBallsCount = Math.floor(Math.random() * 3) + 1; 
+    if (Math.random() < 0.50) flashBallsCount = Math.floor(Math.random() * 3) + 1; 
     
     // 預先在盤面上塞入佔位符，這樣 getSafeColorForRefill 才能判斷到剛生成的新球
     for (let i = 0; i < emptySpots.length; i++) {

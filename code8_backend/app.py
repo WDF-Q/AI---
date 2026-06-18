@@ -19,6 +19,12 @@ for code, info in twstock.codes.items():
         code_to_name[code] = info.name
         name_to_code[info.name] = code
 
+def get_yahoo_symbol(code):
+    info = twstock.codes.get(code)
+    if info and info.market == '上櫃':
+        return f"{code}.TWO"
+    return f"{code}.TW"
+
 def resolve_symbol(input_str):
     input_str = input_str.strip()
     if not input_str:
@@ -27,12 +33,12 @@ def resolve_symbol(input_str):
     # Check if input is a known name
     if input_str in name_to_code:
         code = name_to_code[input_str]
-        return f"{code}.TW", input_str, "name" # user input name
+        return get_yahoo_symbol(code), input_str, "name" # user input name
         
     # Check if input is a code
     if input_str.isdigit():
         name = code_to_name.get(input_str, input_str)
-        return f"{input_str}.TW", name, "code" # user input code
+        return get_yahoo_symbol(input_str), name, "code" # user input code
         
     # Fallback for arbitrary symbols (like AAPL)
     return input_str, input_str, "unknown"
@@ -131,10 +137,11 @@ def get_stocks():
             stock_data.reverse()
 
             # Always format as "公司名稱 / 代號"
-            display_title = f"{company_name} / {symbol.replace('.TW', '')}"
+            clean_symbol = symbol.split('.')[0]
+            display_title = f"{company_name} / {clean_symbol}"
 
             results.append({
-                'symbol': symbol.replace('.TW', ''),
+                'symbol': clean_symbol,
                 'name': company_name,
                 'display_title': display_title,
                 'data': stock_data
@@ -208,10 +215,11 @@ def get_chart_data():
                 
             prices.append(round(row['Close'], 2))
             
+        clean_symbol = symbol.split('.')[0]
         return jsonify({
-            "symbol": symbol.replace('.TW', ''),
+            "symbol": clean_symbol,
             "name": company_name,
-            "display_title": f"{company_name} / {symbol.replace('.TW', '')}",
+            "display_title": f"{company_name} / {clean_symbol}",
             "labels": labels,
             "prices": prices,
             "range": range_str
