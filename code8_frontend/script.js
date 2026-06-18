@@ -221,18 +221,23 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.innerHTML = ''; 
 
         const validStocks = results.filter(s => !s.error && s.data && s.data.length > 0);
+        const failedStocks = results.filter(s => s.error || !s.data || s.data.length === 0);
 
         if (validStocks.length === 0) {
-            resultsContainer.innerHTML = `
-                <div class="empty-state glass-panel">
-                    <div class="empty-icon">🎀</div>
-                    <p>沒有查詢到任何有效資料，請檢查代號或名稱是否正確喔</p>
-                </div>
-            `;
-            return;
+            resultsContainer.innerHTML = ''; // Don't show empty state if we have errors
+            if (failedStocks.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state glass-panel">
+                        <div class="empty-icon">🎀</div>
+                        <p>沒有查詢到有效資料。請檢查代號是否正確，或伺服器被阻擋。</p>
+                    </div>
+                `;
+                return;
+            }
         }
 
-        const dateSet = new Set();
+        if (validStocks.length > 0) {
+            const dateSet = new Set();
         validStocks.forEach(stock => stock.data.forEach(row => dateSet.add(row.date)));
         const sortedDates = Array.from(dateSet).sort((a, b) => b.localeCompare(a));
 
@@ -305,20 +310,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbodyHtml += `</tbody>`;
 
-        const tableHtml = `<table>${theadHtml}${tbodyHtml}</table>`;
-        container.innerHTML = tableHtml;
-        resultsContainer.appendChild(container);
-        
-        // Add click events to headers
-        const headers = container.querySelectorAll('.stock-header-cell');
-        headers.forEach(header => {
-            header.addEventListener('click', () => {
-                const symbol = header.dataset.symbol;
-                openChartView(symbol);
+            const tableHtml = `<table>${theadHtml}${tbodyHtml}</table>`;
+            container.innerHTML = tableHtml;
+            resultsContainer.appendChild(container);
+            
+            // Add click events to headers
+            const headers = container.querySelectorAll('.stock-header-cell');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const symbol = header.dataset.symbol;
+                    openChartView(symbol);
+                });
             });
-        });
+        }
         
-        const failedStocks = results.filter(s => s.error || !s.data || s.data.length === 0);
         if (failedStocks.length > 0) {
             const errorMsg = document.createElement('div');
             errorMsg.style.color = 'var(--danger)';
