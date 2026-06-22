@@ -244,10 +244,11 @@ def get_stocks():
                 print(f"twstock fallback also failed for {symbol}: {tw_e}")
             
             # If all else fails
+            clean_sym = symbol.split('.')[0] if '.' in symbol else symbol
             results.append({
-                'symbol': raw_input,
-                'name': raw_input,
-                'display_title': raw_input,
+                'symbol': clean_sym,
+                'name': company_name,
+                'display_title': f"{company_name} / {clean_sym}",
                 'error': str(e),
                 'data': []
             })
