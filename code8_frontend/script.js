@@ -365,7 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
             renderUnifiedTable(data.results);
         } catch (error) {
             console.error('Error fetching data:', error);
-            alert('抓取資料失敗，請稍後再試');
+            if (API_BASE_URL.includes('onrender.com')) {
+                alert('⚠️ 雲端伺服器正在從週末休眠中喚醒 (約需 1~2 分鐘)。\n\n請稍候片刻，再按一次「更新資料」即可！');
+            } else {
+                alert('⚠️ 無法連線到後端系統！\n\n請確認您是否已經點擊執行了「啟動股價系統後端.bat」，且黑色視窗並未關閉。');
+            }
         } finally {
             refreshBtn.classList.remove('loading');
             refreshBtn.disabled = false;
