@@ -1,7 +1,46 @@
-// 動態判斷 API 網址：如果在本機執行就連本機伺服器，如果在 GitHub 上就連 Render 伺服器
-const API_BASE_URL = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://127.0.0.1:5000'
+// 動態判斷 API 網址：如果在本機執行就連本機伺服器，如果在// Determine API Base URL based on environment
+const API_BASE_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' || window.location.protocol === 'file:') 
+    ? 'http://127.0.0.1:5000' 
     : 'https://code8-rhsc.onrender.com';
+
+// Cache for stock mapping to resolve Chinese names to IDs
+let finmindStockMapping = null;
+
+async function getStockIdFromName(nameOrId) {
+    if (!nameOrId) return { id: nameOrId, name: nameOrId };
+    
+    // Clean suffix if any (e.g., .TW)
+    nameOrId = nameOrId.split('.')[0];
+    
+    // If it's already a number, return it
+    const match = nameOrId.match(/^\d+/);
+    if (match && match[0] === nameOrId) {
+        // We know the ID, but what about the name?
+        // We can fetch mapping to get the name if we want, but let's just return it for now
+        // We will fetch mapping anyway to get the proper name
+    }
+
+    if (!finmindStockMapping) {
+        try {
+            const res = await fetch('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo');
+            const json = await res.json();
+            if (json.msg === 'success' && json.data) {
+                finmindStockMapping = json.data;
+            }
+        } catch(e) {
+            console.error("Failed to fetch FinMind mapping", e);
+        }
+    }
+
+    if (finmindStockMapping) {
+        for(let s of finmindStockMapping) {
+            if (s.stock_name === nameOrId) return { id: s.stock_id, name: s.stock_name };
+            if (s.stock_id === nameOrId) return { id: s.stock_id, name: s.stock_name };
+        }
+    }
+    
+    return { id: nameOrId, name: nameOrId };
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const inputsContainer = document.getElementById('inputs-container');
@@ -134,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // --- FRONTEND FINMIND CHART RESCUE ---
             try {
-                let cleanSymbol = symbol.split('.')[0];
+                let { id: cleanSymbol, name: correctName } = await getStockIdFromName(symbol);
                 let d = new Date();
                 d.setFullYear(d.getFullYear() - 1);
                 let startDateStr = d.toISOString().split('T')[0];
@@ -146,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const labels = fmData.data.map(r => r.date);
                     const prices = fmData.data.map(r => r.close);
                     
-                    document.getElementById('chart-title').textContent = `${symbol} (備用線圖)`;
+                    document.getElementById('chart-title').textContent = `${correctName} / ${cleanSymbol} (備用線圖)`;
                     
                     const latest = prices[prices.length - 1];
                     const first = prices[0];
@@ -406,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let stock = data.results[i];
                 if (stock.error && stock.symbol) {
                     try {
-                        let cleanSymbol = stock.symbol.split('.')[0];
+                        let { id: cleanSymbol, name: correctName } = await getStockIdFromName(stock.symbol);
                         let d = new Date();
                         let endDateStr = d.toISOString().split('T')[0];
                         d.setDate(d.getDate() - 45); // grab 45 calendar days to ensure 30 trading days
@@ -432,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             stock.data = stockData;
                             stock.error = null; // Clear error to display table
-                            stock.display_title = `${stock.name || stock.symbol} (備用連線)`;
+                            stock.display_title = `${correctName} / ${cleanSymbol} (備用連線)`;
                         }
                     } catch (e) {
                         console.error("Frontend FinMind rescue failed for", stock.symbol, e);
