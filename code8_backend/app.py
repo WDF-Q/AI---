@@ -77,8 +77,6 @@ def get_stocks():
             session = requests.Session()
             session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
             
-            raise Exception("Forced failure to test twstock fallback")
-            
             ticker = yf.Ticker(symbol, session=session)
             # If it's a foreign stock or not in twstock, fallback to yfinance info
             if company_name == symbol:
