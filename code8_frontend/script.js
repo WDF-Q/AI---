@@ -131,6 +131,44 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error(error);
+            
+            // --- FRONTEND FINMIND CHART RESCUE ---
+            try {
+                let cleanSymbol = symbol.split('.')[0];
+                let d = new Date();
+                d.setFullYear(d.getFullYear() - 1);
+                let startDateStr = d.toISOString().split('T')[0];
+                let fmUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${cleanSymbol}&start_date=${startDateStr}`;
+                let fmRes = await fetch(fmUrl);
+                let fmData = await fmRes.json();
+                
+                if (fmData.msg === 'success' && fmData.data && fmData.data.length > 0) {
+                    const labels = fmData.data.map(r => r.date);
+                    const prices = fmData.data.map(r => r.close);
+                    
+                    document.getElementById('chart-title').textContent = `${symbol} (備用線圖)`;
+                    
+                    const latest = prices[prices.length - 1];
+                    const first = prices[0];
+                    const diff = latest - first;
+                    const percent = (diff / first) * 100;
+                    const sign = diff >= 0 ? '+' : '';
+                    const colorClass = diff >= 0 ? 'price-up' : 'price-down';
+                    chartPriceInfo.innerHTML = `
+                        <span class="${colorClass}">${latest.toFixed(2)}</span>
+                        <span style="font-size: 1rem; margin-left: 10px;" class="${colorClass}">
+                            ${sign}${diff.toFixed(2)} (${sign}${percent.toFixed(2)}%)
+                        </span>
+                    `;
+                    
+                    renderChart(labels, prices, "1Y");
+                    return; // Rescued successfully!
+                }
+            } catch (rescueErr) {
+                console.error("Frontend FinMind Chart rescue failed", rescueErr);
+            }
+            // -------------------------------------
+
             alert('抓取圖表資料失敗');
         }
     };
@@ -362,6 +400,47 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Network response was not ok');
 
             const data = await response.json();
+            
+            // --- FRONTEND FINMIND FALLBACK RESCUE ---
+            for (let i = 0; i < data.results.length; i++) {
+                let stock = data.results[i];
+                if (stock.error && stock.symbol) {
+                    try {
+                        let cleanSymbol = stock.symbol.split('.')[0];
+                        let d = new Date();
+                        let endDateStr = d.toISOString().split('T')[0];
+                        d.setDate(d.getDate() - 45); // grab 45 calendar days to ensure 30 trading days
+                        let startDateStr = d.toISOString().split('T')[0];
+                        
+                        let fmUrl = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${cleanSymbol}&start_date=${startDateStr}&end_date=${endDateStr}`;
+                        let fmRes = await fetch(fmUrl);
+                        let fmData = await fmRes.json();
+                        
+                        if (fmData.msg === 'success' && fmData.data && fmData.data.length > 0) {
+                            let stockData = fmData.data.map(row => ({
+                                date: row.date,
+                                prev_close: Math.round((row.close - row.spread) * 100) / 100,
+                                open: row.open,
+                                high: row.max,
+                                low: row.min,
+                                close: row.close
+                            })).reverse();
+                            
+                            if (mode === 'last_30') {
+                                stockData = stockData.slice(0, 30);
+                            }
+                            
+                            stock.data = stockData;
+                            stock.error = null; // Clear error to display table
+                            stock.display_title = `${stock.name || stock.symbol} (備用連線)`;
+                        }
+                    } catch (e) {
+                        console.error("Frontend FinMind rescue failed for", stock.symbol, e);
+                    }
+                }
+            }
+            // ----------------------------------------
+
             renderUnifiedTable(data.results);
         } catch (error) {
             console.error('Error fetching data:', error);
