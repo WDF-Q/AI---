@@ -140,12 +140,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ symbol, range })
             });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || 'Network response was not ok');
+            }
+
             const data = await response.json();
             
-            if(data.error) {
-                alert("無法取得該區間圖表資料");
-                return;
+            if (data.error) {
+                throw new Error(data.error);
             }
+            
+            // --- DETECT YAHOO FINANCE PRICE ANOMALIES ---
+            let hasAnomaly = false;
+            if (data.prices && data.prices.length > 1) {
+                for (let i = 1; i < data.prices.length; i++) {
+                    const prevPrice = data.prices[i-1];
+                    const currPrice = data.prices[i];
+                    if (prevPrice > 0 && currPrice > 0) {
+                        const ratio = currPrice / prevPrice;
+                        if (ratio > 1.4 || ratio < 0.6) {
+                            hasAnomaly = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (hasAnomaly) {
+                throw new Error('Yahoo Finance returned anomalous data (>40% gap)');
+            }
+            // ---------------------------------------------
             
             chartTitle.textContent = data.display_title;
             const prices = data.prices;
@@ -443,7 +469,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- FRONTEND FINMIND FALLBACK RESCUE ---
             for (let i = 0; i < data.results.length; i++) {
                 let stock = data.results[i];
-                if (stock.error && stock.symbol) {
+                
+                // Detect yfinance adjustment bug: unrealistic price jumps (>30%)
+                let hasAnomaly = false;
+                if (!stock.error && stock.data && stock.data.length > 1) {
+                    for (let j = 0; j < stock.data.length - 1; j++) {
+                        let currentDay = stock.data[j]; // newer date
+                        let prevDay = stock.data[j+1]; // older date
+                        if (prevDay.close > 0 && currentDay.close > 0) {
+                            let ratio = currentDay.close / prevDay.close;
+                            if (ratio > 1.4 || ratio < 0.6) {
+                                hasAnomaly = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (stock.error || hasAnomaly) {
                     try {
                         let { id: cleanSymbol, name: correctName } = await getStockIdFromName(stock.symbol);
                         let d = new Date();
@@ -471,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             stock.data = stockData;
                             stock.error = null; // Clear error to display table
-                            stock.display_title = `${correctName} / ${cleanSymbol} (備用連線)`;
+                            stock.display_title = `${correctName} / ${cleanSymbol} (備用連線${hasAnomaly ? ': 資料校正' : ''})`;
                         }
                     } catch (e) {
                         console.error("Frontend FinMind rescue failed for", stock.symbol, e);
