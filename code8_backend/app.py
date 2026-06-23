@@ -86,7 +86,7 @@ def get_stocks():
             print(f"DEBUG: Fetching {symbol} for {company_name}")
 
             if mode == 'last_30':
-                hist = ticker.history(period="3mo") 
+                hist = ticker.history(period="3mo", auto_adjust=False) 
                 print(f"DEBUG: {symbol} hist empty? {hist.empty}")
                 if hist.empty:
                     results.append({
@@ -106,7 +106,7 @@ def get_stocks():
                 last_day = calendar.monthrange(year, month)[1]
                 end_date = datetime(year, month, last_day) + timedelta(days=1)
                 buffer_start = start_date - timedelta(days=15)
-                hist = ticker.history(start=buffer_start.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
+                hist = ticker.history(start=buffer_start.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), auto_adjust=False)
                 if hist.empty:
                     continue
             else:
@@ -288,7 +288,7 @@ def get_chart_data():
         session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
         
         ticker = yf.Ticker(symbol, session=session)
-        hist = ticker.history(period=params['period'], interval=params['interval'])
+        hist = ticker.history(period=params['period'], interval=params['interval'], auto_adjust=False)
         
         if hist.empty:
             return jsonify({"error": "No data found", "data": [], "labels": []})
