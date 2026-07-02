@@ -68,8 +68,7 @@ let pendingDrawsQueue = 0;
 // Roulette animation tracking
 let outerWheelRotation = 0;
 let innerWheelRotation = 0;
-let ballState = 'idle'; // 'idle', 'spinning_outer', 'landed_outer', 'spinning_inner', 'landed_inner'
-let ballOffsetAngle = 0; // The angle offset of the ball relative to the wheel it's stuck on
+let activeBalls = [];
 
 const DOM = {
     board: document.getElementById('game-board'),
@@ -92,6 +91,27 @@ const DOM = {
     fireBox: document.getElementById('fire-box'),
     ballHistory: document.getElementById('ball-history')
 };
+
+function startWheelRotations() {
+    function animate() {
+        outerWheelRotation = (outerWheelRotation + 0.5) % 360; 
+        innerWheelRotation = (innerWheelRotation + 1.5) % 360; 
+        
+        DOM.rouletteOuter.style.transform = `rotate(${outerWheelRotation}deg)`;
+        DOM.rouletteInner.style.transform = `translate(-50%, -50%) rotate(${innerWheelRotation}deg)`;
+        
+        for (let ball of activeBalls) {
+            if (ball.state === 'landed_outer') {
+                ball.orbitEl.style.transform = `rotate(${outerWheelRotation + ball.offsetAngle}deg)`;
+            } else if (ball.state === 'landed_inner') {
+                ball.orbitEl.style.transform = `rotate(${innerWheelRotation + ball.offsetAngle}deg)`;
+            }
+        }
+        
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
 
 function initRouletteVisuals() {
     // Outer Wheel
@@ -134,26 +154,6 @@ function initRouletteVisuals() {
     
     startWheelRotations();
 }
-
-function startWheelRotations() {
-    function animate() {
-        outerWheelRotation = (outerWheelRotation + 0.5) % 360; 
-        innerWheelRotation = (innerWheelRotation + 1.5) % 360; 
-        DOM.rouletteOuter.style.transform = `rotate(${outerWheelRotation}deg)`;
-        DOM.rouletteInner.style.transform = `translate(-50%, -50%) rotate(${innerWheelRotation}deg)`;
-        
-        // Physics tracking for the ball!
-        if (ballState === 'landed_outer') {
-            DOM.rouletteBallOrbit.style.transform = `rotate(${outerWheelRotation + ballOffsetAngle}deg)`;
-        } else if (ballState === 'landed_inner') {
-            DOM.rouletteBallOrbit.style.transform = `rotate(${innerWheelRotation + ballOffsetAngle}deg)`;
-        }
-        
-        requestAnimationFrame(animate);
-    }
-    animate();
-}
-
 initRouletteVisuals();
 
 document.querySelectorAll('.chip-btn').forEach(btn => {
@@ -298,6 +298,7 @@ async function startGame() {
     DOM.drawStatus.textContent = '遊戲開始！';
     await sleep(1000);
     
+    leftEngineActive = true;
     startLeftEngine();
     startRightEngine();
 }
@@ -346,19 +347,24 @@ function updateResultText(resultText, colorClass) {
     else DOM.rouletteResultText.style.color = '#a855f7'; // SP
 }
 
-async function spinVegasRoulette(targetMain, isInner = false, innerTargetText = null, innerTargetColor = null, innerTargetPair = null) {
+async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = null, innerTargetColor = null, innerTargetPair = null) {
+    let orbitEl = document.createElement('div');
+    orbitEl.className = 'roulette-ball-orbit';
+    let ballEl = document.createElement('div');
+    ballEl.className = 'roulette-ball visible';
+    orbitEl.appendChild(ballEl);
+    
+    document.querySelector('.roulette-wheel-wrapper').appendChild(orbitEl);
+    
+    let ballObj = { orbitEl, ballEl, state: 'spinning_outer', offsetAngle: 0 };
+    activeBalls.push(ballObj);
+    
     DOM.fireBox.classList.add('active');
     DOM.fireBox.textContent = '發球！';
-    DOM.rouletteResultText.textContent = '???';
-    DOM.rouletteResultText.style.color = '#fff';
     
-    ballState = 'spinning_outer';
-    DOM.rouletteBallOrbit.style.transition = 'none';
-    DOM.rouletteBallOrbit.style.transform = `rotate(0deg)`;
-    DOM.rouletteBall.classList.remove('dive-inner');
-    void DOM.rouletteBallOrbit.offsetWidth; 
-    
-    DOM.rouletteBall.classList.add('visible');
+    orbitEl.style.transition = 'none';
+    orbitEl.style.transform = `rotate(0deg)`;
+    void orbitEl.offsetWidth; 
     
     let baseSpins = 3 * 360; 
     
@@ -370,41 +376,36 @@ async function spinVegasRoulette(targetMain, isInner = false, innerTargetText = 
     let anglePerSlotOuter = 360 / 21;
     let slotCenterOuter = (targetIndexOuter * anglePerSlotOuter) + (anglePerSlotOuter / 2);
     
-    // Calculate world angle exactly 2s from now
     let predictedOuterRotation = (outerWheelRotation + (0.5 * 120)) % 360; 
     let targetWorldAngle = predictedOuterRotation + slotCenterOuter; 
     
     let targetModOuter = ((targetWorldAngle % 360) + 360) % 360;
     let orbitTargetRot = -(baseSpins + (360 - targetModOuter) % 360);
     
-    DOM.rouletteBallOrbit.style.transition = 'transform 2s cubic-bezier(0.25, 1, 0.5, 1)'; 
-    DOM.rouletteBallOrbit.style.transform = `rotate(${orbitTargetRot}deg)`;
+    orbitEl.style.transition = 'transform 2s cubic-bezier(0.25, 1, 0.5, 1)'; 
+    orbitEl.style.transform = `rotate(${orbitTargetRot}deg)`;
     await sleep(2000);
     
-    // LANDED on Outer Wheel! Follow it physically!
-    ballState = 'landed_outer';
-    ballOffsetAngle = orbitTargetRot - outerWheelRotation;
-    DOM.rouletteBallOrbit.style.transition = 'none';
+    ballObj.state = 'landed_outer';
+    ballObj.offsetAngle = orbitTargetRot - outerWheelRotation;
+    orbitEl.style.transition = 'none';
     
     if (!isInner) {
         DOM.fireBox.classList.remove('active');
         DOM.fireBox.textContent = 'WAIT';
-        ballState = 'idle';
-        DOM.rouletteBall.classList.remove('visible');
+        ballEl.classList.remove('visible');
         updateResultText(targetMain.toUpperCase(), targetMain);
         await sleep(500);
     } else {
-        // user requested 0.5s pause before diving in
         await sleep(500);
         
         DOM.rouletteResultText.textContent = '進入內圈小轉盤！';
         DOM.rouletteResultText.style.color = '#a855f7';
-        DOM.rouletteBall.classList.add('dive-inner');
+        ballEl.classList.add('dive-inner');
         
-        await sleep(500); // Wait for the visual drop (CSS transition is 0.5s)
+        await sleep(500); 
         
-        // Now spin around the inner wheel for 1s
-        ballState = 'spinning_inner';
+        ballObj.state = 'spinning_inner';
         let innerSpins = 2 * 360; 
         
         let targetIndexInner = 0;
@@ -415,12 +416,10 @@ async function spinVegasRoulette(targetMain, isInner = false, innerTargetText = 
         let anglePerSlotInner = 360 / 6;
         let slotCenterInner = (targetIndexInner * anglePerSlotInner) + (anglePerSlotInner / 2);
         
-        // Predict inner wheel rotation 1s (60 frames) from now
         let predictedInnerRotation = (innerWheelRotation + (1.5 * 60)) % 360;
         let innerTargetWorldAngle = predictedInnerRotation + slotCenterInner;
         
-        // Start from current orbit rotation to ensure smoothness
-        let currentBallWorldAngle = outerWheelRotation + ballOffsetAngle;
+        let currentBallWorldAngle = outerWheelRotation + ballObj.offsetAngle;
         
         let currentMod = ((currentBallWorldAngle % 360) + 360) % 360;
         let targetModInner = ((innerTargetWorldAngle % 360) + 360) % 360;
@@ -429,106 +428,145 @@ async function spinVegasRoulette(targetMain, isInner = false, innerTargetText = 
         
         let nextOrbitTargetRot = currentBallWorldAngle + innerSpins + deltaInner;
         
-        DOM.rouletteBallOrbit.style.transition = 'transform 1s cubic-bezier(0.25, 1, 0.5, 1)';
-        DOM.rouletteBallOrbit.style.transform = `rotate(${nextOrbitTargetRot}deg)`;
+        orbitEl.style.transition = 'transform 1s cubic-bezier(0.25, 1, 0.5, 1)';
+        orbitEl.style.transform = `rotate(${nextOrbitTargetRot}deg)`;
         
         await sleep(1000);
         
-        // LANDED on Inner Wheel!
-        ballState = 'landed_inner';
-        ballOffsetAngle = nextOrbitTargetRot - innerWheelRotation;
-        DOM.rouletteBallOrbit.style.transition = 'none';
+        ballObj.state = 'landed_inner';
+        ballObj.offsetAngle = nextOrbitTargetRot - innerWheelRotation;
+        orbitEl.style.transition = 'none';
         
-        // Wait briefly to show it clearly stuck in the inner hole
         await sleep(500);
         
         DOM.fireBox.classList.remove('active');
         DOM.fireBox.textContent = 'WAIT';
-        ballState = 'idle';
-        DOM.rouletteBall.classList.remove('visible'); 
+        ballEl.classList.remove('visible'); 
         updateResultText(innerTargetText, innerTargetColor);
         await sleep(800);
+    }
+    
+    orbitEl.remove();
+    activeBalls = activeBalls.filter(b => b !== ballObj);
+}
+
+async function shootBallAsync(isSafeMode) {
+    let baseDraw = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
+    
+    if (baseDraw === 'white') {
+        await spawnAndSpinBall('white', false);
+        historyTracker.white++;
+        addBallToHistoryUI('白色', 'white');
+        
+        if (!isSafeMode) {
+            isGameOverTriggered = true;
+            pendingEventsQueue.push({ type: 'game_over' });
+            DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
+            return 'game_over';
+        } else {
+            DOM.drawStatus.textContent = '安全期！抽中白球不結束。';
+            return 'safe_white';
+        }
+    } else if (baseDraw === 'roulette') {
+        let r = Math.random();
+        if (r < 1/6) {
+            await spawnAndSpinBall('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
+            historyTracker.rainbow++;
+            addBallToHistoryUI('彩色', 'rainbow');
+            
+            pendingEventsQueue.push({ type: 'laser_strike' });
+            DOM.drawStatus.textContent = '彩色球！獲得雷射！';
+            return 'rainbow';
+        } else {
+            let pair = getSmallRoulettePair();
+            await spawnAndSpinBall('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
+            historyTracker[pair[0]]++;
+            historyTracker[pair[1]]++;
+            let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
+            addBallToHistoryUI('雙色', null, gradient);
+            
+            pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
+            DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
+            return 'sp';
+        }
+    } else {
+        let color = baseDraw;
+        await spawnAndSpinBall(color, false);
+        historyTracker[color]++;
+        addBallToHistoryUI(COLOR_ZH[color], color);
+        
+        pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
+        DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
+        return 'color';
     }
 }
 
 async function startLeftEngine() {
-    leftEngineActive = true;
-    
     while (leftEngineActive && !isGameOverTriggered) {
         if (pendingDrawsQueue === 0) pendingDrawsQueue = 1;
         
         while (pendingDrawsQueue > 0 && !isGameOverTriggered) {
-            let randomInterval = Math.floor(Math.random() * 1000) + 500; 
-            await sleep(randomInterval);
-            
-            ballCount++;
-            DOM.ballCountText.textContent = ballCount;
-            let isSafeMode = (ballCount <= 3) || (pendingInitialBatch > 0 && pendingDrawsQueue > 0); 
-            
-            if (!isSafeMode) {
-                DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
-                DOM.safeIndicator.className = 'safe-indicator danger';
-            }
-            
-            let baseDraw = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
-            
-            if (baseDraw === 'white') {
-                await spinVegasRoulette('white', false);
-                historyTracker.white++;
-                addBallToHistoryUI('白色', 'white');
-                
-                if (!isSafeMode) {
-                    isGameOverTriggered = true;
-                    pendingEventsQueue.push({ type: 'game_over' });
-                    DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
-                    break; 
-                } else {
-                    DOM.drawStatus.textContent = `安全期！抽中白球不結束。`;
-                }
-            } else if (baseDraw === 'roulette') {
-                let r = Math.random();
-                if (r < 1/6) {
-                    await spinVegasRoulette('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
-                    historyTracker.rainbow++;
-                    addBallToHistoryUI('彩色', 'rainbow');
-                    pendingDrawsQueue += 3;
-                    if (pendingInitialBatch === 0) {
-                        pendingInitialBatch = 4;
-                    } else {
-                        pendingInitialBatch += 3;
+            try {
+                if (pendingInitialBatch > 0) {
+                    let batchCount = pendingInitialBatch;
+                    pendingInitialBatch = 0;
+                    pendingDrawsQueue -= batchCount;
+                    
+                    let promises = [];
+                    let rainbowTriggeredCount = 0;
+                    
+                    for (let i = 0; i < batchCount; i++) {
+                        if (isGameOverTriggered) break;
+                        ballCount++;
+                        DOM.ballCountText.textContent = ballCount;
+                        let isSafeMode = true; 
+                        
+                        let p = shootBallAsync(isSafeMode).then(res => {
+                            if (res === 'rainbow') rainbowTriggeredCount++;
+                            updateHistoryUI();
+                        }).catch(e => console.error("Left engine batch error:", e));
+                        promises.push(p);
+                        
+                        if (i < batchCount - 1) {
+                            await sleep(800);
+                        }
                     }
-                    DOM.drawStatus.textContent = `彩色球！獲得 3 連發與雷射！`;
                     
-                    // 新增鳥嘴雷射事件
-                    pendingEventsQueue.push({ type: 'laser_strike' });
+                    await Promise.all(promises);
+                    
+                    if (rainbowTriggeredCount > 0) {
+                        pendingDrawsQueue += (rainbowTriggeredCount * 3);
+                        pendingInitialBatch += (rainbowTriggeredCount * 3);
+                    } else {
+                        pendingEventsQueue.push({ type: 'trigger_chains' });
+                    }
                     
                 } else {
-                    let pair = getSmallRoulettePair();
-                    await spinVegasRoulette('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
-                    historyTracker[pair[0]]++;
-                    historyTracker[pair[1]]++;
-                    let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
-                    addBallToHistoryUI('雙色', null, gradient);
+                    let randomInterval = Math.floor(Math.random() * 1000) + 500; 
+                    await sleep(randomInterval);
                     
-                    pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
-                    DOM.drawStatus.textContent = `小轉盤：同步消除雙色！`;
+                    ballCount++;
+                    DOM.ballCountText.textContent = ballCount;
+                    let isSafeMode = (ballCount <= 3); 
+                    
+                    if (!isSafeMode) {
+                        DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
+                        DOM.safeIndicator.className = 'safe-indicator danger';
+                    }
+                    
+                    let res = await shootBallAsync(isSafeMode);
+                    updateHistoryUI();
+                    
+                    pendingDrawsQueue--;
+                    if (res === 'rainbow') {
+                        pendingDrawsQueue += 3;
+                        pendingInitialBatch += 3;
+                    } else {
+                        pendingEventsQueue.push({ type: 'trigger_chains' });
+                    }
                 }
-            } else {
-                let color = baseDraw;
-                await spinVegasRoulette(color, false);
-                historyTracker[color]++;
-                addBallToHistoryUI(COLOR_ZH[color], color);
-                
-                pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
-                DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
-            }
-            
-            updateHistoryUI();
-            pendingDrawsQueue--;
-            if (pendingInitialBatch > 0) pendingInitialBatch--;
-            
-            if (pendingInitialBatch === 0) {
-                pendingEventsQueue.push({ type: 'trigger_chains' });
+            } catch (err) {
+                console.error("Left engine error:", err);
             }
         }
     }
@@ -542,128 +580,140 @@ async function startRightEngine() {
         if (boardState === 'IDLE' && pendingEventsQueue.length > 0) {
             boardState = 'BUSY';
             
-            let event = pendingEventsQueue.shift();
+            try {
+                let event = pendingEventsQueue.shift();
             
-            if (event.type === 'layer8_hit') {
-                let eliminatedAny = false;
-                let flashColorsTriggered = new Set();
-                
-                for (let color of event.colors) {
-                    for (let c = 0; c < COLS; c++) {
-                        let block = board[ROWS - 1][c];
-                        if (block !== null && !block.isMoney && block.color === color) {
-                            if (block.isFlash) flashColorsTriggered.add(block.color);
-                            block.el.classList.add('eliminating');
-                            setTimeout((el) => el.remove(), 1000, block.el);
-                            board[ROWS - 1][c] = null;
-                            eliminatedAny = true;
-                        }
-                    }
-                }
-                
-                if (flashColorsTriggered.size > 0) {
-                    DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
-                    for (let r = 0; r < ROWS; r++) {
+                if (event.type === 'layer8_hit') {
+                    let eliminatedAny = false;
+                    let flashColorsTriggered = new Set();
+                    
+                    for (let color of event.colors) {
                         for (let c = 0; c < COLS; c++) {
-                            let block = board[r][c];
-                            if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                            let block = board[ROWS - 1][c];
+                            if (block !== null && !block.isMoney && block.color === color) {
+                                if (block.isFlash) flashColorsTriggered.add(block.color);
                                 block.el.classList.add('eliminating');
                                 setTimeout((el) => el.remove(), 1000, block.el);
-                                board[r][c] = null;
+                                board[ROWS - 1][c] = null;
                                 eliminatedAny = true;
                             }
                         }
                     }
-                }
-                
-                if (eliminatedAny) {
-                    currentCombo = 1;
-                    updateLadderActive(currentCombo);
-                    DOM.drawStatus.textContent = `${currentCombo} 連鎖！(底部引爆)`;
-                    showComboOverlay(currentCombo);
-                    await sleep(1000);
-                    batchEliminatedAny = true;
-                }
-            } else if (event.type === 'trigger_chains') {
-                if (batchEliminatedAny) {
-                    await applyGravity();
-                    await checkMatchesAndChain();
-                    await refillBoard();
-                    batchEliminatedAny = false;
-                    currentCombo = 0;
-                    updateLadderActive(0);
-                }
-            } else if (event.type === 'laser_strike') {
-                let birdMouth = document.getElementById('bird-mouth');
-                let leftPx = parseInt(birdMouth.style.left || "0", 10);
-                let targetCol = Math.round(leftPx / (BLOCK_SIZE + GAP));
-                
-                let laserBeam = document.getElementById('laser-beam');
-                laserBeam.style.left = `${targetCol * (BLOCK_SIZE + GAP)}px`;
-                
-                laserBeam.classList.remove('hidden');
-                
-                // 重置動畫
-                laserBeam.style.animation = 'none';
-                void laserBeam.offsetWidth;
-                laserBeam.style.animation = 'laser-flash 0.6s ease-out forwards';
-                
-                DOM.drawStatus.textContent = `⚡ 鳥嘴雷射發射！ ⚡`;
-                await sleep(400); // 等待雷射特效到達最大
-                
-                let moneyCollected = 0;
-                let flashColorsTriggered = new Set();
-                
-                for (let r = 0; r < ROWS; r++) {
-                    let block = board[r][targetCol];
-                    if (block !== null) {
-                        if (block.isMoney) {
-                            moneyCollected += block.moneyValue;
-                            totalWin += block.moneyValue;
-                            DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
-                        } else {
-                            if (block.isFlash) flashColorsTriggered.add(block.color);
-                        }
-                        block.el.classList.add('eliminating');
-                        setTimeout((el) => el.remove(), 500, block.el);
-                        board[r][targetCol] = null;
-                    }
-                }
-                
-                if (flashColorsTriggered.size > 0) {
-                    DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
-                    for (let r = 0; r < ROWS; r++) {
-                        for (let c = 0; c < COLS; c++) {
-                            let block = board[r][c];
-                            if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                                block.el.classList.add('eliminating');
-                                setTimeout((el) => el.remove(), 500, block.el);
-                                board[r][c] = null;
+                    
+                    if (flashColorsTriggered.size > 0) {
+                        DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
+                        for (let r = 0; r < ROWS; r++) {
+                            for (let c = 0; c < COLS; c++) {
+                                let block = board[r][c];
+                                if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                                    block.el.classList.add('eliminating');
+                                    setTimeout((el) => el.remove(), 1000, block.el);
+                                    board[r][c] = null;
+                                    eliminatedAny = true;
+                                }
                             }
                         }
                     }
+                    
+                    if (eliminatedAny) {
+                        currentCombo = 1;
+                        updateLadderActive(currentCombo);
+                        DOM.drawStatus.textContent = `${currentCombo} 連鎖！(底部引爆)`;
+                        showComboOverlay(currentCombo);
+                        await sleep(1000);
+                        batchEliminatedAny = true;
+                    }
+                } else if (event.type === 'trigger_chains') {
+                    if (batchEliminatedAny) {
+                        await applyGravity();
+                        await checkMatchesAndChain();
+                        await refillBoard();
+                        batchEliminatedAny = false;
+                        currentCombo = 0;
+                        updateLadderActive(0);
+                    }
+                } else if (event.type === 'laser_strike') {
+                    let birdMouth = document.getElementById('bird-mouth');
+                    if (birdMouth) birdMouth.classList.add('bird-charging');
+                    
+                    await sleep(500); // 讓鳥嘴集氣膨脹
+                    
+                    let leftPx = parseInt(birdMouth ? (birdMouth.style.left || "0") : "0", 10);
+                    let targetCol = Math.round((leftPx - OFFSET) / (BLOCK_SIZE + GAP));
+                    
+                    let laserBeam = document.getElementById('laser-beam');
+                    if (laserBeam) {
+                        laserBeam.style.left = `${OFFSET + targetCol * (BLOCK_SIZE + GAP)}px`;
+                        laserBeam.classList.remove('hidden');
+                        laserBeam.style.animation = 'none';
+                        void laserBeam.offsetWidth;
+                        laserBeam.style.animation = 'laser-flash 0.6s ease-out forwards';
+                    }
+                    
+                    DOM.drawStatus.textContent = `⚡ 鳥嘴雷射發射！ ⚡`;
+                    await sleep(400); // 等待雷射特效到達最大
+                    if (birdMouth) birdMouth.classList.remove('bird-charging');
+                    
+                    let moneyCollected = 0;
+                    let flashColorsTriggered = new Set();
+                    
+                    for (let r = 0; r < ROWS; r++) {
+                        let block = board[r][targetCol];
+                        if (block !== null) {
+                            if (block.isMoney) {
+                                moneyCollected += block.moneyValue;
+                                totalWin += block.moneyValue;
+                                DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
+                            } else {
+                                if (block.isFlash) flashColorsTriggered.add(block.color);
+                            }
+                            block.el.classList.add('eliminating');
+                            setTimeout((el) => el.remove(), 500, block.el);
+                            board[r][targetCol] = null;
+                        }
+                    }
+                    
+                    if (flashColorsTriggered.size > 0) {
+                        DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
+                        for (let r = 0; r < ROWS; r++) {
+                            for (let c = 0; c < COLS; c++) {
+                                let block = board[r][c];
+                                if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                                    block.el.classList.add('eliminating');
+                                    setTimeout((el) => el.remove(), 500, block.el);
+                                    board[r][c] = null;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (moneyCollected > 0) {
+                        updateWinDisplay();
+                    }
+                    
+                    await sleep(500);
+                    
+                    laserBeam.classList.add('hidden');
+                    
+                    await applyGravity();
+                    await checkMatchesAndChain();
+                    await refillBoard();
+                    
+                } else if (event.type === 'game_over') {
+                    boardState = 'SETTLING';
+                    await checkMatchesAndChain(); // 結算最後盤面
+                    await finishGameOverSequence();
+                    boardState = 'IDLE';
+                    continue;
                 }
-                
-                if (moneyCollected > 0) {
-                    updateWinDisplay();
-                }
-                
-                await sleep(500);
-                
-                laserBeam.classList.add('hidden');
-                
-                await applyGravity();
-                await checkMatchesAndChain();
-                await refillBoard();
-                
-            } else if (event.type === 'game_over') {
-                await finishGameOverSequence();
-                break;
+            } catch (err) {
+                console.error("Right engine error:", err);
             }
             
             boardState = 'IDLE';
+        } else {
+            await sleep(100);
         }
-        await sleep(100);
     }
 }
 
