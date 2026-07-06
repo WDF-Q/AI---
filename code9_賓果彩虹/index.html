@@ -41,54 +41,34 @@
                     <div class="ball-count-display">投擲球數: <span id="ball-count-text">0</span></div>
                 </div>
 
-                <!-- 炫酷大轉盤 -->
-                <div class="roulette-container">
-                    <div class="fire-box" id="fire-box">WAIT</div>
-                    <div class="roulette-wheel-wrapper">
-                        <!-- 閃爍背景 (供透明的 SP 軌道入口透光) -->
-                        <div class="sp-flash-bg"></div>
-                        <!-- 外圈大轉盤 (21格) -->
-                        <div class="roulette-wheel-outer" id="roulette-wheel-outer"></div>
-                        <!-- 內圈小轉盤 (SP) -->
-                        <div class="roulette-wheel-inner" id="roulette-wheel-inner">
-                            <div class="inner-borders"></div>
+                <div class="roulette-wrapper-horizontal" style="display: flex; flex-direction: row; align-items: stretch; gap: 10px; margin-bottom: 20px;">
+                    <!-- 炫酷大轉盤 -->
+                    <div class="roulette-container" style="margin-bottom: 0;">
+                        <div class="fire-box" id="fire-box">WAIT</div>
+                        <div class="roulette-wheel-wrapper">
+                            <!-- 閃爍背景 -->
+                            <div class="sp-flash-bg"></div>
+                            <!-- 外圈大轉盤 -->
+                            <div class="roulette-wheel-outer" id="roulette-wheel-outer"></div>
+                            <!-- 內圈小轉盤 -->
+                            <div class="roulette-wheel-inner" id="roulette-wheel-inner">
+                                <div class="inner-borders"></div>
+                            </div>
+                        </div>
+                        <div class="roulette-result-box" id="roulette-result-box">
+                            進洞顏色：<span id="roulette-result-text">等待發球</span>
                         </div>
                     </div>
-                    <!-- 專屬的進洞顏色顯示區 -->
-                    <div class="roulette-result-box" id="roulette-result-box">
-                        進洞顏色：<span id="roulette-result-text">等待發球</span>
-                    </div>
-                </div>
 
-                <!-- 近期發球紀錄隊列 -->
-                <div class="recent-draws-panel">
-                    <div class="recent-title">近期發球隊列</div>
-                    <div id="ball-history" class="ball-history-container">
-                        <!-- JS 動態產生球 -->
+                    <!-- 近期發球紀錄隊列 (Vertical) -->
+                    <div class="recent-draws-panel vertical" style="flex-direction: row; width: 60px; padding: 10px;">
+                        <div id="ball-history" class="ball-history-container vertical" style="flex-direction: column; overflow-y: hidden; overflow-x: hidden; width: 100%; min-height: auto; align-items: center;">
+                            <!-- JS 動態產生球 -->
+                        </div>
                     </div>
                 </div>
                 
-                <!-- 押分與控制區 -->
-                <div class="controls-panel">
-                    <div class="betting-panel">
-                        <div class="bet-display">
-                            <span>當前押分: </span>
-                            <span id="bet-input" class="bet-value">600</span>
-                        </div>
-                        <div class="chip-container">
-                            <button class="chip-btn" data-val="1">+1</button>
-                            <button class="chip-btn" data-val="5">+5</button>
-                            <button class="chip-btn" data-val="10">+10</button>
-                            <button class="chip-btn" data-val="20">+20</button>
-                            <button class="chip-btn" data-val="50">+50</button>
-                            <button class="chip-btn" data-val="100">+100</button>
-                            <button class="chip-btn" data-val="500">+500</button>
-                            <button class="chip-btn btn-clear" id="btn-clear-bet">重置</button>
-                        </div>
-                    </div>
-                    
-                    <button id="btn-start" class="btn-start">🚀 開始遊戲 (START)</button>
-                </div>
+                <!-- 押分與控制區 (Moved to right panel) -->
             </div>
 
             <!-- RIGHT PANEL: Match-3 Board & Combo Ladder -->
@@ -177,6 +157,22 @@
                             <span class="track-count" id="track-rainbow">0</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- 押分與控制區 -->
+                <div class="controls-panel" style="margin-top: 20px; background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
+                    <div class="betting-panel" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="bet-display" style="display: flex; align-items: center; gap: 15px;">
+                            <span style="color: #94a3b8;">基本押分: 600</span>
+                            <span style="font-size: 1.2rem; font-weight: bold; color: #fff;">當前押分: </span>
+                            <span id="bet-input" class="bet-value">0</span>
+                        </div>
+                        <div class="chip-container" style="display: flex; gap: 10px;">
+                            <button id="btn-cycle-bet" class="chip-btn" style="width: 150px;">切換加分 (+1)</button>
+                            <button id="btn-add-bet" class="chip-btn" style="background: #eab308; color: #000; font-weight: bold;">押分</button>
+                        </div>
+                    </div>
+                    <button id="btn-start" class="btn-start" style="width: 100%; padding: 15px; font-size: 1.2rem;">🚀 開始遊戲 (START)</button>
                 </div>
             </div>
             

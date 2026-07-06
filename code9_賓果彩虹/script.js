@@ -51,7 +51,7 @@ let currentCombo = 0;
 let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
-let currentBet = 600;
+let currentBet = 0;
 let allClearBonusCount = 0;
 
 let historyTracker = {
@@ -157,19 +157,27 @@ function initRouletteVisuals() {
 }
 initRouletteVisuals();
 
-document.querySelectorAll('.chip-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        if (isPlaying) return;
-        if (btn.id === 'btn-clear-bet') {
-            currentBet = 600;
-        } else {
-            let val = parseInt(btn.dataset.val);
-            currentBet += val;
-            if (currentBet > 3000) currentBet = 3000;
-        }
-        DOM.betInput.textContent = currentBet;
-        updateLadderRewards(currentBet);
-    });
+const BET_INCREMENTS = [1, 5, 10, 20, 50, 100, 500];
+let currentIncrementIndex = 0;
+
+document.getElementById('btn-cycle-bet').addEventListener('click', () => {
+    if (isPlaying) return;
+    currentIncrementIndex = (currentIncrementIndex + 1) % BET_INCREMENTS.length;
+    let inc = BET_INCREMENTS[currentIncrementIndex];
+    document.getElementById('btn-cycle-bet').textContent = `切換加分 (+${inc})`;
+});
+
+document.getElementById('btn-add-bet').addEventListener('click', () => {
+    if (isPlaying) return;
+    if (currentBet === 0) {
+        currentBet = 600;
+    } else {
+        let inc = BET_INCREMENTS[currentIncrementIndex];
+        currentBet += inc;
+        if (currentBet > 3000) currentBet = 3000;
+    }
+    DOM.betInput.textContent = currentBet;
+    updateLadderRewards(currentBet);
 });
 
 DOM.btnStart.addEventListener('click', startGame);
@@ -261,6 +269,10 @@ function initBoard() {
 
 async function startGame() {
     if (isPlaying) return;
+    if (currentBet === 0) {
+        alert("請先押分！");
+        return;
+    }
     if (credit < currentBet) {
         alert("餘額不足！");
         return;
