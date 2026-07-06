@@ -52,6 +52,7 @@ let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
 let currentBet = 600;
+let allClearBonusCount = 0;
 
 let historyTracker = {
     red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0
@@ -271,6 +272,7 @@ async function startGame() {
     totalWin = 0;
     ballCount = 0;
     currentCombo = 0;
+    allClearBonusCount = 0;
     batchEliminatedAny = false;
     DOM.ballCountText.textContent = ballCount;
     isGameOverTriggered = false;
@@ -926,7 +928,8 @@ async function checkMatchesAndChain() {
                 }
                 if (!isAllClear) break;
             }
-            if (isAllClear) {
+            if (isAllClear && allClearBonusCount < 2) {
+                allClearBonusCount++;
                 let bonus = currentBet * 30;
                 totalWin += bonus;
                 updateWinDisplay();
