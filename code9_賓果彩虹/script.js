@@ -518,11 +518,17 @@ async function startLeftEngine() {
                     for (let i = 0; i < batchCount; i++) {
                         if (isGameOverTriggered) break;
                         ballCount++;
+                        let currentShotNumber = ballCount;
                         DOM.ballCountText.textContent = ballCount;
                         let isSafeMode = true; 
                         
                         let p = shootBallAsync(isSafeMode).then(res => {
-                            if (res === 'rainbow') rainbowTriggeredCount++;
+                            if (res === 'rainbow') {
+                                let expectedTotal = currentShotNumber + (batchCount - 1 - i) + (rainbowTriggeredCount * 3);
+                                if (expectedTotal <= 40) {
+                                    rainbowTriggeredCount++;
+                                }
+                            }
                             updateHistoryUI();
                         }).catch(e => console.error("Left engine batch error:", e));
                         promises.push(p);
@@ -539,6 +545,12 @@ async function startLeftEngine() {
                         pendingInitialBatch += (rainbowTriggeredCount * 3);
                     } else {
                         pendingEventsQueue.push({ type: 'trigger_chains' });
+                    }
+                    
+                    if (pendingInitialBatch === 0 && ballCount >= 40) {
+                        isGameOverTriggered = true;
+                        pendingEventsQueue.push({ type: 'game_over' });
+                        DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
                     }
                     
                 } else {
@@ -559,10 +571,21 @@ async function startLeftEngine() {
                     
                     pendingDrawsQueue--;
                     if (res === 'rainbow') {
-                        pendingDrawsQueue += 3;
-                        pendingInitialBatch += 3;
+                        if (ballCount <= 40) {
+                            pendingDrawsQueue += 3;
+                            pendingInitialBatch += 3;
+                        } else {
+                            pendingEventsQueue.push({ type: 'trigger_chains' });
+                        }
                     } else {
                         pendingEventsQueue.push({ type: 'trigger_chains' });
+                    }
+                    
+                    if (pendingInitialBatch === 0 && ballCount >= 40) {
+                        isGameOverTriggered = true;
+                        pendingEventsQueue.push({ type: 'game_over' });
+                        DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
+                        break;
                     }
                 }
             } catch (err) {
@@ -892,6 +915,24 @@ async function checkMatchesAndChain() {
             
             await sleep(1000);
             await applyGravity();
+            
+            let isAllClear = true;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c] !== null) {
+                        isAllClear = false;
+                        break;
+                    }
+                }
+                if (!isAllClear) break;
+            }
+            if (isAllClear) {
+                let bonus = currentBet * 30;
+                totalWin += bonus;
+                updateWinDisplay();
+                DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
+                await sleep(2000);
+            }
         } else {
             hasMatches = false;
         }
