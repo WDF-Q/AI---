@@ -332,7 +332,7 @@ function getSmallRoulettePair() {
 function addBallToHistoryUI(typeText, colorClass, gradient = null) {
     const ballEl = document.createElement('div');
     ballEl.className = 'ball';
-    ballEl.textContent = typeText;
+    
     
     if (gradient) {
         ballEl.style.background = gradient;
