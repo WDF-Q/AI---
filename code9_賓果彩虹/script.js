@@ -58,6 +58,17 @@ let historyTracker = {
     red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0
 };
 
+
+let appleCount = 0;
+const MAX_APPLES = 7;
+let appleBonusRoundsLeft = 0;
+let miniGameSteps = 0;
+const MAX_MG_STEPS = 140;
+let currentStepMapping = {};
+const MG_STATIONS = [20, 50, 90, 140];
+let passedStations = [];
+let nextBonusRoundsQueued = false;
+
 // ** Decoupled Engine States **
 let leftEngineActive = false;
 let boardState = 'IDLE'; 
@@ -78,6 +89,14 @@ const DOM = {
     win: document.getElementById('win-display'),
     safeIndicator: document.getElementById('safe-indicator'),
     ballCountText: document.getElementById('ball-count-text'),
+    appleIcons: document.querySelectorAll('.apple-icon'),
+    btnDebugApple: document.getElementById('btn-debug-apple'),
+    miniGamePanel: document.getElementById('mini-game-panel'),
+    mgRoundsLeft: document.getElementById('mg-rounds-left'),
+    mgColorRules: document.getElementById('mg-color-rules'),
+    mgProgressFill: document.getElementById('mg-progress-fill'),
+    mgDog: document.getElementById('mg-dog'),
+    mgStationEls: document.querySelectorAll('.mg-station'),
     drawStatus: document.getElementById('draw-status'),
     btnStart: document.getElementById('btn-start'),
     comboOverlay: document.getElementById('combo-overlay'),
@@ -183,6 +202,70 @@ document.getElementById('btn-add-bet').addEventListener('click', () => {
 DOM.btnStart.addEventListener('click', startGame);
 updateLadderRewards(currentBet);
 
+// --- Apple & Mini Game Logic ---
+DOM.btnDebugApple.addEventListener('click', () => {
+    if (appleCount < MAX_APPLES) {
+        appleCount++;
+        updateAppleUI();
+        if (appleCount === MAX_APPLES) {
+            nextBonusRoundsQueued = true;
+            let div = document.createElement('div');
+            div.style.position = 'fixed';
+            div.style.top = '20%';
+            div.style.left = '50%';
+            div.style.transform = 'translate(-50%, -50%)';
+            div.style.background = 'rgba(0,0,0,0.8)';
+            div.style.color = '#4ade80';
+            div.style.padding = '20px 40px';
+            div.style.borderRadius = '20px';
+            div.style.fontSize = '2rem';
+            div.style.zIndex = '9999';
+            div.style.border = '2px solid #4ade80';
+            div.style.boxShadow = '0 0 20px #4ade80';
+            div.textContent = '🍎 集滿 7 顆蘋果！下一局將進入連續 3 局特別獎勵小遊戲！';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 4000);
+        }
+    }
+});
+
+function updateAppleUI() {
+    DOM.appleIcons.forEach((icon, index) => {
+        if (index < appleCount) {
+            icon.classList.remove('dim');
+        } else {
+            icon.classList.add('dim');
+        }
+    });
+}
+
+function updateMiniGameUI() {
+    if (appleBonusRoundsLeft <= 0) {
+        DOM.miniGamePanel.classList.add('hidden');
+        return;
+    }
+    DOM.miniGamePanel.classList.remove('hidden');
+    DOM.mgRoundsLeft.textContent = appleBonusRoundsLeft;
+    
+    let progressPercent = Math.min(100, (miniGameSteps / MAX_MG_STEPS) * 100);
+    DOM.mgProgressFill.style.width = progressPercent + '%';
+    
+    // Jump animation for the dog
+    DOM.mgDog.classList.remove('mg-dog-jump');
+    void DOM.mgDog.offsetWidth; // trigger reflow
+    DOM.mgDog.classList.add('mg-dog-jump');
+    DOM.mgDog.style.left = progressPercent + '%';
+    
+    DOM.mgStationEls.forEach(el => {
+        let st = parseInt(el.textContent);
+        if (miniGameSteps >= st) {
+            el.classList.add('passed');
+        } else {
+            el.classList.remove('passed');
+        }
+    });
+}
+
 function updateLadderRewards(bet) {
     for (let chain = 4; chain <= 10; chain++) {
         let el = document.getElementById(`reward-${chain}`);
@@ -268,7 +351,38 @@ function initBoard() {
 }
 
 async function startGame() {
-    if (isPlaying) return;
+    if (leftEngineActive || boardState !== 'IDLE') return;
+    
+    if (nextBonusRoundsQueued && appleBonusRoundsLeft === 0) {
+        nextBonusRoundsQueued = false;
+        appleBonusRoundsLeft = 3;
+        miniGameSteps = 0;
+        appleCount = 0;
+        updateAppleUI();
+        passedStations = [];
+    }
+    
+    if (appleBonusRoundsLeft > 0) {
+        const colors = ['red', 'pink', 'blue', 'green', 'yellow'];
+        colors.sort(() => Math.random() - 0.5);
+        const selected = colors.slice(0, 3);
+        const steps = [1, 3, 5];
+        steps.sort(() => Math.random() - 0.5);
+        
+        currentStepMapping = {};
+        DOM.mgColorRules.innerHTML = '';
+        for (let i=0; i<3; i++) {
+            currentStepMapping[selected[i]] = steps[i];
+            DOM.mgColorRules.innerHTML += `
+                <div class="mg-rule-item">
+                    <div class="mg-rule-color color-${selected[i]}"></div>
+                    <span class="mg-rule-step">${steps[i]}步</span>
+                </div>
+            `;
+        }
+        updateMiniGameUI();
+    }
+    
     if (currentBet === 0) {
         alert("請先押分！");
         return;
@@ -1123,9 +1237,14 @@ function showComboOverlay(combo) {
 
 async function finishGameOverSequence() {
     isPlaying = false;
-    DOM.drawStatus.textContent = '遊戲結束結算中...';
+    DOM.drawStatus.textContent = '結算中...';
     DOM.outOverlay.classList.add('show');
     await sleep(2000);
+    
+    if (appleBonusRoundsLeft > 0) {
+        appleBonusRoundsLeft--;
+        updateMiniGameUI();
+    }
     
     credit += totalWin;
     updateCreditDisplay();
