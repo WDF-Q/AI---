@@ -763,7 +763,7 @@ body {
     clip-path: polygon(10% 0, 90% 0, 50% 100%);
     z-index: 30;
     transition: left 0.3s ease, transform 0.5s ease, filter 0.5s ease;
-    transform: scale(0.66);
+    transform: scale(0.46);
     transform-origin: center top;
 }
 .bird-mouth::after {
@@ -811,6 +811,28 @@ body {
 }
 
 .bird-charging {
-    transform: scale(1.5) !important;
+    transform: scale(1.05) !important;
     filter: brightness(1.5) drop-shadow(0 0 10px yellow);
 }
+
+.track-square {
+    width: 35px;
+    height: 35px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    box-shadow: inset 0 0 5px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.5);
+    border: 1px solid rgba(0,0,0,0.3);
+}
+.white-block { background: linear-gradient(135deg, #f8fafc, #cbd5e1); color: #000; text-shadow: none; }
+.pink-block { background: linear-gradient(135deg, #f472b6, #db2777); }
+.red-block { background: linear-gradient(135deg, #f87171, #dc2626); }
+.yellow-block { background: linear-gradient(135deg, #fde047, #ca8a04); }
+.green-block { background: linear-gradient(135deg, #4ade80, #16a34a); }
+.blue-block { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+.rainbow-block { background: linear-gradient(135deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7); }

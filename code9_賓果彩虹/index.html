@@ -38,7 +38,6 @@
                     <h3>目前狀態</h3>
                     <div id="draw-status" class="draw-status" style="margin-bottom: 10px; color: #fff; font-size: 1.1rem; font-weight: bold;">等待開始...</div>
                     <div id="safe-indicator" class="safe-indicator">前 3 球安全保障！</div>
-                    <div class="ball-count-display">投擲球數: <span id="ball-count-text">0</span></div>
                 </div>
 
                 <div class="roulette-wrapper-horizontal" style="display: flex; flex-direction: row; align-items: stretch; gap: 10px; margin-bottom: 20px;">
@@ -58,12 +57,6 @@
                         <div class="roulette-result-box" id="roulette-result-box">
                             進洞顏色：<span id="roulette-result-text">等待發球</span>
                         </div>
-                    </div>
-
-                    <!-- 近期發球紀錄隊列 (Vertical) -->
-                    <div class="recent-draws-panel vertical" style="flex-direction: row; width: 60px; padding: 10px;">
-                        <div id="ball-history" class="ball-history-container vertical" style="flex-direction: column; overflow-y: hidden; overflow-x: hidden; width: 100%; min-height: auto; align-items: center;">
-                            <!-- JS 動態產生球 -->
                         </div>
                     </div>
                 </div>
@@ -124,37 +117,32 @@
                     </div>
                 </div>
                 
-                <!-- 底部紀錄統計區 -->
-                <div class="history-tracker">
-                    <h3>本局發球紀錄統計</h3>
-                    <div class="tracker-row">
-                        <div class="track-item color-red">
-                            <span class="track-icon"></span>
-                            <span class="track-count" id="track-red">0</span>
+                <!-- 底部紀錄統計區 (New HUD) -->
+                <div class="bottom-hud-container" style="display: flex; flex-direction: row; align-items: flex-end; gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px;">
+                    <!-- COUNT block -->
+                    <div class="hud-count-box" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 5px;">
+                        <span style="font-size: 1rem; font-weight: bold; color: #333; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">COUNT</span>
+                        <span id="ball-count-text" style="font-size: 2.8rem; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; line-height: 0.9;">0</span>
+                    </div>
+
+                    <!-- History Trackers + Recent Balls -->
+                    <div class="hud-tracker-area" style="display: flex; flex-direction: column; flex-grow: 1;">
+                        <!-- Recent Balls Track (The black bar) -->
+                        <div class="recent-balls-track" style="background: #111; border-radius: 20px; height: 35px; width: 100%; display: flex; align-items: center; padding: 0 10px; margin-bottom: 2px; position: relative;">
+                            <div id="ball-history" class="ball-history-container" style="display: flex; flex-direction: row; gap: 2px; overflow: hidden; position: absolute; bottom: 3px; max-width: 90%;">
+                                <!-- JS 動態產生球 -->
+                            </div>
                         </div>
-                        <div class="track-item color-pink">
-                            <span class="track-icon"></span>
-                            <span class="track-count" id="track-pink">0</span>
-                        </div>
-                        <div class="track-item color-blue">
-                            <span class="track-icon"></span>
-                            <span class="track-count" id="track-blue">0</span>
-                        </div>
-                        <div class="track-item color-green">
-                            <span class="track-icon"></span>
-                            <span class="track-count" id="track-green">0</span>
-                        </div>
-                        <div class="track-item color-yellow">
-                            <span class="track-icon"></span>
-                            <span class="track-count" id="track-yellow">0</span>
-                        </div>
-                        <div class="track-item white-ball">
-                            <span class="track-icon">W</span>
-                            <span class="track-count" id="track-white">0</span>
-                        </div>
-                        <div class="track-item rainbow-ball">
-                            <span class="track-icon">🌈</span>
-                            <span class="track-count" id="track-rainbow">0</span>
+                        
+                        <!-- Square Color Trackers -->
+                        <div class="square-trackers" style="display: flex; gap: 2px;">
+                            <div class="track-square white-block"><span id="track-white" class="track-count">0</span></div>
+                            <div class="track-square pink-block"><span id="track-pink" class="track-count">0</span></div>
+                            <div class="track-square red-block"><span id="track-red" class="track-count">0</span></div>
+                            <div class="track-square yellow-block"><span id="track-yellow" class="track-count">0</span></div>
+                            <div class="track-square green-block"><span id="track-green" class="track-count">0</span></div>
+                            <div class="track-square blue-block"><span id="track-blue" class="track-count">0</span></div>
+                            <div class="track-square rainbow-block"><span id="track-rainbow" class="track-count">0</span></div>
                         </div>
                     </div>
                 </div>
