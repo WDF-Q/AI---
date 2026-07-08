@@ -99,6 +99,8 @@ const DOM = {
     mgDogCounter: document.getElementById('mg-dog-counter'),
     mgDog: document.getElementById('mg-dog'),
     mgStationEls: document.querySelectorAll('.mg-station'),
+    birdMouthSlots: document.querySelectorAll('.bird-mouth-slot'),
+    birdMouth: document.getElementById('bird-mouth'),
     drawStatus: document.getElementById('draw-status'),
     btnStart: document.getElementById('btn-start'),
     comboOverlay: document.getElementById('combo-overlay'),
