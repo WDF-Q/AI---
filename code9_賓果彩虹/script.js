@@ -95,6 +95,8 @@ const DOM = {
     mgRoundsLeft: document.getElementById('mg-rounds-left'),
     mgColorRules: document.getElementById('mg-color-rules'),
     mgProgressFill: document.getElementById('mg-progress-fill'),
+    mgDogContainer: document.getElementById('mg-dog-container'),
+    mgDogCounter: document.getElementById('mg-dog-counter'),
     mgDog: document.getElementById('mg-dog'),
     mgStationEls: document.querySelectorAll('.mg-station'),
     drawStatus: document.getElementById('draw-status'),
@@ -250,11 +252,13 @@ function updateMiniGameUI() {
     let progressPercent = Math.min(100, (miniGameSteps / MAX_MG_STEPS) * 100);
     DOM.mgProgressFill.style.width = progressPercent + '%';
     
+    DOM.mgDogCounter.textContent = miniGameSteps;
+    DOM.mgDogContainer.style.left = progressPercent + '%';
+    
     // Jump animation for the dog
     DOM.mgDog.classList.remove('mg-dog-walk');
     void DOM.mgDog.offsetWidth; // trigger reflow
     DOM.mgDog.classList.add('mg-dog-walk');
-    DOM.mgDog.style.left = progressPercent + '%';
     
     DOM.mgStationEls.forEach(el => {
         let st = parseInt(el.textContent);
@@ -264,6 +268,44 @@ function updateMiniGameUI() {
             el.classList.remove('passed');
         }
     });
+}
+
+const MG_STATIONS = [0, 20, 50, 90, 140];
+
+async function jumpToNextIsland() {
+    let nextStation = 140;
+    for (let st of MG_STATIONS) {
+        if (st > miniGameSteps) {
+            nextStation = st;
+            break;
+        }
+    }
+    miniGameSteps = nextStation;
+    updateMiniGameUI();
+    await sleep(500);
+}
+
+async function applyMiniGameSteps(steps) {
+    if (steps <= 0) return;
+    
+    miniGameSteps = Math.min(140, miniGameSteps + steps);
+    updateMiniGameUI();
+    
+    // Check if landed exactly on an island
+    let perfectLand = false;
+    for (let st of [20, 50, 90]) {
+        if (miniGameSteps === st) {
+            perfectLand = true;
+            break;
+        }
+    }
+    
+    if (perfectLand) {
+        await sleep(500);
+        await jumpToNextIsland();
+    } else {
+        await sleep(200); // small pause to show sequential addition
+    }
 }
 
 function updateLadderRewards(bet) {
@@ -601,6 +643,10 @@ async function shootBallAsync(isSafeMode) {
             historyTracker.rainbow++;
             addBallToHistoryUI('彩色', 'rainbow');
             
+            if (appleBonusRoundsLeft > 0) {
+                await jumpToNextIsland();
+            }
+            
             pendingEventsQueue.push({ type: 'laser_strike' });
             DOM.drawStatus.textContent = '彩色球！獲得雷射！';
             return 'rainbow';
@@ -613,12 +659,7 @@ async function shootBallAsync(isSafeMode) {
             addBallToHistoryUI('雙色', null, gradient);
             
             if (appleBonusRoundsLeft > 0) {
-                let s1 = currentStepMapping[pair[0]] || 0;
-                let s2 = currentStepMapping[pair[1]] || 0;
-                if (s1 || s2) {
-                    miniGameSteps = Math.min(MAX_MG_STEPS, miniGameSteps + s1 + s2);
-                    updateMiniGameUI();
-                }
+                await jumpToNextIsland();
             }
             
             pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
@@ -632,8 +673,7 @@ async function shootBallAsync(isSafeMode) {
         addBallToHistoryUI(COLOR_ZH[color], color);
         
         if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
-            miniGameSteps = Math.min(MAX_MG_STEPS, miniGameSteps + currentStepMapping[color]);
-            updateMiniGameUI();
+            await applyMiniGameSteps(currentStepMapping[color]);
         }
         
         pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
