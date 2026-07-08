@@ -160,24 +160,69 @@ body {
     max-width: 320px;
 }
 
+/* 鳥嘴列與蘋果槽 */
+.beak-row {
+    display: grid;
+    grid-template-columns: repeat(6, 54px);
+    gap: 4px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+.beak-slot {
+    width: 54px;
+    height: 54px;
+    background: #1e293b;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
 .fire-box {
     background: #1e293b;
     border: 2px solid #eab308;
     color: #fcd34d;
-    padding: 0.5rem 2rem;
+    width: 110%;
+    height: 110%;
     border-radius: 8px;
     font-weight: bold;
-    font-size: 1.2rem;
-    letter-spacing: 2px;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    line-height: 1.1;
     box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
     transition: all 0.2s;
+    z-index: 5;
+    transform: scale(1.1);
 }
 .fire-box.active {
     background: #eab308;
     color: #000;
     box-shadow: 0 0 30px #eab308;
-    transform: scale(1.1);
+    transform: scale(1.2);
 }
+
+/* 蘋果樣式 */
+.apple-item {
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+/* 品質調色 */
+.apple-gold { filter: drop-shadow(0 0 8px #facc15) sepia(1) saturate(5) hue-rotate(15deg) brightness(1.2); }
+.apple-silver { filter: drop-shadow(0 0 8px #cbd5e1) grayscale(1) brightness(1.5); }
+.apple-bronze { filter: drop-shadow(0 0 8px #b45309) sepia(1) saturate(3) hue-rotate(-20deg) brightness(0.8); }
+.apple-red { filter: drop-shadow(0 0 8px #ef4444); }
+.apple-green { filter: drop-shadow(0 0 8px #22c55e) hue-rotate(270deg) saturate(3); }
 
 .roulette-wheel-wrapper {
     position: relative;
@@ -883,9 +928,9 @@ body {
     animation: dogWalk 0.5s linear;
 }
 @keyframes dogWalk {
-    0% { transform: translate(-50%, 0) scaleX(-1); }
-    25% { transform: translate(-50%, -10px) rotate(-10deg) scaleX(-1); }
-    50% { transform: translate(-50%, 0) scaleX(-1); }
-    75% { transform: translate(-50%, -10px) rotate(10deg) scaleX(-1); }
-    100% { transform: translate(-50%, 0) scaleX(-1); }
+    0% { transform: translateY(0) scaleX(-1); }
+    25% { transform: translateY(-10px) rotate(-10deg) scaleX(-1); }
+    50% { transform: translateY(0) scaleX(-1); }
+    75% { transform: translateY(-10px) rotate(10deg) scaleX(-1); }
+    100% { transform: translateY(0) scaleX(-1); }
 }

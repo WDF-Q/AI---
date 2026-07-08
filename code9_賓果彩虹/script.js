@@ -391,6 +391,48 @@ function initBoard() {
     }
 }
 
+function getAppleType() {
+    let r = Math.random();
+    if (r < 0.40) return 'gold';
+    if (r < 0.60) return 'silver';
+    if (r < 0.80) return 'bronze';
+    if (r < 0.90) return 'red';
+    return 'green';
+}
+
+function spawnApples() {
+    DOM.beakSlots.forEach(slot => {
+        slot.innerHTML = '';
+    });
+    
+    let slotsArray = Array.from(DOM.beakSlots);
+    if (slotsArray.length === 0) return;
+    
+    let beakIndex = Math.floor(Math.random() * slotsArray.length);
+    let beakEl = document.createElement('div');
+    beakEl.className = 'fire-box';
+    beakEl.id = 'fire-box';
+    beakEl.textContent = 'SP光束';
+    slotsArray[beakIndex].appendChild(beakEl);
+    
+    DOM.fireBox = beakEl;
+    
+    let appleCount = Math.random() < 0.1 ? 2 : 3;
+    let availableSlots = [];
+    for (let i = 0; i < slotsArray.length; i++) {
+        if (i !== beakIndex) availableSlots.push(slotsArray[i]);
+    }
+    availableSlots.sort(() => Math.random() - 0.5);
+    
+    for (let i = 0; i < appleCount && i < availableSlots.length; i++) {
+        let appleType = getAppleType();
+        let appleEl = document.createElement('div');
+        appleEl.className = `apple-item apple-${appleType}`;
+        appleEl.textContent = '🍎';
+        availableSlots[i].appendChild(appleEl);
+    }
+}
+
 async function startGame() {
     if (leftEngineActive || boardState !== 'IDLE') return;
     
@@ -459,6 +501,7 @@ async function startGame() {
     DOM.safeIndicator.className = 'safe-indicator';
     
     initBoard();
+    spawnApples();
     
     pendingDrawsQueue = 3;
     pendingInitialBatch = 3;
