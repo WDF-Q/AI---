@@ -2,7 +2,7 @@ const COLS = 6;
 const ROWS = 8;
 const BLOCK_SIZE = 54; 
 const GAP = 4;  
-const OFFSET = 15;
+const OFFSET = 4;
 
 const COLORS = ['red', 'pink', 'blue', 'green', 'yellow'];
 const COLOR_ZH = {
@@ -352,7 +352,7 @@ function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = fal
         el.classList.add(`color-${color}`);
         if (isFlash) el.classList.add('flash-ball');
     }
-    el.style.left = `${c * (BLOCK_SIZE + GAP)}px`;
+    el.style.left = `${OFFSET + c * (BLOCK_SIZE + GAP)}px`;
     el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
     DOM.board.appendChild(el);
     return { r, c, color, isMoney, moneyValue, isFlash, el };
