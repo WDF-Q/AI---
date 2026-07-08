@@ -222,7 +222,7 @@ DOM.btnDebugApple.addEventListener('click', () => {
             div.style.zIndex = '9999';
             div.style.border = '2px solid #4ade80';
             div.style.boxShadow = '0 0 20px #4ade80';
-            div.textContent = '🍎 集滿 7 顆蘋果！下一局將進入連續 3 局特別獎勵小遊戲！';
+            div.textContent = '🍎 集滿 7 顆蘋果！下一局將進入連續 3 局 JP 遊戲！';
             document.body.appendChild(div);
             setTimeout(() => div.remove(), 4000);
         }
@@ -360,9 +360,8 @@ async function startGame() {
         appleCount = 0;
         updateAppleUI();
         passedStations = [];
-    }
-    
-    if (appleBonusRoundsLeft > 0) {
+        
+        // 鎖定本次 JP 遊戲三局的顏色與步數
         const colors = ['red', 'pink', 'blue', 'green', 'yellow'];
         colors.sort(() => Math.random() - 0.5);
         const selected = colors.slice(0, 3);
@@ -377,6 +376,9 @@ async function startGame() {
                 <div class="track-square" style="background: var(--color-${selected[i]}); margin: 0 10px; font-size: 1.1rem; color: #fff; font-weight: bold; width: 25px; height: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">${steps[i]}</div>
             `;
         }
+    }
+    
+    if (appleBonusRoundsLeft > 0) {
         updateMiniGameUI();
     }
     

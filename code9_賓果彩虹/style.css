@@ -871,21 +871,21 @@ body {
     font-size: 1rem;
     text-shadow: 1px 1px 1px #000;
 }
+    100% { transform: translate(-50%, 0) scaleX(-1); }
+}
+
 .mg-station.passed {
     color: #4ade80 !important;
     font-weight: bold;
     text-shadow: 0 0 5px #4ade80;
 }
 .mg-dog-walk {
-    animation: dogWalk 0.3s ease-in-out;
+    animation: dogWalk 0.5s linear;
 }
 @keyframes dogWalk {
-    0% { transform: translate(-50%, 0) rotate(0deg); }
-    25% { transform: translate(-50%, -10px) rotate(-10deg); }
-    50% { transform: translate(-50%, 0) rotate(0deg); }
-    75% { transform: translate(-50%, -10px) rotate(10deg); }
-    100% { transform: translate(-50%, 0) rotate(0deg); }
-}
-    50% { transform: translate(-50%, -15px); }
-    100% { transform: translate(-50%, 0); }
+    0% { transform: translate(-50%, 0) scaleX(-1); }
+    25% { transform: translate(-50%, -10px) rotate(-10deg) scaleX(-1); }
+    50% { transform: translate(-50%, 0) scaleX(-1); }
+    75% { transform: translate(-50%, -10px) rotate(10deg) scaleX(-1); }
+    100% { transform: translate(-50%, 0) scaleX(-1); }
 }
