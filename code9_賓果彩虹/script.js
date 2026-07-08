@@ -2,6 +2,7 @@ const COLS = 6;
 const ROWS = 8;
 const BLOCK_SIZE = 54; 
 const GAP = 4;  
+const OFFSET = 15;
 
 const COLORS = ['red', 'pink', 'blue', 'green', 'yellow'];
 const COLOR_ZH = {
@@ -890,8 +891,12 @@ async function startRightEngine() {
                     
                     await sleep(500); // 讓鳥嘴集氣膨脹
                     
-                    let leftPx = parseInt(birdMouth ? (birdMouth.style.left || "0") : "0", 10);
-                    let targetCol = Math.round((leftPx - OFFSET) / (BLOCK_SIZE + GAP));
+                    let targetCol = 0;
+                    if (birdMouth && birdMouth.parentElement) {
+                        let slots = Array.from(document.querySelectorAll('.bird-mouth-slot'));
+                        targetCol = slots.indexOf(birdMouth.parentElement);
+                        if (targetCol === -1) targetCol = 0;
+                    }
                     
                     let laserBeam = document.getElementById('laser-beam');
                     if (laserBeam) {
