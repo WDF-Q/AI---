@@ -251,9 +251,9 @@ function updateMiniGameUI() {
     DOM.mgProgressFill.style.width = progressPercent + '%';
     
     // Jump animation for the dog
-    DOM.mgDog.classList.remove('mg-dog-jump');
+    DOM.mgDog.classList.remove('mg-dog-walk');
     void DOM.mgDog.offsetWidth; // trigger reflow
-    DOM.mgDog.classList.add('mg-dog-jump');
+    DOM.mgDog.classList.add('mg-dog-walk');
     DOM.mgDog.style.left = progressPercent + '%';
     
     DOM.mgStationEls.forEach(el => {
@@ -374,10 +374,7 @@ async function startGame() {
         for (let i=0; i<3; i++) {
             currentStepMapping[selected[i]] = steps[i];
             DOM.mgColorRules.innerHTML += `
-                <div class="mg-rule-item">
-                    <div class="mg-rule-color color-${selected[i]}"></div>
-                    <span class="mg-rule-step">${steps[i]}步</span>
-                </div>
+                <div class="track-square color-${selected[i]}" style="margin: 0 10px; font-size: 1.1rem; color: #fff; font-weight: bold; width: 25px; height: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">${steps[i]}</div>
             `;
         }
         updateMiniGameUI();
@@ -613,6 +610,15 @@ async function shootBallAsync(isSafeMode) {
             let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
             addBallToHistoryUI('雙色', null, gradient);
             
+            if (appleBonusRoundsLeft > 0) {
+                let s1 = currentStepMapping[pair[0]] || 0;
+                let s2 = currentStepMapping[pair[1]] || 0;
+                if (s1 || s2) {
+                    miniGameSteps = Math.min(MAX_MG_STEPS, miniGameSteps + s1 + s2);
+                    updateMiniGameUI();
+                }
+            }
+            
             pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
             DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
             return 'sp';
@@ -622,6 +628,11 @@ async function shootBallAsync(isSafeMode) {
         await spawnAndSpinBall(color, false);
         historyTracker[color]++;
         addBallToHistoryUI(COLOR_ZH[color], color);
+        
+        if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
+            miniGameSteps = Math.min(MAX_MG_STEPS, miniGameSteps + currentStepMapping[color]);
+            updateMiniGameUI();
+        }
         
         pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
         DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
