@@ -65,7 +65,7 @@ let appleBonusRoundsLeft = 0;
 let miniGameSteps = 0;
 const MAX_MG_STEPS = 140;
 let currentStepMapping = {};
-const MG_STATIONS = [20, 50, 90, 140];
+const MG_STATIONS = [0, 20, 50, 90, 140];
 let passedStations = [];
 let nextBonusRoundsQueued = false;
 
@@ -270,7 +270,6 @@ function updateMiniGameUI() {
     });
 }
 
-const MG_STATIONS = [0, 20, 50, 90, 140];
 
 async function jumpToNextIsland() {
     let nextStation = 140;
@@ -659,7 +658,10 @@ async function shootBallAsync(isSafeMode) {
             addBallToHistoryUI('雙色', null, gradient);
             
             if (appleBonusRoundsLeft > 0) {
-                await jumpToNextIsland();
+                let s1 = currentStepMapping[pair[0]] || 0;
+                if (s1) await applyMiniGameSteps(s1);
+                let s2 = currentStepMapping[pair[1]] || 0;
+                if (s2) await applyMiniGameSteps(s2);
             }
             
             pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
