@@ -401,21 +401,22 @@ function getAppleType() {
 }
 
 function spawnApples() {
-    DOM.beakSlots.forEach(slot => {
+    DOM.birdMouthSlots.forEach(slot => {
         slot.innerHTML = '';
     });
     
-    let slotsArray = Array.from(DOM.beakSlots);
-    if (slotsArray.length === 0) return;
+    let slotsArray = Array.from(DOM.birdMouthSlots);
+    if(slotsArray.length === 0) return;
     
     let beakIndex = Math.floor(Math.random() * slotsArray.length);
+    
     let beakEl = document.createElement('div');
-    beakEl.className = 'fire-box';
-    beakEl.id = 'fire-box';
+    beakEl.className = 'bird-mouth';
+    beakEl.id = 'bird-mouth';
     beakEl.textContent = 'SP光束';
     slotsArray[beakIndex].appendChild(beakEl);
     
-    DOM.fireBox = beakEl;
+    DOM.birdMouth = beakEl;
     
     let appleCount = Math.random() < 0.1 ? 2 : 3;
     let availableSlots = [];
