@@ -374,7 +374,7 @@ async function startGame() {
         for (let i=0; i<3; i++) {
             currentStepMapping[selected[i]] = steps[i];
             DOM.mgColorRules.innerHTML += `
-                <div class="track-square color-${selected[i]}" style="margin: 0 10px; font-size: 1.1rem; color: #fff; font-weight: bold; width: 25px; height: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">${steps[i]}</div>
+                <div class="track-square" style="background: var(--color-${selected[i]}); margin: 0 10px; font-size: 1.1rem; color: #fff; font-weight: bold; width: 25px; height: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">${steps[i]}</div>
             `;
         }
         updateMiniGameUI();
