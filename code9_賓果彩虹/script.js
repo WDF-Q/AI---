@@ -403,10 +403,13 @@ function getAppleType() {
     return 'green';
 }
 
+let topApplesState = new Array(COLS).fill(null);
+
 function spawnApples() {
     DOM.birdMouthSlots.forEach(slot => {
         slot.innerHTML = '';
     });
+    topApplesState.fill(null);
     
     let slotsArray = Array.from(DOM.birdMouthSlots);
     if(slotsArray.length === 0) return;
@@ -435,6 +438,28 @@ function spawnApples() {
         let num = Math.floor(Math.random() * 10) + 6; // 6 to 15
         appleEl.innerHTML = `🍎<span class="apple-num">${num}</span>`;
         availableSlots[i].appendChild(appleEl);
+        
+        let colIndex = slotsArray.indexOf(availableSlots[i]);
+        topApplesState[colIndex] = {
+            type: appleType,
+            hp: num,
+            el: appleEl,
+            numEl: appleEl.querySelector('.apple-num'),
+            readyToDrop: false
+        };
+    }
+}
+
+function updateApplesHP(colCounts) {
+    for (let c = 0; c < COLS; c++) {
+        if (colCounts[c] > 0 && topApplesState[c] !== null && !topApplesState[c].readyToDrop) {
+            topApplesState[c].hp -= colCounts[c];
+            if (topApplesState[c].hp <= 0) {
+                topApplesState[c].hp = 0;
+                topApplesState[c].readyToDrop = true;
+            }
+            topApplesState[c].numEl.textContent = topApplesState[c].hp;
+        }
     }
 }
 
@@ -840,12 +865,15 @@ async function startRightEngine() {
                 if (event.type === 'layer8_hit') {
                     let eliminatedAny = false;
                     let flashColorsTriggered = new Set();
+                    let colElims = new Array(COLS).fill(0);
                     
                     for (let color of event.colors) {
                         for (let c = 0; c < COLS; c++) {
                             let block = board[ROWS - 1][c];
                             if (block !== null && !block.isMoney && block.color === color) {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
+                                if (block.attachedApple) collectApple(block.attachedApple);
+                                colElims[c]++;
                                 block.el.classList.add('eliminating');
                                 setTimeout((el) => el.remove(), 1000, block.el);
                                 board[ROWS - 1][c] = null;
@@ -853,13 +881,17 @@ async function startRightEngine() {
                             }
                         }
                     }
+                    updateApplesHP(colElims);
                     
                     if (flashColorsTriggered.size > 0) {
                         DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
+                        let flashColElims = new Array(COLS).fill(0);
                         for (let r = 0; r < ROWS; r++) {
                             for (let c = 0; c < COLS; c++) {
                                 let block = board[r][c];
                                 if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                                    if (block.attachedApple) collectApple(block.attachedApple);
+                                    flashColElims[c]++;
                                     block.el.classList.add('eliminating');
                                     setTimeout((el) => el.remove(), 1000, block.el);
                                     board[r][c] = null;
@@ -867,6 +899,7 @@ async function startRightEngine() {
                                 }
                             }
                         }
+                        updateApplesHP(flashColElims);
                     }
                     
                     if (eliminatedAny) {
@@ -914,6 +947,7 @@ async function startRightEngine() {
                     
                     let moneyCollected = 0;
                     let flashColorsTriggered = new Set();
+                    let laserColElims = new Array(COLS).fill(0);
                     
                     for (let r = 0; r < ROWS; r++) {
                         let block = board[r][targetCol];
@@ -924,25 +958,32 @@ async function startRightEngine() {
                                 DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
                             } else {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
+                                if (block.attachedApple) collectApple(block.attachedApple);
+                                laserColElims[targetCol]++;
                             }
                             block.el.classList.add('eliminating');
                             setTimeout((el) => el.remove(), 500, block.el);
                             board[r][targetCol] = null;
                         }
                     }
+                    updateApplesHP(laserColElims);
                     
                     if (flashColorsTriggered.size > 0) {
                         DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
+                        let flashColElims = new Array(COLS).fill(0);
                         for (let r = 0; r < ROWS; r++) {
                             for (let c = 0; c < COLS; c++) {
                                 let block = board[r][c];
                                 if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
+                                    if (block.attachedApple) collectApple(block.attachedApple);
+                                    flashColElims[c]++;
                                     block.el.classList.add('eliminating');
                                     setTimeout((el) => el.remove(), 500, block.el);
                                     board[r][c] = null;
                                 }
                             }
                         }
+                        updateApplesHP(flashColElims);
                     }
                     
                     if (moneyCollected > 0) {
@@ -1141,11 +1182,17 @@ async function checkMatchesAndChain() {
                     }
                 }
                 
+                let colElims = new Array(COLS).fill(0);
                 for (let block of blocksToEliminate) {
+                    if (block.attachedApple) {
+                        collectApple(block.attachedApple);
+                    }
+                    colElims[block.c]++;
                     block.el.classList.add('eliminating');
                     setTimeout((el) => el.remove(), 1000, block.el);
                     board[block.r][block.c] = null;
                 }
+                updateApplesHP(colElims);
             }
             
             await sleep(1000);
@@ -1328,6 +1375,39 @@ async function refillBoard() {
         board[r][c] = block; // 正式寫入完整 block，後續生成會參考到這個正確的 block
     }
     
+    // 處理蘋果掉落附著
+    for (let c = 0; c < COLS; c++) {
+        if (topApplesState[c] !== null && topApplesState[c].readyToDrop) {
+            let newColorBlocksInCol = emptySpots.filter(spot => 
+                spot.c === c && board[spot.r][spot.c] && !board[spot.r][spot.c].isMoney
+            );
+            if (newColorBlocksInCol.length > 0) {
+                let randomSpot = newColorBlocksInCol[Math.floor(Math.random() * newColorBlocksInCol.length)];
+                let block = board[randomSpot.r][randomSpot.c];
+                block.attachedApple = topApplesState[c].type;
+                
+                let smallApple = document.createElement('div');
+                smallApple.className = `apple-item apple-${topApplesState[c].type}`;
+                smallApple.innerHTML = '🍎';
+                smallApple.style.fontSize = '1.5rem';
+                smallApple.style.position = 'absolute';
+                smallApple.style.bottom = '-8px';
+                smallApple.style.right = '-8px';
+                smallApple.style.zIndex = '10';
+                smallApple.style.filter = 'drop-shadow(0 0 5px rgba(255,255,255,1))';
+                
+                // 清除附著蘋果本身的動畫，避免一直跳動
+                smallApple.style.animation = 'none';
+                
+                block.el.appendChild(smallApple);
+                
+                topApplesState[c].el.remove();
+                topApplesState[c] = null;
+            }
+        }
+    }
+    
+    
     await sleep(500);
     // 恢復 checkMatchesAndChain 作為安全網，雖然演算法已保證不連鎖，
     // 若機率極低發生顏色庫耗盡而 fallback 的情況，也能正確清除避免盤面卡死
@@ -1361,4 +1441,36 @@ async function finishGameOverSequence() {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+function collectApple(type) {
+    let slots = [
+        document.getElementById('collected-apple-0'),
+        document.getElementById('collected-apple-1'),
+        document.getElementById('collected-apple-2')
+    ];
+    
+    // Find first empty slot
+    let targetSlot = null;
+    for (let slot of slots) {
+        if (slot && slot.innerHTML === '') {
+            targetSlot = slot;
+            break;
+        }
+    }
+    
+    // If full, maybe just replace the last one for now or do nothing
+    if (!targetSlot) targetSlot = slots[2];
+    
+    if (targetSlot) {
+        let appleEl = document.createElement('div');
+        appleEl.className = \pple-item apple-\;
+        appleEl.innerHTML = '🍎';
+        targetSlot.innerHTML = '';
+        targetSlot.appendChild(appleEl);
+        
+        // Float text
+        DOM.drawStatus.textContent = \🍎 收集到蘋果！\;
+    }
 }

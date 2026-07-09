@@ -456,6 +456,54 @@ body {
 }
 
 /* 連鎖獎勵塔 Combo Ladder */
+
+.left-ladder-col {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.apple-collection-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.apple-slots-group {
+    display: flex;
+    gap: 5px;
+}
+
+.apple-slot {
+    width: 40px;
+    height: 40px;
+    border: 2px dashed #475569;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.extra-slot {
+    margin-left: 10px;
+    border: 2px dashed #eab308;
+    background: rgba(234, 179, 8, 0.1);
+}
+
+.apple-slot .apple-item {
+    font-size: 2rem;
+    animation: none;
+}
+.apple-slot .apple-num {
+    display: none;
+}
+
 .combo-ladder {
     display: flex;
     flex-direction: column-reverse; /* 由下往上 4~10 */
