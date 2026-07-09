@@ -432,7 +432,8 @@ function spawnApples() {
         let appleType = getAppleType();
         let appleEl = document.createElement('div');
         appleEl.className = `apple-item apple-${appleType}`;
-        appleEl.textContent = '🍎';
+        let num = Math.floor(Math.random() * 10) + 6; // 6 to 15
+        appleEl.innerHTML = `🍎<span class="apple-num">${num}</span>`;
         availableSlots[i].appendChild(appleEl);
     }
 }
