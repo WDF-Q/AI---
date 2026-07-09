@@ -294,20 +294,7 @@ async function applyMiniGameSteps(steps) {
     updateMiniGameUI();
     
     // Check if landed exactly on an island
-    let perfectLand = false;
-    for (let st of [20, 50, 90]) {
-        if (miniGameSteps === st) {
-            perfectLand = true;
-            break;
-        }
-    }
-    
-    if (perfectLand) {
-        await sleep(500);
-        await jumpToNextIsland();
-    } else {
-        await sleep(200); // small pause to show sequential addition
-    }
+    await sleep(200);
 }
 
 function updateLadderRewards(bet) {
@@ -359,7 +346,8 @@ function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = fal
 }
 
 function initBoard() {
-    DOM.board.innerHTML = '';
+    let blocks = DOM.board.querySelectorAll('.block');
+    blocks.forEach(b => b.remove());
     board = [];
     for (let r = 0; r < ROWS; r++) board.push(new Array(COLS).fill(null));
     
@@ -716,7 +704,9 @@ async function shootBallAsync(isSafeMode) {
             addBallToHistoryUI('彩色', 'rainbow');
             
             if (appleBonusRoundsLeft > 0) {
-                await jumpToNextIsland();
+                if ([20, 50, 90].includes(miniGameSteps)) {
+                    await jumpToNextIsland();
+                }
             }
             
             pendingEventsQueue.push({ type: 'laser_strike' });
@@ -1012,48 +1002,6 @@ async function startRightEngine() {
             boardState = 'IDLE';
         } else {
             await sleep(100);
-        }
-    }
-}
-
-function initBoard() {
-    DOM.board.innerHTML = `
-        <div id="laser-beam" class="laser-beam hidden"></div>
-        <div class="elimination-zone">消除觸發區域</div>
-    `;
-    
-    let initialBirdCol = Math.floor(Math.random() * COLS);
-    let birdMouth = document.getElementById('bird-mouth');
-    if (birdMouth) {
-        birdMouth.style.left = `${initialBirdCol * (BLOCK_SIZE + GAP)}px`;
-    }
-    
-    board = new Array(ROWS).fill(null).map(() => new Array(COLS).fill(null));
-    
-    let moneySpots = new Set();
-    let availableCols = [];
-    for (let i = 0; i < COLS; i++) availableCols.push(i);
-    availableCols.sort(() => Math.random() - 0.5);
-    let moneyBallCount = Math.random() < 0.5 ? 4 : 5;
-    let selectedCols = availableCols.slice(0, moneyBallCount);
-    
-    for (let c of selectedCols) {
-        // 第 1~3 層 (由上往下，索引為 0, 1, 2)
-        let r = Math.floor(Math.random() * 3); 
-        moneySpots.add(`${r},${c}`);
-    }
-    
-    for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-            if (moneySpots.has(`${r},${c}`)) {
-                let initialValue = Math.floor(currentBet / 5);
-                let block = createBlock(r, c, null, true, initialValue);
-                board[r][c] = block;
-            } else {
-                let color = getSafeColorForRefill(r, c);
-                let block = createBlock(r, c, color, false);
-                board[r][c] = block;
-            }
         }
     }
 }
@@ -1465,12 +1413,12 @@ function collectApple(type) {
     
     if (targetSlot) {
         let appleEl = document.createElement('div');
-        appleEl.className = \pple-item apple-\;
+        appleEl.className = `apple-item apple-${type}`;
         appleEl.innerHTML = '🍎';
         targetSlot.innerHTML = '';
         targetSlot.appendChild(appleEl);
         
         // Float text
-        DOM.drawStatus.textContent = \🍎 收集到蘋果！\;
+        DOM.drawStatus.textContent = `🍎 收集到蘋果！`;
     }
 }
