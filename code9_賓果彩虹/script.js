@@ -69,7 +69,9 @@ let currentStepMapping = {};
 const MG_STATIONS = [0, 20, 50, 90, 140];
 let passedStations = [];
 let nextBonusRoundsQueued = false;
-let queuedJPRounds = 0;
+let queuedJPPackages = [];
+let currentAppleScores = [];
+let activeJPAmount = 0;
 let currentAppleColors = [];
 let totalCollectedApples = 0;
 
@@ -258,6 +260,7 @@ function updateMiniGameUI() {
 
 
 async function jumpToNextIsland() {
+    let oldSteps = miniGameSteps;
     let nextStation = 140;
     for (let st of MG_STATIONS) {
         if (st > miniGameSteps) {
@@ -267,16 +270,31 @@ async function jumpToNextIsland() {
     }
     miniGameSteps = nextStation;
     updateMiniGameUI();
+    
+    if (oldSteps < 140 && miniGameSteps === 140) {
+        totalWin += activeJPAmount;
+        updateWinDisplay();
+        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！獲得 JP 獎金 ${activeJPAmount} 🎯`;
+        await sleep(2000);
+    }
+    
     await sleep(500);
 }
 
 async function applyMiniGameSteps(steps) {
     if (steps <= 0) return;
     
+    let oldSteps = miniGameSteps;
     miniGameSteps = Math.min(140, miniGameSteps + steps);
     updateMiniGameUI();
     
-    // Check if landed exactly on an island
+    if (oldSteps < 140 && miniGameSteps === 140) {
+        totalWin += activeJPAmount;
+        updateWinDisplay();
+        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！獲得 JP 獎金 ${activeJPAmount} 🎯`;
+        await sleep(2000);
+    }
+    
     await sleep(200);
 }
 
@@ -420,9 +438,9 @@ function updateApplesHP(colCounts) {
 async function startGame() {
     if (leftEngineActive || boardState !== 'IDLE') return;
     
-    if (queuedJPRounds > 0 && appleBonusRoundsLeft === 0) {
+    if (queuedJPPackages.length > 0 && appleBonusRoundsLeft === 0) {
         appleBonusRoundsLeft = 3;
-        queuedJPRounds -= 3;
+        activeJPAmount = queuedJPPackages.shift();
         
         miniGameSteps = 0;
         passedStations = [];
@@ -1375,17 +1393,30 @@ function sleep(ms) {
 
 function collectApple(type) {
     if (currentAppleColors.length === 7) {
-        currentAppleColors = []; // clear the display array if it was full
+        currentAppleColors = []; 
+        currentAppleScores = [];
     }
     
     currentAppleColors.push(type);
+    
+    let score = 0;
+    switch (type) {
+        case 'gold': score = currentBet * 2.5; break;
+        case 'silver': score = currentBet * 1.5; break;
+        case 'bronze': score = currentBet * 1.0; break;
+        case 'red': score = currentBet * 0.5; break;
+        case 'green': score = currentBet * 0.25; break;
+    }
+    currentAppleScores.push(score);
+    
     totalCollectedApples++;
     
     updateAppleUI();
     DOM.drawStatus.textContent = `🍎 收集到蘋果！`;
     
     if (currentAppleColors.length === 7) {
-        queuedJPRounds += 3;
+        let jpScore = currentAppleScores.reduce((a, b) => a + b, 0);
+        queuedJPPackages.push(jpScore);
         
         let div = document.createElement('div');
         div.style.position = 'fixed';
@@ -1400,7 +1431,7 @@ function collectApple(type) {
         div.style.zIndex = '9999';
         div.style.border = '2px solid #4ade80';
         div.style.boxShadow = '0 0 20px #4ade80';
-        div.textContent = '🍎 集滿 7 顆蘋果！獲得 3 局 JP 遊戲！';
+        div.textContent = `🍎 集滿 7 顆！獲得 3 局 JP (獎金 ${jpScore})`;
         document.body.appendChild(div);
         setTimeout(() => div.remove(), 4000);
     }
