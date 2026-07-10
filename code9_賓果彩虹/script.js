@@ -279,9 +279,7 @@ async function jumpToNextIsland() {
     updateMiniGameUI();
     
     if (oldSteps < 140 && miniGameSteps === 140) {
-        totalWin += activeJPAmount;
-        updateWinDisplay();
-        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！獲得 JP 獎金 ${activeJPAmount} 🎯`;
+        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！等待結算 🎯`;
         await sleep(2000);
     }
     
@@ -296,10 +294,12 @@ async function applyMiniGameSteps(steps) {
     updateMiniGameUI();
     
     if (oldSteps < 140 && miniGameSteps === 140) {
-        totalWin += activeJPAmount;
-        updateWinDisplay();
-        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！獲得 JP 獎金 ${activeJPAmount} 🎯`;
+        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！等待結算 🎯`;
         await sleep(2000);
+    } else if ([20, 50, 90].includes(miniGameSteps)) {
+        DOM.drawStatus.textContent = `精準抵達 ${miniGameSteps} 島！直達下一島嶼！`;
+        await sleep(1000);
+        await jumpToNextIsland();
     }
     
     await sleep(200);
@@ -699,12 +699,6 @@ async function shootBallAsync(isSafeMode) {
             historyTracker.rainbow++;
             addBallToHistoryUI('彩色', 'rainbow');
             
-            if (appleBonusRoundsLeft > 0) {
-                if ([20, 50, 90].includes(miniGameSteps)) {
-                    await jumpToNextIsland();
-                }
-            }
-            
             pendingEventsQueue.push({ type: 'laser_strike' });
             DOM.drawStatus.textContent = '彩色球！獲得雷射！';
             return 'rainbow';
@@ -979,6 +973,10 @@ async function startRightEngine() {
                     await sleep(500);
                     
                     laserBeam.classList.add('hidden');
+                    
+                    if (appleBonusRoundsLeft > 0) {
+                        await jumpToNextIsland();
+                    }
                     
                     await applyGravity();
                     await checkMatchesAndChain();
@@ -1391,6 +1389,26 @@ async function finishGameOverSequence() {
     if (appleBonusRoundsLeft > 0) {
         appleBonusRoundsLeft--;
         updateMiniGameUI();
+        
+        if (appleBonusRoundsLeft === 0) {
+            let ratio = 0;
+            if (miniGameSteps >= 140) ratio = 1;
+            else if (miniGameSteps >= 90) ratio = 0.20;
+            else if (miniGameSteps >= 50) ratio = 0.10;
+            else if (miniGameSteps >= 20) ratio = 0.05;
+            else ratio = 0;
+            
+            let reward = Math.floor(activeJPAmount * ratio);
+            if (reward > 0) {
+                totalWin += reward;
+                updateWinDisplay();
+                DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
+                await sleep(3000);
+            } else {
+                DOM.drawStatus.textContent = `🎯 JP結算！未達 20 島，無獎金 🎯`;
+                await sleep(2000);
+            }
+        }
     }
     
     credit += totalWin;
