@@ -214,6 +214,10 @@ updateLadderRewards(currentBet);
 
 // --- Apple & Mini Game Logic ---
 DOM.btnDebugApple.addEventListener('click', () => {
+    if (currentBet === 0) {
+        alert('請先點擊下方押注按鈕設定押分！(測試按鈕需要知道押分才能計算蘋果價值)');
+        return;
+    }
     collectApple(getAppleType());
 });
 
