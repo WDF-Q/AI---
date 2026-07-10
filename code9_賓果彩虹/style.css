@@ -210,7 +210,7 @@ body {
 .apple-silver { filter: drop-shadow(0 0 8px #cbd5e1) grayscale(1) brightness(1.5); }
 .apple-bronze { filter: drop-shadow(0 0 8px #b45309) sepia(1) saturate(3) hue-rotate(-20deg) brightness(0.8); }
 .apple-red { filter: drop-shadow(0 0 8px #ef4444); }
-.apple-green { filter: drop-shadow(0 0 8px #22c55e) hue-rotate(270deg) saturate(3); }
+.apple-green { filter: drop-shadow(0 0 8px #22c55e) hue-rotate(110deg) saturate(3); }
 
 .roulette-wheel-wrapper {
     position: relative;
