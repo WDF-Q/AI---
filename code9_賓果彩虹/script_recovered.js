@@ -2,7 +2,6 @@ const COLS = 6;
 const ROWS = 8;
 const BLOCK_SIZE = 54; 
 const GAP = 4;  
-const OFFSET = 4;
 
 const COLORS = ['red', 'pink', 'blue', 'green', 'yellow'];
 const COLOR_ZH = {
@@ -52,26 +51,11 @@ let currentCombo = 0;
 let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
-let currentBet = 0;
-let allClearBonusCount = 0;
+let currentBet = 600;
 
 let historyTracker = {
     red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0
 };
-
-
-let appleCount = 0;
-const MAX_APPLES = 7;
-let appleBonusRoundsLeft = 0;
-let miniGameSteps = 0;
-const MAX_MG_STEPS = 140;
-let currentStepMapping = {};
-const MG_STATIONS = [0, 20, 50, 90, 140];
-let passedStations = [];
-let nextBonusRoundsQueued = false;
-let queuedJPRounds = 0;
-let currentAppleColors = [];
-let totalCollectedApples = 0;
 
 // ** Decoupled Engine States **
 let leftEngineActive = false;
@@ -93,18 +77,6 @@ const DOM = {
     win: document.getElementById('win-display'),
     safeIndicator: document.getElementById('safe-indicator'),
     ballCountText: document.getElementById('ball-count-text'),
-    appleIcons: document.querySelectorAll('.apple-icon'),
-    btnDebugApple: document.getElementById('btn-debug-apple'),
-    miniGamePanel: document.getElementById('mini-game-panel'),
-    mgRoundsLeft: document.getElementById('mg-rounds-left'),
-    mgColorRules: document.getElementById('mg-color-rules'),
-    mgProgressFill: document.getElementById('mg-progress-fill'),
-    mgDogContainer: document.getElementById('mg-dog-container'),
-    mgDogCounter: document.getElementById('mg-dog-counter'),
-    mgDog: document.getElementById('mg-dog'),
-    mgStationEls: document.querySelectorAll('.mg-station'),
-    birdMouthSlots: document.querySelectorAll('.bird-mouth-slot'),
-    birdMouth: document.getElementById('bird-mouth'),
     drawStatus: document.getElementById('draw-status'),
     btnStart: document.getElementById('btn-start'),
     comboOverlay: document.getElementById('combo-overlay'),
@@ -112,34 +84,11 @@ const DOM = {
     
     rouletteOuter: document.getElementById('roulette-wheel-outer'),
     rouletteInner: document.getElementById('roulette-wheel-inner'),
-    rouletteBallOrbit: document.getElementById('roulette-ball-orbit'),
-    rouletteBall: document.getElementById('roulette-ball'),
     rouletteResultText: document.getElementById('roulette-result-text'),
     
     fireBox: document.getElementById('fire-box'),
     ballHistory: document.getElementById('ball-history')
 };
-
-function startWheelRotations() {
-    function animate() {
-        outerWheelRotation = (outerWheelRotation + 0.5) % 360; 
-        innerWheelRotation = (innerWheelRotation + 1.5) % 360; 
-        
-        DOM.rouletteOuter.style.transform = `rotate(${outerWheelRotation}deg)`;
-        DOM.rouletteInner.style.transform = `translate(-50%, -50%) rotate(${innerWheelRotation}deg)`;
-        
-        for (let ball of activeBalls) {
-            if (ball.state === 'landed_outer') {
-                ball.orbitEl.style.transform = `rotate(${outerWheelRotation + ball.offsetAngle}deg)`;
-            } else if (ball.state === 'landed_inner') {
-                ball.orbitEl.style.transform = `rotate(${innerWheelRotation + ball.offsetAngle}deg)`;
-            }
-        }
-        
-        requestAnimationFrame(animate);
-    }
-    animate();
-}
 
 function initRouletteVisuals() {
     // Outer Wheel
@@ -182,103 +131,45 @@ function initRouletteVisuals() {
     
     startWheelRotations();
 }
+
+function startWheelRotations() {
+    function animate() {
+        outerWheelRotation = (outerWheelRotation + 0.5) % 360; 
+        innerWheelRotation = (innerWheelRotation + 1.5) % 360; 
+        DOM.rouletteOuter.style.transform = `rotate(${outerWheelRotation}deg)`;
+        DOM.rouletteInner.style.transform = `translate(-50%, -50%) rotate(${innerWheelRotation}deg)`;
+        
+        // Physics tracking for the ball!
+        if (ballState === 'landed_outer') {
+            DOM.rouletteBallOrbit.style.transform = `rotate(${outerWheelRotation + ballOffsetAngle}deg)`;
+        } else if (ballState === 'landed_inner') {
+            DOM.rouletteBallOrbit.style.transform = `rotate(${innerWheelRotation + ballOffsetAngle}deg)`;
+        }
+        
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
 initRouletteVisuals();
 
-const BET_INCREMENTS = [1, 5, 10, 20, 50, 100, 500];
-let currentIncrementIndex = 0;
-
-document.getElementById('btn-cycle-bet').addEventListener('click', () => {
-    if (isPlaying) return;
-    currentIncrementIndex = (currentIncrementIndex + 1) % BET_INCREMENTS.length;
-    let inc = BET_INCREMENTS[currentIncrementIndex];
-    document.getElementById('btn-cycle-bet').textContent = `切換加分 (+${inc})`;
-});
-
-document.getElementById('btn-add-bet').addEventListener('click', () => {
-    if (isPlaying) return;
-    if (currentBet === 0) {
-        currentBet = 600;
-    } else {
-        let inc = BET_INCREMENTS[currentIncrementIndex];
-        currentBet += inc;
-        if (currentBet > 3000) currentBet = 3000;
-    }
-    DOM.betInput.textContent = currentBet;
-    updateLadderRewards(currentBet);
+document.querySelectorAll('.chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (isPlaying) return;
+        if (btn.id === 'btn-clear-bet') {
+            currentBet = 600;
+        } else {
+            let val = parseInt(btn.dataset.val);
+            currentBet += val;
+            if (currentBet > 3000) currentBet = 3000;
+        }
+        DOM.betInput.textContent = currentBet;
+        updateLadderRewards(currentBet);
+    });
 });
 
 DOM.btnStart.addEventListener('click', startGame);
 updateLadderRewards(currentBet);
-
-// --- Apple & Mini Game Logic ---
-DOM.btnDebugApple.addEventListener('click', () => {
-    collectApple(getAppleType());
-});
-
-function updateAppleUI() {
-    DOM.appleIcons.forEach((icon, index) => {
-        if (index < currentAppleColors.length) {
-            icon.classList.remove('dim');
-            icon.className = 'apple-icon';
-            icon.classList.add(`apple-${currentAppleColors[index]}`);
-        } else {
-            icon.className = 'apple-icon dim';
-        }
-    });
-}
-
-function updateMiniGameUI() {
-    if (appleBonusRoundsLeft <= 0) {
-        DOM.miniGamePanel.classList.add('hidden');
-        return;
-    }
-    DOM.miniGamePanel.classList.remove('hidden');
-    DOM.mgRoundsLeft.textContent = appleBonusRoundsLeft;
-    
-    let progressPercent = Math.min(100, (miniGameSteps / MAX_MG_STEPS) * 100);
-    DOM.mgProgressFill.style.width = progressPercent + '%';
-    
-    DOM.mgDogCounter.textContent = miniGameSteps;
-    DOM.mgDogContainer.style.left = progressPercent + '%';
-    
-    // Jump animation for the dog
-    DOM.mgDog.classList.remove('mg-dog-walk');
-    void DOM.mgDog.offsetWidth; // trigger reflow
-    DOM.mgDog.classList.add('mg-dog-walk');
-    
-    DOM.mgStationEls.forEach(el => {
-        let st = parseInt(el.textContent);
-        if (miniGameSteps >= st) {
-            el.classList.add('passed');
-        } else {
-            el.classList.remove('passed');
-        }
-    });
-}
-
-
-async function jumpToNextIsland() {
-    let nextStation = 140;
-    for (let st of MG_STATIONS) {
-        if (st > miniGameSteps) {
-            nextStation = st;
-            break;
-        }
-    }
-    miniGameSteps = nextStation;
-    updateMiniGameUI();
-    await sleep(500);
-}
-
-async function applyMiniGameSteps(steps) {
-    if (steps <= 0) return;
-    
-    miniGameSteps = Math.min(140, miniGameSteps + steps);
-    updateMiniGameUI();
-    
-    // Check if landed exactly on an island
-    await sleep(200);
-}
 
 function updateLadderRewards(bet) {
     for (let chain = 4; chain <= 10; chain++) {
@@ -323,14 +214,13 @@ function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = fal
         if (isFlash) el.classList.add('flash-ball');
     }
     el.style.left = `${OFFSET + c * (BLOCK_SIZE + GAP)}px`;
-    el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
+    el.style.top = `${OFFSET + r * (BLOCK_SIZE + GAP)}px`;
     DOM.board.appendChild(el);
     return { r, c, color, isMoney, moneyValue, isFlash, el };
 }
 
 function initBoard() {
-    let blocks = DOM.board.querySelectorAll('.block');
-    blocks.forEach(b => b.remove());
+    DOM.board.innerHTML = '';
     board = [];
     for (let r = 0; r < ROWS; r++) board.push(new Array(COLS).fill(null));
     
@@ -365,110 +255,8 @@ function initBoard() {
     }
 }
 
-function getAppleType() {
-    let r = Math.random();
-    if (r < 0.40) return 'gold';
-    if (r < 0.60) return 'silver';
-    if (r < 0.80) return 'bronze';
-    if (r < 0.90) return 'red';
-    return 'green';
-}
-
-let topApplesState = new Array(COLS).fill(null);
-
-function spawnApples() {
-    DOM.birdMouthSlots.forEach(slot => {
-        slot.innerHTML = '';
-    });
-    topApplesState.fill(null);
-    
-    let slotsArray = Array.from(DOM.birdMouthSlots);
-    if(slotsArray.length === 0) return;
-    
-    let beakIndex = Math.floor(Math.random() * slotsArray.length);
-    
-    let beakEl = document.createElement('div');
-    beakEl.className = 'bird-mouth';
-    beakEl.id = 'bird-mouth';
-    beakEl.textContent = 'SP光束';
-    slotsArray[beakIndex].appendChild(beakEl);
-    
-    DOM.birdMouth = beakEl;
-    
-    let appleCount = Math.random() < 0.1 ? 2 : 3;
-    let availableSlots = [];
-    for (let i = 0; i < slotsArray.length; i++) {
-        if (i !== beakIndex) availableSlots.push(slotsArray[i]);
-    }
-    availableSlots.sort(() => Math.random() - 0.5);
-    
-    for (let i = 0; i < appleCount && i < availableSlots.length; i++) {
-        let appleType = getAppleType();
-        let appleEl = document.createElement('div');
-        appleEl.className = `apple-item apple-${appleType}`;
-        let num = Math.floor(Math.random() * 10) + 6; // 6 to 15
-        appleEl.innerHTML = `🍎<span class="apple-num">${num}</span>`;
-        availableSlots[i].appendChild(appleEl);
-        
-        let colIndex = slotsArray.indexOf(availableSlots[i]);
-        topApplesState[colIndex] = {
-            type: appleType,
-            hp: num,
-            el: appleEl,
-            numEl: appleEl.querySelector('.apple-num'),
-            readyToDrop: false
-        };
-    }
-}
-
-function updateApplesHP(colCounts) {
-    for (let c = 0; c < COLS; c++) {
-        if (colCounts[c] > 0 && topApplesState[c] !== null && !topApplesState[c].readyToDrop) {
-            topApplesState[c].hp -= colCounts[c];
-            if (topApplesState[c].hp <= 0) {
-                topApplesState[c].hp = 0;
-                topApplesState[c].readyToDrop = true;
-            }
-            topApplesState[c].numEl.textContent = topApplesState[c].hp;
-        }
-    }
-}
-
 async function startGame() {
-    if (leftEngineActive || boardState !== 'IDLE') return;
-    
-    if (queuedJPRounds > 0 && appleBonusRoundsLeft === 0) {
-        appleBonusRoundsLeft = 3;
-        queuedJPRounds -= 3;
-        
-        miniGameSteps = 0;
-        passedStations = [];
-        
-        // 鎖定本次 JP 遊戲三局的顏色與步數
-        const colors = ['red', 'pink', 'blue', 'green', 'yellow'];
-        colors.sort(() => Math.random() - 0.5);
-        const selected = colors.slice(0, 3);
-        const steps = [1, 3, 5];
-        steps.sort(() => Math.random() - 0.5);
-        
-        currentStepMapping = {};
-        DOM.mgColorRules.innerHTML = '';
-        for (let i=0; i<3; i++) {
-            currentStepMapping[selected[i]] = steps[i];
-            DOM.mgColorRules.innerHTML += `
-                <div class="track-square" style="background: var(--color-${selected[i]}); margin: 0 10px; font-size: 1.1rem; color: #fff; font-weight: bold; width: 25px; height: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">${steps[i]}</div>
-            `;
-        }
-    }
-    
-    if (appleBonusRoundsLeft > 0) {
-        updateMiniGameUI();
-    }
-    
-    if (currentBet === 0) {
-        alert("請先押分！");
-        return;
-    }
+    if (isPlaying) return;
     if (credit < currentBet) {
         alert("餘額不足！");
         return;
@@ -480,7 +268,6 @@ async function startGame() {
     totalWin = 0;
     ballCount = 0;
     currentCombo = 0;
-    allClearBonusCount = 0;
     batchEliminatedAny = false;
     DOM.ballCountText.textContent = ballCount;
     isGameOverTriggered = false;
@@ -501,7 +288,6 @@ async function startGame() {
     DOM.safeIndicator.className = 'safe-indicator';
     
     initBoard();
-    spawnApples();
     
     pendingDrawsQueue = 3;
     pendingInitialBatch = 3;
@@ -509,7 +295,6 @@ async function startGame() {
     DOM.drawStatus.textContent = '遊戲開始！';
     await sleep(1000);
     
-    leftEngineActive = true;
     startLeftEngine();
     startRightEngine();
 }
@@ -529,7 +314,7 @@ function getSmallRoulettePair() {
 function addBallToHistoryUI(typeText, colorClass, gradient = null) {
     const ballEl = document.createElement('div');
     ballEl.className = 'ball';
-    
+    ballEl.textContent = typeText;
     
     if (gradient) {
         ballEl.style.background = gradient;
@@ -558,24 +343,19 @@ function updateResultText(resultText, colorClass) {
     else DOM.rouletteResultText.style.color = '#a855f7'; // SP
 }
 
-async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = null, innerTargetColor = null, innerTargetPair = null) {
-    let orbitEl = document.createElement('div');
-    orbitEl.className = 'roulette-ball-orbit';
-    let ballEl = document.createElement('div');
-    ballEl.className = 'roulette-ball visible';
-    orbitEl.appendChild(ballEl);
-    
-    document.querySelector('.roulette-wheel-wrapper').appendChild(orbitEl);
-    
-    let ballObj = { orbitEl, ballEl, state: 'spinning_outer', offsetAngle: 0 };
-    activeBalls.push(ballObj);
-    
+async function spinVegasRoulette(targetMain, isInner = false, innerTargetText = null, innerTargetColor = null, innerTargetPair = null) {
     DOM.fireBox.classList.add('active');
     DOM.fireBox.textContent = '發球！';
+    DOM.rouletteResultText.textContent = '???';
+    DOM.rouletteResultText.style.color = '#fff';
     
-    orbitEl.style.transition = 'none';
-    orbitEl.style.transform = `rotate(0deg)`;
-    void orbitEl.offsetWidth; 
+    ballState = 'spinning_outer';
+    DOM.rouletteBallOrbit.style.transition = 'none';
+    DOM.rouletteBallOrbit.style.transform = `rotate(0deg)`;
+    DOM.rouletteBall.classList.remove('dive-inner');
+    void DOM.rouletteBallOrbit.offsetWidth; 
+    
+    DOM.rouletteBall.classList.add('visible');
     
     let baseSpins = 3 * 360; 
     
@@ -587,36 +367,41 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
     let anglePerSlotOuter = 360 / 21;
     let slotCenterOuter = (targetIndexOuter * anglePerSlotOuter) + (anglePerSlotOuter / 2);
     
+    // Calculate world angle exactly 2s from now
     let predictedOuterRotation = (outerWheelRotation + (0.5 * 120)) % 360; 
     let targetWorldAngle = predictedOuterRotation + slotCenterOuter; 
     
     let targetModOuter = ((targetWorldAngle % 360) + 360) % 360;
     let orbitTargetRot = -(baseSpins + (360 - targetModOuter) % 360);
     
-    orbitEl.style.transition = 'transform 2s cubic-bezier(0.25, 1, 0.5, 1)'; 
-    orbitEl.style.transform = `rotate(${orbitTargetRot}deg)`;
+    DOM.rouletteBallOrbit.style.transition = 'transform 2s cubic-bezier(0.25, 1, 0.5, 1)'; 
+    DOM.rouletteBallOrbit.style.transform = `rotate(${orbitTargetRot}deg)`;
     await sleep(2000);
     
-    ballObj.state = 'landed_outer';
-    ballObj.offsetAngle = orbitTargetRot - outerWheelRotation;
-    orbitEl.style.transition = 'none';
+    // LANDED on Outer Wheel! Follow it physically!
+    ballState = 'landed_outer';
+    ballOffsetAngle = orbitTargetRot - outerWheelRotation;
+    DOM.rouletteBallOrbit.style.transition = 'none';
     
     if (!isInner) {
         DOM.fireBox.classList.remove('active');
         DOM.fireBox.textContent = 'WAIT';
-        ballEl.classList.remove('visible');
+        ballState = 'idle';
+        DOM.rouletteBall.classList.remove('visible');
         updateResultText(targetMain.toUpperCase(), targetMain);
         await sleep(500);
     } else {
+        // user requested 0.5s pause before diving in
         await sleep(500);
         
         DOM.rouletteResultText.textContent = '進入內圈小轉盤！';
         DOM.rouletteResultText.style.color = '#a855f7';
-        ballEl.classList.add('dive-inner');
+        DOM.rouletteBall.classList.add('dive-inner');
         
-        await sleep(500); 
+        await sleep(500); // Wait for the visual drop (CSS transition is 0.5s)
         
-        ballObj.state = 'spinning_inner';
+        // Now spin around the inner wheel for 1s
+        ballState = 'spinning_inner';
         let innerSpins = 2 * 360; 
         
         let targetIndexInner = 0;
@@ -627,10 +412,12 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
         let anglePerSlotInner = 360 / 6;
         let slotCenterInner = (targetIndexInner * anglePerSlotInner) + (anglePerSlotInner / 2);
         
+        // Predict inner wheel rotation 1s (60 frames) from now
         let predictedInnerRotation = (innerWheelRotation + (1.5 * 60)) % 360;
         let innerTargetWorldAngle = predictedInnerRotation + slotCenterInner;
         
-        let currentBallWorldAngle = outerWheelRotation + ballObj.offsetAngle;
+        // Start from current orbit rotation to ensure smoothness
+        let currentBallWorldAngle = outerWheelRotation + ballOffsetAngle;
         
         let currentMod = ((currentBallWorldAngle % 360) + 360) % 360;
         let targetModInner = ((innerTargetWorldAngle % 360) + 360) % 360;
@@ -639,182 +426,106 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
         
         let nextOrbitTargetRot = currentBallWorldAngle + innerSpins + deltaInner;
         
-        orbitEl.style.transition = 'transform 1s cubic-bezier(0.25, 1, 0.5, 1)';
-        orbitEl.style.transform = `rotate(${nextOrbitTargetRot}deg)`;
+        DOM.rouletteBallOrbit.style.transition = 'transform 1s cubic-bezier(0.25, 1, 0.5, 1)';
+        DOM.rouletteBallOrbit.style.transform = `rotate(${nextOrbitTargetRot}deg)`;
         
         await sleep(1000);
         
-        ballObj.state = 'landed_inner';
-        ballObj.offsetAngle = nextOrbitTargetRot - innerWheelRotation;
-        orbitEl.style.transition = 'none';
+        // LANDED on Inner Wheel!
+        ballState = 'landed_inner';
+        ballOffsetAngle = nextOrbitTargetRot - innerWheelRotation;
+        DOM.rouletteBallOrbit.style.transition = 'none';
         
+        // Wait briefly to show it clearly stuck in the inner hole
         await sleep(500);
         
         DOM.fireBox.classList.remove('active');
         DOM.fireBox.textContent = 'WAIT';
-        ballEl.classList.remove('visible'); 
+        ballState = 'idle';
+        DOM.rouletteBall.classList.remove('visible'); 
         updateResultText(innerTargetText, innerTargetColor);
         await sleep(800);
-    }
-    
-    orbitEl.remove();
-    activeBalls = activeBalls.filter(b => b !== ballObj);
-}
-
-async function shootBallAsync(isSafeMode) {
-    let baseDraw = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
-    
-    if (baseDraw === 'white') {
-        await spawnAndSpinBall('white', false);
-        historyTracker.white++;
-        addBallToHistoryUI('白色', 'white');
-        
-        if (!isSafeMode) {
-            isGameOverTriggered = true;
-            pendingEventsQueue.push({ type: 'game_over' });
-            DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
-            return 'game_over';
-        } else {
-            DOM.drawStatus.textContent = '安全期！抽中白球不結束。';
-            return 'safe_white';
-        }
-    } else if (baseDraw === 'roulette') {
-        let r = Math.random();
-        if (r < 1/6) {
-            await spawnAndSpinBall('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
-            historyTracker.rainbow++;
-            addBallToHistoryUI('彩色', 'rainbow');
-            
-            if (appleBonusRoundsLeft > 0) {
-                if ([20, 50, 90].includes(miniGameSteps)) {
-                    await jumpToNextIsland();
-                }
-            }
-            
-            pendingEventsQueue.push({ type: 'laser_strike' });
-            DOM.drawStatus.textContent = '彩色球！獲得雷射！';
-            return 'rainbow';
-        } else {
-            let pair = getSmallRoulettePair();
-            await spawnAndSpinBall('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
-            historyTracker[pair[0]]++;
-            historyTracker[pair[1]]++;
-            let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
-            addBallToHistoryUI('雙色', null, gradient);
-            
-            if (appleBonusRoundsLeft > 0) {
-                let s1 = currentStepMapping[pair[0]] || 0;
-                if (s1) await applyMiniGameSteps(s1);
-                let s2 = currentStepMapping[pair[1]] || 0;
-                if (s2) await applyMiniGameSteps(s2);
-            }
-            
-            pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
-            DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
-            return 'sp';
-        }
-    } else {
-        let color = baseDraw;
-        await spawnAndSpinBall(color, false);
-        historyTracker[color]++;
-        addBallToHistoryUI(COLOR_ZH[color], color);
-        
-        if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
-            await applyMiniGameSteps(currentStepMapping[color]);
-        }
-        
-        pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
-        DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
-        return 'color';
     }
 }
 
 async function startLeftEngine() {
-    while (leftEngineActive && !isGameOverTriggered) {
-        if (pendingDrawsQueue === 0) pendingDrawsQueue = 1;
+    leftEngineActive = true;
+    
+
         
         while (pendingDrawsQueue > 0 && !isGameOverTriggered) {
             try {
-                if (pendingInitialBatch > 0) {
-                    let batchCount = pendingInitialBatch;
-                    pendingInitialBatch = 0;
-                    pendingDrawsQueue -= batchCount;
-                    
-                    let promises = [];
-                    let rainbowTriggeredCount = 0;
-                    
-                    for (let i = 0; i < batchCount; i++) {
-                        if (isGameOverTriggered) break;
-                        ballCount++;
-                        let currentShotNumber = ballCount;
-                        DOM.ballCountText.textContent = ballCount;
-                        let isSafeMode = true; 
-                        
-                        let p = shootBallAsync(isSafeMode).then(res => {
-                            if (res === 'rainbow') {
-                                let expectedTotal = currentShotNumber + (batchCount - 1 - i) + (rainbowTriggeredCount * 3);
-                                if (expectedTotal <= 40) {
-                                    rainbowTriggeredCount++;
-                                }
-                            }
-                            updateHistoryUI();
-                        }).catch(e => console.error("Left engine batch error:", e));
-                        promises.push(p);
-                        
-                        if (i < batchCount - 1) {
-                            await sleep(800);
-                        }
-                    }
-                    
-                    await Promise.all(promises);
-                    
-                    if (rainbowTriggeredCount > 0) {
-                        pendingDrawsQueue += (rainbowTriggeredCount * 3);
-                        pendingInitialBatch += (rainbowTriggeredCount * 3);
-                    } else {
-                        pendingEventsQueue.push({ type: 'trigger_chains' });
-                    }
-                    
-                    if (pendingInitialBatch === 0 && ballCount >= 40) {
-                        isGameOverTriggered = true;
-                        pendingEventsQueue.push({ type: 'game_over' });
-                        DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
-                    }
-                    
-                } else {
-                    let randomInterval = Math.floor(Math.random() * 1000) + 500; 
-                    await sleep(randomInterval);
-                    
-                    ballCount++;
-                    DOM.ballCountText.textContent = ballCount;
-                    let isSafeMode = (ballCount <= 3); 
+                let randomInterval = Math.floor(Math.random() * 1000) + 500; 
+                await sleep(randomInterval);
+                
+                ballCount++;
+                DOM.ballCountText.textContent = ballCount;
+                let isSafeMode = (ballCount <= 3) || (pendingInitialBatch > 0 && pendingDrawsQueue > 0); 
+                
+                if (!isSafeMode) {
+                    DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
+                    DOM.safeIndicator.className = 'safe-indicator danger';
+                }
+                
+                let baseDraw = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
+                
+                if (baseDraw === 'white') {
+                    await spinVegasRoulette('white', false);
+                    historyTracker.white++;
+                    addBallToHistoryUI('白色', 'white');
                     
                     if (!isSafeMode) {
-                        DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
-                        DOM.safeIndicator.className = 'safe-indicator danger';
-                    }
-                    
-                    let res = await shootBallAsync(isSafeMode);
-                    updateHistoryUI();
-                    
-                    pendingDrawsQueue--;
-                    if (res === 'rainbow') {
-                        if (ballCount <= 40) {
-                            pendingDrawsQueue += 3;
-                            pendingInitialBatch += 3;
-                        } else {
-                            pendingEventsQueue.push({ type: 'trigger_chains' });
-                        }
-                    } else {
-                        pendingEventsQueue.push({ type: 'trigger_chains' });
-                    }
-                    
-                    if (pendingInitialBatch === 0 && ballCount >= 40) {
                         isGameOverTriggered = true;
                         pendingEventsQueue.push({ type: 'game_over' });
-                        DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
-                        break;
+                        DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
+                        break; 
+                    } else {
+                        DOM.drawStatus.textContent = `安全期！抽中白球不結束。`;
                     }
+                } else if (baseDraw === 'roulette') {
+                    let r = Math.random();
+                    if (r < 1/6) {
+                        await spinVegasRoulette('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
+                        historyTracker.rainbow++;
+                        addBallToHistoryUI('彩色', 'rainbow');
+                        pendingDrawsQueue += 3;
+                        if (pendingInitialBatch === 0) {
+                            pendingInitialBatch = 4;
+                        } else {
+                            pendingInitialBatch += 3;
+                        }
+                        DOM.drawStatus.textContent = `彩色球！獲得 3 連發與雷射！`;
+                        
+                        // 新增鳥嘴雷射事件
+                        pendingEventsQueue.push({ type: 'laser_strike' });
+                        
+                    } else {
+                        let pair = getSmallRoulettePair();
+                        await spinVegasRoulette('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
+                        historyTracker[pair[0]]++;
+                        historyTracker[pair[1]]++;
+                        let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
+                        addBallToHistoryUI('雙色', null, gradient);
+                        
+                        pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
+                        DOM.drawStatus.textContent = `小轉盤：同步消除雙色！`;
+                    }
+                } else {
+                    let color = baseDraw;
+                    await spinVegasRoulette(color, false);
+                    historyTracker[color]++;
+                    addBallToHistoryUI(COLOR_ZH[color], color);
+                    
+                    pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
+                    DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
+                }
+                
+                updateHistoryUI();
+                pendingDrawsQueue--;
+                if (pendingInitialBatch > 0) pendingInitialBatch--;
+                
+                if (pendingInitialBatch === 0) {
+                    pendingEventsQueue.push({ type: 'trigger_chains' });
                 }
             } catch (err) {
                 console.error("Left engine error:", err);
@@ -837,15 +548,12 @@ async function startRightEngine() {
                 if (event.type === 'layer8_hit') {
                     let eliminatedAny = false;
                     let flashColorsTriggered = new Set();
-                    let colElims = new Array(COLS).fill(0);
                     
                     for (let color of event.colors) {
                         for (let c = 0; c < COLS; c++) {
                             let block = board[ROWS - 1][c];
                             if (block !== null && !block.isMoney && block.color === color) {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
-                                if (block.attachedApple) collectApple(block.attachedApple);
-                                colElims[c]++;
                                 block.el.classList.add('eliminating');
                                 setTimeout((el) => el.remove(), 1000, block.el);
                                 board[ROWS - 1][c] = null;
@@ -853,17 +561,13 @@ async function startRightEngine() {
                             }
                         }
                     }
-                    updateApplesHP(colElims);
                     
                     if (flashColorsTriggered.size > 0) {
                         DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
-                        let flashColElims = new Array(COLS).fill(0);
                         for (let r = 0; r < ROWS; r++) {
                             for (let c = 0; c < COLS; c++) {
                                 let block = board[r][c];
                                 if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                                    if (block.attachedApple) collectApple(block.attachedApple);
-                                    flashColElims[c]++;
                                     block.el.classList.add('eliminating');
                                     setTimeout((el) => el.remove(), 1000, block.el);
                                     board[r][c] = null;
@@ -871,7 +575,6 @@ async function startRightEngine() {
                                 }
                             }
                         }
-                        updateApplesHP(flashColElims);
                     }
                     
                     if (eliminatedAny) {
@@ -897,12 +600,8 @@ async function startRightEngine() {
                     
                     await sleep(500); // 讓鳥嘴集氣膨脹
                     
-                    let targetCol = 0;
-                    if (birdMouth && birdMouth.parentElement) {
-                        let slots = Array.from(document.querySelectorAll('.bird-mouth-slot'));
-                        targetCol = slots.indexOf(birdMouth.parentElement);
-                        if (targetCol === -1) targetCol = 0;
-                    }
+                    let leftPx = parseInt(birdMouth ? (birdMouth.style.left || "0") : "0", 10);
+                    let targetCol = Math.round((leftPx - OFFSET) / (BLOCK_SIZE + GAP));
                     
                     let laserBeam = document.getElementById('laser-beam');
                     if (laserBeam) {
@@ -919,7 +618,6 @@ async function startRightEngine() {
                     
                     let moneyCollected = 0;
                     let flashColorsTriggered = new Set();
-                    let laserColElims = new Array(COLS).fill(0);
                     
                     for (let r = 0; r < ROWS; r++) {
                         let block = board[r][targetCol];
@@ -930,32 +628,25 @@ async function startRightEngine() {
                                 DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
                             } else {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
-                                if (block.attachedApple) collectApple(block.attachedApple);
-                                laserColElims[targetCol]++;
                             }
                             block.el.classList.add('eliminating');
                             setTimeout((el) => el.remove(), 500, block.el);
                             board[r][targetCol] = null;
                         }
                     }
-                    updateApplesHP(laserColElims);
                     
                     if (flashColorsTriggered.size > 0) {
                         DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
-                        let flashColElims = new Array(COLS).fill(0);
                         for (let r = 0; r < ROWS; r++) {
                             for (let c = 0; c < COLS; c++) {
                                 let block = board[r][c];
                                 if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                                    if (block.attachedApple) collectApple(block.attachedApple);
-                                    flashColElims[c]++;
                                     block.el.classList.add('eliminating');
                                     setTimeout((el) => el.remove(), 500, block.el);
                                     board[r][c] = null;
                                 }
                             }
                         }
-                        updateApplesHP(flashColElims);
                     }
                     
                     if (moneyCollected > 0) {
@@ -984,6 +675,48 @@ async function startRightEngine() {
             boardState = 'IDLE';
         } else {
             await sleep(100);
+        }
+    }
+}
+
+function initBoard() {
+    DOM.board.innerHTML = `
+        <div id="laser-beam" class="laser-beam hidden"></div>
+        <div class="elimination-zone">消除觸發區域</div>
+    `;
+    
+    let initialBirdCol = Math.floor(Math.random() * COLS);
+    let birdMouth = document.getElementById('bird-mouth');
+    if (birdMouth) {
+        birdMouth.style.left = `${OFFSET + initialBirdCol * (BLOCK_SIZE + GAP)}px`;
+    }
+    
+    board = new Array(ROWS).fill(null).map(() => new Array(COLS).fill(null));
+    
+    let moneySpots = new Set();
+    let availableCols = [];
+    for (let i = 0; i < COLS; i++) availableCols.push(i);
+    availableCols.sort(() => Math.random() - 0.5);
+    let moneyBallCount = Math.random() < 0.5 ? 4 : 5;
+    let selectedCols = availableCols.slice(0, moneyBallCount);
+    
+    for (let c of selectedCols) {
+        // 第 1~3 層 (由上往下，索引為 0, 1, 2)
+        let r = Math.floor(Math.random() * 3); 
+        moneySpots.add(`${r},${c}`);
+    }
+    
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            if (moneySpots.has(`${r},${c}`)) {
+                let initialValue = Math.floor(currentBet / 5);
+                let block = createBlock(r, c, null, true, initialValue);
+                board[r][c] = block;
+            } else {
+                let color = getSafeColorForRefill(r, c);
+                let block = createBlock(r, c, color, false);
+                board[r][c] = block;
+            }
         }
     }
 }
@@ -1112,40 +845,15 @@ async function checkMatchesAndChain() {
                     }
                 }
                 
-                let colElims = new Array(COLS).fill(0);
                 for (let block of blocksToEliminate) {
-                    if (block.attachedApple) {
-                        collectApple(block.attachedApple);
-                    }
-                    colElims[block.c]++;
                     block.el.classList.add('eliminating');
                     setTimeout((el) => el.remove(), 1000, block.el);
                     board[block.r][block.c] = null;
                 }
-                updateApplesHP(colElims);
             }
             
             await sleep(1000);
             await applyGravity();
-            
-            let isAllClear = true;
-            for (let r = 0; r < ROWS; r++) {
-                for (let c = 0; c < COLS; c++) {
-                    if (board[r][c] !== null) {
-                        isAllClear = false;
-                        break;
-                    }
-                }
-                if (!isAllClear) break;
-            }
-            if (isAllClear && allClearBonusCount < 2) {
-                allClearBonusCount++;
-                let bonus = currentBet * 30;
-                totalWin += bonus;
-                updateWinDisplay();
-                DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
-                await sleep(2000);
-            }
         } else {
             hasMatches = false;
         }
@@ -1301,42 +1009,9 @@ async function refillBoard() {
         }
         
         block.r = r;
-        setTimeout(() => { block.el.style.top = `${r * (BLOCK_SIZE + GAP)}px`; }, 50);
+        setTimeout(() => { block.el.style.top = `${OFFSET + r * (BLOCK_SIZE + GAP)}px`; }, 50);
         board[r][c] = block; // 正式寫入完整 block，後續生成會參考到這個正確的 block
     }
-    
-    // 處理蘋果掉落附著
-    for (let c = 0; c < COLS; c++) {
-        if (topApplesState[c] !== null && topApplesState[c].readyToDrop) {
-            let newColorBlocksInCol = emptySpots.filter(spot => 
-                spot.c === c && board[spot.r][spot.c] && !board[spot.r][spot.c].isMoney
-            );
-            if (newColorBlocksInCol.length > 0) {
-                let randomSpot = newColorBlocksInCol[Math.floor(Math.random() * newColorBlocksInCol.length)];
-                let block = board[randomSpot.r][randomSpot.c];
-                block.attachedApple = topApplesState[c].type;
-                
-                let smallApple = document.createElement('div');
-                smallApple.className = `apple-item apple-${topApplesState[c].type}`;
-                smallApple.innerHTML = '🍎';
-                smallApple.style.fontSize = '1.5rem';
-                smallApple.style.position = 'absolute';
-                smallApple.style.bottom = '-8px';
-                smallApple.style.right = '-8px';
-                smallApple.style.zIndex = '10';
-                smallApple.style.filter = 'drop-shadow(0 0 5px rgba(255,255,255,1))';
-                
-                // 清除附著蘋果本身的動畫，避免一直跳動
-                smallApple.style.animation = 'none';
-                
-                block.el.appendChild(smallApple);
-                
-                topApplesState[c].el.remove();
-                topApplesState[c] = null;
-            }
-        }
-    }
-    
     
     await sleep(500);
     // 恢復 checkMatchesAndChain 作為安全網，雖然演算法已保證不連鎖，
@@ -1354,14 +1029,9 @@ function showComboOverlay(combo) {
 
 async function finishGameOverSequence() {
     isPlaying = false;
-    DOM.drawStatus.textContent = '結算中...';
+    DOM.drawStatus.textContent = '遊戲結束結算中...';
     DOM.outOverlay.classList.add('show');
     await sleep(2000);
-    
-    if (appleBonusRoundsLeft > 0) {
-        appleBonusRoundsLeft--;
-        updateMiniGameUI();
-    }
     
     credit += totalWin;
     updateCreditDisplay();
@@ -1371,38 +1041,4 @@ async function finishGameOverSequence() {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
-function collectApple(type) {
-    if (currentAppleColors.length === 7) {
-        currentAppleColors = []; // clear the display array if it was full
-    }
-    
-    currentAppleColors.push(type);
-    totalCollectedApples++;
-    
-    updateAppleUI();
-    DOM.drawStatus.textContent = `🍎 收集到蘋果！`;
-    
-    if (currentAppleColors.length === 7) {
-        queuedJPRounds += 3;
-        
-        let div = document.createElement('div');
-        div.style.position = 'fixed';
-        div.style.top = '20%';
-        div.style.left = '50%';
-        div.style.transform = 'translate(-50%, -50%)';
-        div.style.background = 'rgba(0,0,0,0.8)';
-        div.style.color = '#4ade80';
-        div.style.padding = '20px 40px';
-        div.style.borderRadius = '20px';
-        div.style.fontSize = '2rem';
-        div.style.zIndex = '9999';
-        div.style.border = '2px solid #4ade80';
-        div.style.boxShadow = '0 0 20px #4ade80';
-        div.textContent = '🍎 集滿 7 顆蘋果！獲得 3 局 JP 遊戲！';
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 4000);
-    }
 }
