@@ -300,17 +300,7 @@ function updateHistoryUI() {
     document.getElementById('track-rainbow').textContent = historyTracker.rainbow;
 }
 
-function getRandomColor(r, c) {
-    if (r !== undefined && c !== undefined && Math.random() < 0.10) {
-        let neighbors = [];
-        if (r > 0 && board[r-1][c] && !board[r-1][c].isMoney) neighbors.push(board[r-1][c].color);
-        if (r < ROWS-1 && board[r+1][c] && !board[r+1][c].isMoney) neighbors.push(board[r+1][c].color);
-        if (c > 0 && board[r][c-1] && !board[r][c-1].isMoney) neighbors.push(board[r][c-1].color);
-        if (c < COLS-1 && board[r][c+1] && !board[r][c+1].isMoney) neighbors.push(board[r][c+1].color);
-        if (neighbors.length > 0) return neighbors[Math.floor(Math.random() * neighbors.length)];
-    }
-    return COLORS[Math.floor(Math.random() * COLORS.length)];
-}
+
 
 function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = false) {
     const el = document.createElement('div');
@@ -352,14 +342,7 @@ function initBoard() {
                 board[r][c] = createBlock(r, c, null, true, initialMoneyValue);
                 continue;
             }
-            let color = getRandomColor(r, c);
-            while (
-                (c >= 2 && board[r][c-1]?.color === color && board[r][c-2]?.color === color) ||
-                (r >= 2 && board[r-1][c]?.color === color && board[r-2][c]?.color === color) ||
-                (r >= 1 && c >= 1 && board[r-1][c]?.color === color && board[r][c-1]?.color === color)
-            ) {
-                color = getRandomColor(r, c);
-            }
+            let color = getSafeColorForRefill(r, c);
             board[r][c] = createBlock(r, c, color, false);
         }
     }
@@ -1205,6 +1188,22 @@ function getSafeColorForRefill(r, c) {
     }
     
     if (availableColors.length === 0) return COLORS[Math.floor(Math.random() * COLORS.length)];
+    
+    // Attempt 10% grouping logic if neighbors have safe colors
+    if (r !== undefined && c !== undefined && Math.random() < 0.10) {
+        let neighbors = [];
+        if (r > 0 && board[r-1][c] && !board[r-1][c].isMoney) neighbors.push(board[r-1][c].color);
+        if (r < ROWS-1 && board[r+1][c] && !board[r+1][c].isMoney) neighbors.push(board[r+1][c].color);
+        if (c > 0 && board[r][c-1] && !board[r][c-1].isMoney) neighbors.push(board[r][c-1].color);
+        if (c < COLS-1 && board[r][c+1] && !board[r][c+1].isMoney) neighbors.push(board[r][c+1].color);
+        
+        // Filter neighbors to only include SAFE colors
+        let safeNeighbors = neighbors.filter(col => availableColors.includes(col));
+        if (safeNeighbors.length > 0) {
+            return safeNeighbors[Math.floor(Math.random() * safeNeighbors.length)];
+        }
+    }
+    
     return availableColors[Math.floor(Math.random() * availableColors.length)];
 }
 
