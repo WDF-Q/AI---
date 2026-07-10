@@ -237,6 +237,9 @@ function updateMiniGameUI() {
     DOM.miniGamePanel.classList.remove('hidden');
     DOM.mgRoundsLeft.textContent = appleBonusRoundsLeft;
     
+    let amountEl = document.getElementById('mg-jp-amount');
+    if (amountEl) amountEl.textContent = activeJPAmount;
+    
     let progressPercent = Math.min(100, (miniGameSteps / MAX_MG_STEPS) * 100);
     DOM.mgProgressFill.style.width = progressPercent + '%';
     
@@ -441,6 +444,12 @@ async function startGame() {
     if (queuedJPPackages.length > 0 && appleBonusRoundsLeft === 0) {
         appleBonusRoundsLeft = 3;
         activeJPAmount = queuedJPPackages.shift();
+        
+        if (currentAppleColors.length === 7) {
+            currentAppleColors = [];
+            currentAppleScores = [];
+            updateAppleUI();
+        }
         
         miniGameSteps = 0;
         passedStations = [];
