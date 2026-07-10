@@ -209,29 +209,7 @@ updateLadderRewards(currentBet);
 
 // --- Apple & Mini Game Logic ---
 DOM.btnDebugApple.addEventListener('click', () => {
-    if (appleCount < MAX_APPLES) {
-        appleCount++;
-        updateAppleUI();
-        if (appleCount === MAX_APPLES) {
-            nextBonusRoundsQueued = true;
-            let div = document.createElement('div');
-            div.style.position = 'fixed';
-            div.style.top = '20%';
-            div.style.left = '50%';
-            div.style.transform = 'translate(-50%, -50%)';
-            div.style.background = 'rgba(0,0,0,0.8)';
-            div.style.color = '#4ade80';
-            div.style.padding = '20px 40px';
-            div.style.borderRadius = '20px';
-            div.style.fontSize = '2rem';
-            div.style.zIndex = '9999';
-            div.style.border = '2px solid #4ade80';
-            div.style.boxShadow = '0 0 20px #4ade80';
-            div.textContent = '🍎 集滿 7 顆蘋果！下一局將進入連續 3 局 JP 遊戲！';
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 4000);
-        }
-    }
+    collectApple(getAppleType());
 });
 
 function updateAppleUI() {
@@ -239,7 +217,7 @@ function updateAppleUI() {
         if (index < appleCount) {
             icon.classList.remove('dim');
         } else {
-            icon.classList.add('dim');
+            icon.className = 'apple-icon dim';
         }
     });
 }
@@ -1393,32 +1371,34 @@ function sleep(ms) {
 
 
 function collectApple(type) {
-    let slots = [
-        document.getElementById('collected-apple-0'),
-        document.getElementById('collected-apple-1'),
-        document.getElementById('collected-apple-2')
-    ];
-    
-    // Find first empty slot
-    let targetSlot = null;
-    for (let slot of slots) {
-        if (slot && slot.innerHTML === '') {
-            targetSlot = slot;
-            break;
-        }
-    }
-    
-    // If full, maybe just replace the last one for now or do nothing
-    if (!targetSlot) targetSlot = slots[2];
-    
-    if (targetSlot) {
-        let appleEl = document.createElement('div');
-        appleEl.className = `apple-item apple-${type}`;
-        appleEl.innerHTML = '🍎';
-        targetSlot.innerHTML = '';
-        targetSlot.appendChild(appleEl);
+    if (appleCount < 7) {
+        appleCount++;
+        let icon = DOM.appleIcons[appleCount - 1];
+        icon.classList.remove('dim');
+        // Reset classes and apply the specific color
+        icon.className = 'apple-icon'; 
+        icon.classList.add(pple-);
         
-        // Float text
-        DOM.drawStatus.textContent = `🍎 收集到蘋果！`;
+        DOM.drawStatus.textContent = 🍎 收集到蘋果！;
+        
+        if (appleCount === 7) {
+            nextBonusRoundsQueued = true;
+            let div = document.createElement('div');
+            div.style.position = 'fixed';
+            div.style.top = '20%';
+            div.style.left = '50%';
+            div.style.transform = 'translate(-50%, -50%)';
+            div.style.background = 'rgba(0,0,0,0.8)';
+            div.style.color = '#4ade80';
+            div.style.padding = '20px 40px';
+            div.style.borderRadius = '20px';
+            div.style.fontSize = '2rem';
+            div.style.zIndex = '9999';
+            div.style.border = '2px solid #4ade80';
+            div.style.boxShadow = '0 0 20px #4ade80';
+            div.textContent = '🍎 集滿 7 顆蘋果！下一局將進入連續 3 局 JP 遊戲！';
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 4000);
+        }
     }
 }

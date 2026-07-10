@@ -206,6 +206,11 @@ body {
     100% { transform: scale(1); }
 }
 /* 品質調色 */
+.apple-icon {
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 0 3px rgba(255,0,0,0.6));
+}
 .apple-gold { filter: drop-shadow(0 0 8px #facc15) sepia(1) saturate(5) hue-rotate(15deg) brightness(1.2); }
 .apple-silver { filter: drop-shadow(0 0 8px #cbd5e1) grayscale(1) brightness(1.5); }
 .apple-bronze { filter: drop-shadow(0 0 8px #b45309) sepia(1) saturate(3) hue-rotate(-20deg) brightness(0.8); }
@@ -932,11 +937,7 @@ body {
 .rainbow-block { background: linear-gradient(135deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7); }
 
 /* Apple Bonus UI */
-.apple-icon {
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-    filter: drop-shadow(0 0 3px rgba(255,0,0,0.6));
-}
+
 .apple-icon.dim {
     opacity: 0.2;
     filter: grayscale(100%);
