@@ -941,7 +941,7 @@ async function startRightEngine() {
                         updateLadderActive(currentCombo);
                         DOM.drawStatus.textContent = `${currentCombo} 連鎖！(底部引爆)`;
                         showComboOverlay(currentCombo);
-                        await sleep(1000);
+                        await engineSleep(1000);
                         batchEliminatedAny = true;
                     }
                 } else if (event.type === 'trigger_chains') {
@@ -962,7 +962,7 @@ async function startRightEngine() {
                     let birdMouth = document.getElementById('bird-mouth');
                     if (birdMouth) birdMouth.classList.add('bird-charging');
                     
-                    await sleep(500); // 讓鳥嘴集氣膨脹
+                    await engineSleep(500); // 讓鳥嘴集氣膨脹
                     
                     let targetCol = 0;
                     if (birdMouth && birdMouth.parentElement) {
@@ -981,7 +981,7 @@ async function startRightEngine() {
                     }
                     
                     DOM.drawStatus.textContent = `⚡ 鳥嘴雷射發射！ ⚡`;
-                    await sleep(400); // 等待雷射特效到達最大
+                    await engineSleep(400); // 等待雷射特效到達最大
                     if (birdMouth) birdMouth.classList.remove('bird-charging');
                     
                     let moneyCollected = 0;
@@ -1029,7 +1029,7 @@ async function startRightEngine() {
                         updateWinDisplay();
                     }
                     
-                    await sleep(500);
+                    await engineSleep(500);
                     
                     laserBeam.classList.add('hidden');
                     
@@ -1084,7 +1084,7 @@ async function applyGravity() {
             }
         }
     }
-    if (moved) await sleep(400);
+    if (moved) await engineSleep(400);
 }
 
 function findConnectedComponents() {
@@ -1204,7 +1204,7 @@ async function checkMatchesAndChain() {
                 updateApplesHP(colElims);
             }
             
-            await sleep(1000);
+            await engineSleep(1000);
             await applyGravity();
             
             let isAllClear = true;
@@ -1223,7 +1223,7 @@ async function checkMatchesAndChain() {
                 totalWin += bonus;
                 updateWinDisplay();
                 DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
-                await sleep(2000);
+                await engineSleep(2000);
             }
         } else {
             hasMatches = false;
@@ -1342,7 +1342,7 @@ async function refillBoard(finalCombo = 0) {
             rewardSpotIndex = Math.floor(Math.random() * emptySpots.length);
         }
         DOM.drawStatus.textContent = `⭐ 生成 ${currentCombo} 連鎖獎金球！`;
-        await sleep(500);
+        await engineSleep(500);
     }
     
     let randomMoneySpots = new Set();
@@ -1364,7 +1364,7 @@ async function refillBoard(finalCombo = 0) {
         
         if (randomMoneySpots.size > 0) {
             DOM.drawStatus.textContent = `✨ 天降隨機金錢球！ ✨`;
-            await sleep(500);
+            await engineSleep(500);
         }
     }
 
@@ -1432,8 +1432,7 @@ async function refillBoard(finalCombo = 0) {
         }
     }
     
-    
-    await sleep(500);
+    await engineSleep(500);
     // 恢復 checkMatchesAndChain 作為安全網，雖然演算法已保證不連鎖，
     // 若機率極低發生顏色庫耗盡而 fallback 的情況，也能正確清除避免盤面卡死
     await checkMatchesAndChain(); 
@@ -1490,6 +1489,19 @@ async function finishGameOverSequence() {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getEngineSpeedMultiplier() {
+    let pendingBalls = pendingEventsQueue.filter(e => e.type === 'layer8_hit' || e.type === 'laser_strike').length;
+    if (pendingBalls >= 6) return 4;
+    if (pendingBalls >= 4) return 3;
+    if (pendingBalls >= 2) return 2;
+    return 1;
+}
+
+async function engineSleep(ms) {
+    let speed = getEngineSpeedMultiplier();
+    await sleep(ms / speed);
 }
 
 
