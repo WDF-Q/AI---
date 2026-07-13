@@ -495,6 +495,21 @@ body {
     align-items: center;
 }
 
+.top-apple-slot {
+    width: 48px;
+    height: 48px;
+    border: 2px dashed #475569;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.top-apple-slot .apple-icon {
+    font-size: 2rem;
+}
+
 .extra-slot {
     margin-left: 10px;
     border: 2px dashed #eab308;
