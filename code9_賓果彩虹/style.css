@@ -511,7 +511,7 @@ body {
 
 .combo-ladder {
     display: flex;
-    flex-direction: column-reverse; /* 由下往上 4~10 */
+    flex-direction: column; /* 由上往下 10~4 */
     gap: 4px;
     background: #1e293b;
     padding: 1rem;
