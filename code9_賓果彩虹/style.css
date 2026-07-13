@@ -561,25 +561,32 @@ body {
 .chain-num {
     font-size: 1.44rem;
     font-weight: 900;
-    color: #facc15;
-    text-shadow: 0 0 5px #ca8a04;
+    background: linear-gradient(180deg, #fff7a1 0%, #ffdf00 25%, #d4af37 50%, #996515 75%, #f3e5ab 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.5));
 }
 
 .chain-text {
     font-size: 0.68rem;
-    color: #facc15;
     letter-spacing: 2px;
+    background: linear-gradient(180deg, #fff7a1 0%, #ffdf00 25%, #d4af37 50%, #996515 75%, #f3e5ab 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
 }
 
 .chain-reward {
     font-family: 'Times New Roman', Times, serif;
     font-weight: bold;
-    color: #facc15;
-    text-shadow: 0 0 5px #ca8a04;
     text-align: right;
     flex: 1;
     margin-left: 10px;
     font-size: 1.44rem;
+    background: linear-gradient(180deg, #fff7a1 0%, #ffdf00 25%, #d4af37 50%, #996515 75%, #f3e5ab 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.5));
 }
 
 /* 遊戲棋盤區塊 */
