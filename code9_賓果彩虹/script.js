@@ -365,6 +365,10 @@ function updateLadderRewards(bet) {
             el.textContent = Math.floor(bet * COMBO_MULTIPLIERS[chain]);
         }
     }
+    let acEl = document.getElementById('all-clear-reward');
+    if (acEl) {
+        acEl.textContent = Math.floor(bet * 30);
+    }
 }
 
 function updateCreditDisplay() { DOM.credit.textContent = credit; }
@@ -1225,7 +1229,21 @@ async function checkMatchesAndChain() {
                 totalWin += bonus;
                 updateWinDisplay();
                 DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
-                await engineSleep(2000);
+                
+                let gameBoardEl = document.getElementById('game-board');
+                gameBoardEl.classList.add('all-clear-shake');
+                
+                let acOverlay = document.createElement('div');
+                acOverlay.className = 'all-clear-overlay';
+                acOverlay.textContent = '恭喜獲得全消';
+                gameBoardEl.appendChild(acOverlay);
+                
+                await engineSleep(3000);
+                
+                gameBoardEl.classList.remove('all-clear-shake');
+                if (acOverlay.parentNode) {
+                    acOverlay.remove();
+                }
             }
         } else {
             hasMatches = false;
