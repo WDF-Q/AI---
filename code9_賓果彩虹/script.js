@@ -930,6 +930,10 @@ async function startRightEngine() {
                     if (batchEliminatedAny) {
                         await applyGravity();
                         await checkMatchesAndChain();
+                        
+                        currentCombo = 0;
+                        updateLadderActive(0);
+                        
                         await refillBoard();
                         batchEliminatedAny = false;
                         currentCombo = 0;
@@ -1016,7 +1020,14 @@ async function startRightEngine() {
                     
                     await applyGravity();
                     await checkMatchesAndChain();
+                    
+                    currentCombo = 0;
+                    updateLadderActive(0);
+                    
                     await refillBoard();
+                    
+                    currentCombo = 0;
+                    updateLadderActive(0);
                     
                 } else if (event.type === 'game_over') {
                     boardState = 'SETTLING';
