@@ -221,6 +221,29 @@ DOM.btnDebugApple.addEventListener('click', () => {
     collectApple(getAppleType());
 });
 
+document.querySelectorAll('.clickable-station').forEach(el => {
+    el.addEventListener('click', (e) => {
+        let station = parseInt(el.getAttribute('data-station'));
+        let jpRef = activeJPAmount > 0 ? activeJPAmount : currentAppleScores.reduce((a, b) => a + b, 0);
+        
+        let ratio = 0;
+        if (station === 90) ratio = 0.20;
+        else if (station === 50) ratio = 0.10;
+        else if (station === 20) ratio = 0.05;
+        
+        let amount = Math.floor(jpRef * ratio);
+        let tooltip = document.getElementById('station-tooltip');
+        tooltip.textContent = `${station}島獎金: ${amount}`;
+        tooltip.style.left = el.style.left;
+        tooltip.classList.remove('hidden');
+        
+        if (window._stationTooltipTimeout) clearTimeout(window._stationTooltipTimeout);
+        window._stationTooltipTimeout = setTimeout(() => {
+            tooltip.classList.add('hidden');
+        }, 2000);
+    });
+});
+
 function updateAppleUI() {
     DOM.appleIcons.forEach((icon, index) => {
         if (index < currentAppleColors.length) {
