@@ -949,10 +949,11 @@ async function startRightEngine() {
                         await applyGravity();
                         await checkMatchesAndChain();
                         
+                        let finalCombo = currentCombo;
                         currentCombo = 0;
                         updateLadderActive(0);
                         
-                        await refillBoard();
+                        await refillBoard(finalCombo);
                         batchEliminatedAny = false;
                         currentCombo = 0;
                         updateLadderActive(0);
@@ -1039,10 +1040,11 @@ async function startRightEngine() {
                     await applyGravity();
                     await checkMatchesAndChain();
                     
+                    let finalCombo = currentCombo;
                     currentCombo = 0;
                     updateLadderActive(0);
                     
-                    await refillBoard();
+                    await refillBoard(finalCombo);
                     
                     currentCombo = 0;
                     updateLadderActive(0);
@@ -1301,12 +1303,12 @@ function getSafeColorForRefill(r, c) {
     return availableColors[Math.floor(Math.random() * availableColors.length)];
 }
 
-async function refillBoard() {
+async function refillBoard(finalCombo = 0) {
     let hasEmpty = false;
     let guaranteedRewardValue = 0;
     
-    if (currentCombo >= 4) {
-        let lookupChain = currentCombo >= 10 ? 10 : currentCombo;
+    if (finalCombo >= 4) {
+        let lookupChain = finalCombo >= 10 ? 10 : finalCombo;
         let mult = COMBO_MULTIPLIERS[lookupChain];
         guaranteedRewardValue = Math.floor(currentBet * mult);
     }
