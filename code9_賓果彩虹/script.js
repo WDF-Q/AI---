@@ -245,15 +245,33 @@ document.querySelectorAll('.clickable-station').forEach(el => {
         
         let amount = Math.floor(jpRef * ratio);
         let tooltip = document.getElementById('station-tooltip');
+        
+        // 如果 tooltip 已經是顯示狀態，代表這是 3 秒內的第二次點擊，則直接收回
+        if (tooltip.style.opacity === '1') {
+            tooltip.style.opacity = '0';
+            if (window._stationTooltipTimeout) clearTimeout(window._stationTooltipTimeout);
+            return;
+        }
+
         tooltip.textContent = `${station}島獎金: ${amount}`;
         tooltip.style.left = el.style.left;
-        tooltip.classList.remove('hidden');
+        tooltip.style.opacity = '1';
         
         if (window._stationTooltipTimeout) clearTimeout(window._stationTooltipTimeout);
         window._stationTooltipTimeout = setTimeout(() => {
-            tooltip.classList.add('hidden');
-        }, 2000);
+            tooltip.style.opacity = '0';
+        }, 3000);
     });
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.clickable-station')) {
+        let tooltip = document.getElementById('station-tooltip');
+        if (tooltip && tooltip.style.opacity === '1') {
+            tooltip.style.opacity = '0';
+            if (window._stationTooltipTimeout) clearTimeout(window._stationTooltipTimeout);
+        }
+    }
 });
 
 function updateAppleUI() {
