@@ -53,6 +53,7 @@ let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
 let currentBet = 0;
+let previousBet = 0;
 let allClearBonusCount = 0;
 
 let historyTracker = {
@@ -207,6 +208,17 @@ document.getElementById('btn-add-bet').addEventListener('click', () => {
     }
     DOM.betInput.textContent = currentBet;
     updateLadderRewards(currentBet);
+});
+
+document.getElementById('btn-repeat-bet').addEventListener('click', () => {
+    if (isPlaying) return;
+    if (previousBet > 0) {
+        currentBet = previousBet;
+        DOM.betInput.textContent = currentBet;
+        updateLadderRewards(currentBet);
+    } else {
+        alert("沒有上一局的押分紀錄");
+    }
 });
 
 DOM.btnStart.addEventListener('click', startGame);
@@ -510,6 +522,7 @@ async function startGame() {
         alert("餘額不足！");
         return;
     }
+    previousBet = currentBet;
     credit -= currentBet;
     updateCreditDisplay();
     
@@ -1438,6 +1451,10 @@ async function finishGameOverSequence() {
     updateCreditDisplay();
     DOM.btnStart.disabled = false;
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
+    
+    currentBet = 0;
+    DOM.betInput.textContent = "0";
+    updateLadderRewards(0);
 }
 
 function sleep(ms) {
