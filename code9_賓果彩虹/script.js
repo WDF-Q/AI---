@@ -361,7 +361,10 @@ async function applyMiniGameSteps(steps) {
 function updateLadderRewards(bet) {
     for (let chain = 4; chain <= 10; chain++) {
         let el = document.getElementById(`reward-${chain}`);
-        if (el) el.textContent = Math.floor(bet * COMBO_MULTIPLIERS[chain]);
+        if (el) {
+            let valStr = Math.floor(bet * COMBO_MULTIPLIERS[chain]).toString();
+            el.innerHTML = valStr.split('').map(c => `<span>${c}</span>`).join('');
+        }
     }
 }
 

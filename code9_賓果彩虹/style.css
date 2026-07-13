@@ -551,14 +551,36 @@ body {
 }
 
 .chain-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    width: 40px;
+}
+
+.chain-num {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #facc15;
+    text-shadow: 0 0 5px #ca8a04;
+}
+
+.chain-text {
     font-size: 0.85rem;
-    color: #cbd5e1;
+    color: #facc15;
+    letter-spacing: 2px;
 }
 
 .chain-reward {
     font-family: 'Fredoka', sans-serif;
     font-weight: bold;
-    color: #fcd34d;
+    color: #facc15;
+    text-shadow: 0 0 5px #ca8a04;
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+    margin-left: 10px;
+    font-size: 1.1rem;
 }
 
 /* 遊戲棋盤區塊 */
