@@ -496,8 +496,8 @@ body {
 }
 
 .top-apple-slot {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     border: 2px dashed #475569;
     border-radius: 8px;
     background: rgba(0, 0, 0, 0.5);
@@ -507,7 +507,7 @@ body {
 }
 
 .top-apple-slot .apple-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 .extra-slot {
