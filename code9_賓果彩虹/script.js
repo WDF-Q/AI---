@@ -446,6 +446,38 @@ function getAppleType() {
 let topApplesState = new Array(COLS).fill(null);
 let preGeneratedApples = [];
 
+function getUpgradeProb(bet) {
+    if (bet <= 700) {
+        let p = 0.10 + ((bet - 600) / 100) * 0.20;
+        return Math.max(0.10, Math.min(0.30, p));
+    } else if (bet <= 800) {
+        let p = 0.30 + ((bet - 700) / 100) * 0.20;
+        return Math.max(0.30, Math.min(0.50, p));
+    } else if (bet <= 900) {
+        let p = 0.50 + ((bet - 800) / 100) * 0.20;
+        return Math.max(0.50, Math.min(0.70, p));
+    } else if (bet <= 1000) {
+        let p = 0.70 + ((bet - 900) / 100) * 0.20;
+        return Math.max(0.70, Math.min(0.90, p));
+    } else if (bet <= 1100) {
+        let p = 0.91 + ((bet - 1000) / 100) * 0.08;
+        return Math.max(0.91, Math.min(0.99, p));
+    } else {
+        return 1.0;
+    }
+}
+
+function upgradeApple(type) {
+    switch (type) {
+        case 'green': return 'red';
+        case 'red': return 'bronze';
+        case 'bronze': return 'silver';
+        case 'silver': return 'gold';
+        case 'gold': return 'gold';
+        default: return type;
+    }
+}
+
 function generateBetApples() {
     let betAppleSlots = document.getElementById('bet-apple-slots');
     if (!betAppleSlots) return;
@@ -465,13 +497,27 @@ function generateBetApples() {
     }
     if (currentBet >= 1100) prob3Apples = 1.0;
     
-    let count = Math.random() < prob3Apples ? 3 : 2;
-    preGeneratedApples = [];
+    let targetCount = Math.random() < prob3Apples ? 3 : 2;
     
-    for (let i = 0; i < count; i++) {
-        let type = getAppleType();
-        let hp = Math.floor(Math.random() * 10) + 6;
-        preGeneratedApples.push({ type, hp });
+    if (preGeneratedApples.length === 0) {
+        for (let i = 0; i < targetCount; i++) {
+            let type = getAppleType();
+            let hp = Math.floor(Math.random() * 10) + 6;
+            preGeneratedApples.push({ type, hp });
+        }
+    } else {
+        let upgradeProb = getUpgradeProb(currentBet);
+        for (let i = 0; i < preGeneratedApples.length; i++) {
+            if (Math.random() < upgradeProb) {
+                preGeneratedApples[i].type = upgradeApple(preGeneratedApples[i].type);
+            }
+        }
+        
+        if (preGeneratedApples.length === 2 && targetCount === 3) {
+            let type = getAppleType();
+            let hp = Math.floor(Math.random() * 10) + 6;
+            preGeneratedApples.push({ type, hp });
+        }
     }
     
     let slots = betAppleSlots.querySelectorAll('.apple-slot');
