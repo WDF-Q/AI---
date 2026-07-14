@@ -455,7 +455,7 @@ body {
 
 .board-with-ladder {
     display: flex;
-    align-items: flex-end; /* 底部對齊 */
+    align-items: stretch;
     gap: 1.5rem;
     justify-content: flex-start;
 }
@@ -465,8 +465,8 @@ body {
 .left-ladder-col {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    align-items: center;
+    justify-content: space-between;
+    align-items: stretch;
 }
 
 .apple-collection-row {
@@ -517,6 +517,7 @@ body {
     padding: 1rem;
     border-radius: 12px;
     border: 1px solid #334155;
+    box-sizing: border-box;
 }
 
 .ladder-title {
