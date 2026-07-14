@@ -334,8 +334,9 @@ async function jumpToNextIsland() {
     updateMiniGameUI();
     
     if (oldSteps < 140 && miniGameSteps === 140) {
-        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！等待結算 🎯`;
-        await sleep(2000);
+        DOM.drawStatus.textContent = '🎉 恭喜達成 JP 遊戲 🎉';
+        await sleep(1000);
+        DOM.outOverlay.classList.remove('show');
     }
     
     await sleep(500);
@@ -349,8 +350,8 @@ async function applyMiniGameSteps(steps) {
     updateMiniGameUI();
     
     if (oldSteps < 140 && miniGameSteps === 140) {
-        DOM.drawStatus.textContent = `🎯 抵達終點 140 島！等待結算 🎯`;
-        await sleep(2000);
+        DOM.drawStatus.textContent = '🎉 恭喜達成 JP 遊戲 🎉';
+        await sleep(1000);
     } else if ([20, 50, 90].includes(miniGameSteps)) {
         DOM.drawStatus.textContent = `精準抵達 ${miniGameSteps} 島！直達下一島嶼！`;
         await sleep(1000);
@@ -1570,22 +1571,36 @@ async function finishGameOverSequence() {
         updateMiniGameUI();
         
         if (appleBonusRoundsLeft === 0) {
-            let ratio = 0;
-            if (miniGameSteps >= 140) ratio = 1;
-            else if (miniGameSteps >= 90) ratio = 0.20;
-            else if (miniGameSteps >= 50) ratio = 0.10;
-            else if (miniGameSteps >= 20) ratio = 0.05;
-            else ratio = 0;
-            
-            let reward = Math.floor(activeJPAmount * ratio);
-            if (reward > 0) {
-                totalWin += reward;
-                updateWinDisplay();
-                DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
-                await sleep(3000);
+            if (miniGameSteps >= 140) {
+                let notice = document.getElementById('jp-roulette-notice');
+                if (notice) {
+                    notice.classList.remove('hidden');
+                }
+                DOM.drawStatus.textContent = `🎯 準備進入 JP 轉盤遊戲... 🎯`;
+                await sleep(4000);
+                if (notice) notice.classList.add('hidden');
+                await sleep(1000);
+                
+                // 開始 JP 轉盤
+                await runJPRouletteGame();
+                
             } else {
-                DOM.drawStatus.textContent = `🎯 JP結算！未達 20 島，無獎金 🎯`;
-                await sleep(2000);
+                let ratio = 0;
+                if (miniGameSteps >= 90) ratio = 0.20;
+                else if (miniGameSteps >= 50) ratio = 0.10;
+                else if (miniGameSteps >= 20) ratio = 0.05;
+                else ratio = 0;
+                
+                let reward = Math.floor(activeJPAmount * ratio);
+                if (reward > 0) {
+                    totalWin += reward;
+                    updateWinDisplay();
+                    DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
+                    await sleep(3000);
+                } else {
+                    DOM.drawStatus.textContent = `🎯 JP結算！未達 20 島，無獎金 🎯`;
+                    await sleep(2000);
+                }
             }
         }
     }
@@ -1661,6 +1676,64 @@ function collectApple(type) {
         div.style.boxShadow = '0 0 20px #4ade80';
         div.textContent = `🍎 集滿 7 顆！獲得 3 局 JP (獎金 ${jpScore})`;
         document.body.appendChild(div);
-        setTimeout(() => div.remove(), 4000);
+        setTimeout(() => {
+            div.remove();
+        }, 2000);
     }
+}
+
+async function runJPRouletteGame() {
+    DOM.drawStatus.textContent = `🎰 JP轉盤遊戲開始！ 🎰`;
+    
+    // Assign tiers
+    let colors = ['red', 'pink', 'yellow', 'green', 'blue'];
+    colors.sort(() => Math.random() - 0.5);
+    let tier1 = [colors[0], colors[1]]; // 1%
+    let tier2 = [colors[2], colors[3]]; // 2%
+    let tier3 = [colors[4]];            // 3%
+    
+    let currentJPWin = 0;
+    let possibleColors = ['white', 'red', 'pink', 'yellow', 'green', 'blue', 'rainbow'];
+    
+    for (let i = 0; i < 10; i++) {
+        DOM.drawStatus.textContent = `JP轉盤 第 ${i + 1}/10 顆球發射！目前累積: ${currentJPWin}`;
+        
+        let targetColor = possibleColors[Math.floor(Math.random() * possibleColors.length)];
+        
+        if (targetColor === 'rainbow') {
+            await spawnAndSpinBall('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
+        } else if (targetColor === 'white') {
+            await spawnAndSpinBall('white', false);
+        } else {
+            await spawnAndSpinBall(targetColor, false);
+        }
+        
+        await sleep(1500); // 稍微等待球歸位顯示結果
+        
+        if (targetColor === 'rainbow') {
+            currentJPWin += activeJPAmount; 
+            let jackpotEl = document.getElementById('jp-roulette-jackpot');
+            if (jackpotEl) jackpotEl.classList.remove('hidden');
+            DOM.drawStatus.textContent = `🌟 JACKPOT!!! 獲得全額 JP獎金 ${activeJPAmount} 🌟`;
+            await sleep(3000);
+            if (jackpotEl) jackpotEl.classList.add('hidden');
+        } else if (targetColor === 'white' || tier1.includes(targetColor)) {
+            currentJPWin += Math.floor(activeJPAmount * 0.01);
+            DOM.drawStatus.textContent = `獲得 JP獎金 1%`;
+            await sleep(1000);
+        } else if (tier2.includes(targetColor)) {
+            currentJPWin += Math.floor(activeJPAmount * 0.02);
+            DOM.drawStatus.textContent = `獲得 JP獎金 2%`;
+            await sleep(1000);
+        } else if (tier3.includes(targetColor)) {
+            currentJPWin += Math.floor(activeJPAmount * 0.03);
+            DOM.drawStatus.textContent = `獲得 JP獎金 3%`;
+            await sleep(1000);
+        }
+    }
+    
+    DOM.drawStatus.textContent = `🎯 JP轉盤遊戲結束！總共累積獲得 JP獎金 ${currentJPWin} 🎯`;
+    totalWin += currentJPWin;
+    updateWinDisplay();
+    await sleep(4000);
 }
