@@ -208,6 +208,7 @@ document.getElementById('btn-add-bet').addEventListener('click', () => {
     }
     DOM.betInput.textContent = currentBet;
     updateLadderRewards(currentBet);
+    generateBetApples();
 });
 
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
@@ -216,6 +217,7 @@ document.getElementById('btn-repeat-bet').addEventListener('click', () => {
         currentBet = previousBet;
         DOM.betInput.textContent = currentBet;
         updateLadderRewards(currentBet);
+        generateBetApples();
     } else {
         alert("沒有上一局的押分紀錄");
     }
@@ -442,6 +444,52 @@ function getAppleType() {
 }
 
 let topApplesState = new Array(COLS).fill(null);
+let preGeneratedApples = [];
+
+function generateBetApples() {
+    let betAppleSlots = document.getElementById('bet-apple-slots');
+    if (!betAppleSlots) return;
+
+    if (currentBet === 0) {
+        preGeneratedApples = [];
+        let slots = betAppleSlots.querySelectorAll('.apple-slot');
+        slots.forEach(slot => {
+            slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
+        });
+        return;
+    }
+
+    let prob3Apples = 0.10;
+    if (currentBet > 900) {
+        prob3Apples += Math.floor((currentBet - 900) / 10) * 0.05;
+    }
+    if (currentBet >= 1100) prob3Apples = 1.0;
+    
+    let count = Math.random() < prob3Apples ? 3 : 2;
+    preGeneratedApples = [];
+    
+    for (let i = 0; i < count; i++) {
+        let type = getAppleType();
+        let hp = Math.floor(Math.random() * 10) + 6;
+        preGeneratedApples.push({ type, hp });
+    }
+    
+    let slots = betAppleSlots.querySelectorAll('.apple-slot');
+    slots.forEach((slot, index) => {
+        slot.innerHTML = '';
+        if (index < preGeneratedApples.length) {
+            let a = preGeneratedApples[index];
+            let appleEl = document.createElement('div');
+            appleEl.className = `apple-item apple-${a.type}`;
+            appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
+            appleEl.style.fontSize = '1.8rem';
+            appleEl.style.margin = '0';
+            slot.appendChild(appleEl);
+        } else {
+            slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
+        }
+    });
+}
 
 function spawnApples() {
     DOM.birdMouthSlots.forEach(slot => {
@@ -462,25 +510,31 @@ function spawnApples() {
     
     DOM.birdMouth = beakEl;
     
-    let appleCount = Math.random() < 0.1 ? 2 : 3;
     let availableSlots = [];
     for (let i = 0; i < slotsArray.length; i++) {
         if (i !== beakIndex) availableSlots.push(slotsArray[i]);
     }
     availableSlots.sort(() => Math.random() - 0.5);
     
-    for (let i = 0; i < appleCount && i < availableSlots.length; i++) {
-        let appleType = getAppleType();
+    let applesToSpawn = preGeneratedApples.length > 0 ? preGeneratedApples : [];
+    if (applesToSpawn.length === 0) {
+        let count = Math.random() < 0.1 ? 2 : 3;
+        for (let i = 0; i < count; i++) {
+            applesToSpawn.push({ type: getAppleType(), hp: Math.floor(Math.random() * 10) + 6 });
+        }
+    }
+    
+    for (let i = 0; i < applesToSpawn.length && i < availableSlots.length; i++) {
+        let appleData = applesToSpawn[i];
         let appleEl = document.createElement('div');
-        appleEl.className = `apple-item apple-${appleType}`;
-        let num = Math.floor(Math.random() * 10) + 6; // 6 to 15
-        appleEl.innerHTML = `🍎<span class="apple-num">${num}</span>`;
+        appleEl.className = `apple-item apple-${appleData.type}`;
+        appleEl.innerHTML = `🍎<span class="apple-num">${appleData.hp}</span>`;
         availableSlots[i].appendChild(appleEl);
         
         let colIndex = slotsArray.indexOf(availableSlots[i]);
         topApplesState[colIndex] = {
-            type: appleType,
-            hp: num,
+            type: appleData.type,
+            hp: appleData.hp,
             el: appleEl,
             numEl: appleEl.querySelector('.apple-num'),
             readyToDrop: false
@@ -1505,6 +1559,7 @@ async function finishGameOverSequence() {
     currentBet = 0;
     DOM.betInput.textContent = "0";
     updateLadderRewards(0);
+    generateBetApples();
 }
 
 function sleep(ms) {
