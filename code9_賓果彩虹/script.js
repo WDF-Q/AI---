@@ -214,10 +214,18 @@ document.getElementById('btn-add-bet').addEventListener('click', () => {
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
     if (previousBet > 0) {
-        currentBet = previousBet;
+        currentBet = 600;
+        generateBetApples();
+        
+        let inc = BET_INCREMENTS[currentIncrementIndex];
+        while (currentBet < previousBet) {
+            currentBet += inc;
+            if (currentBet > previousBet) currentBet = previousBet;
+            generateBetApples();
+        }
+        
         DOM.betInput.textContent = currentBet;
         updateLadderRewards(currentBet);
-        generateBetApples();
     } else {
         alert("沒有上一局的押分紀錄");
     }
