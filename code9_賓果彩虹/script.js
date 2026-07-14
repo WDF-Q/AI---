@@ -447,24 +447,17 @@ let topApplesState = new Array(COLS).fill(null);
 let preGeneratedApples = [];
 
 function getUpgradeProb(bet) {
-    if (bet <= 700) {
-        let p = 0.10 + ((bet - 600) / 100) * 0.20;
-        return Math.max(0.10, Math.min(0.30, p));
-    } else if (bet <= 800) {
-        let p = 0.30 + ((bet - 700) / 100) * 0.20;
-        return Math.max(0.30, Math.min(0.50, p));
-    } else if (bet <= 900) {
-        let p = 0.50 + ((bet - 800) / 100) * 0.20;
-        return Math.max(0.50, Math.min(0.70, p));
-    } else if (bet <= 1000) {
-        let p = 0.70 + ((bet - 900) / 100) * 0.20;
-        return Math.max(0.70, Math.min(0.90, p));
-    } else if (bet <= 1100) {
-        let p = 0.91 + ((bet - 1000) / 100) * 0.08;
-        return Math.max(0.91, Math.min(0.99, p));
-    } else {
-        return 1.0;
-    }
+    if (bet <= 650) return 0.10;
+    if (bet <= 700) return 0.20;
+    if (bet <= 750) return 0.30;
+    if (bet <= 800) return 0.40;
+    if (bet <= 850) return 0.50;
+    if (bet <= 900) return 0.60;
+    if (bet <= 950) return 0.70;
+    if (bet <= 1000) return 0.80;
+    if (bet <= 1050) return 0.90;
+    if (bet <= 1100) return 0.95;
+    return 1.0;
 }
 
 function upgradeApple(type) {
