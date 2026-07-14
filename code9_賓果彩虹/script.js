@@ -459,9 +459,9 @@ function generateBetApples() {
         return;
     }
 
-    let prob3Apples = 0.10;
+    let prob3Apples = 0.90;
     if (currentBet > 900) {
-        prob3Apples += Math.floor((currentBet - 900) / 10) * 0.05;
+        prob3Apples += Math.floor((currentBet - 900) / 10) * 0.005;
     }
     if (currentBet >= 1100) prob3Apples = 1.0;
     
