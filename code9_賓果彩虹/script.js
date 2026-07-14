@@ -240,7 +240,11 @@ DOM.btnDebugApple.addEventListener('click', () => {
         alert('請先點擊下方押注按鈕設定押分！(測試按鈕需要知道押分才能計算蘋果價值)');
         return;
     }
-    collectApple(getAppleType());
+    let appleType = getAppleType();
+    if (typeof preGeneratedApples !== 'undefined' && preGeneratedApples.length > 0) {
+        appleType = preGeneratedApples[0].type;
+    }
+    collectApple(appleType);
 });
 
 document.querySelectorAll('.clickable-station').forEach(el => {
