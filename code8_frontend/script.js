@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             stock.data = stockData;
                             stock.error = null; // Clear error to display table
-                            stock.display_title = `${correctName} / ${cleanSymbol} (備用連線${hasAnomaly ? ': 資料校正' : ''})`;
+                            stock.display_title = `${correctName} / ${cleanSymbol} (備用連線${hasAnomaly ? ': 資料校正' : ': 今日資料約下午3點後更新'})`;
                         }
                     } catch (e) {
                         console.error("Frontend FinMind rescue failed for", stock.symbol, e);
