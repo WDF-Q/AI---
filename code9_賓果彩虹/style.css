@@ -1018,6 +1018,16 @@ body {
 .mini-game-panel.hidden {
     display: none !important;
 }
+.mini-game-panel.dim-background {
+    opacity: 0.2 !important;
+}
+
+@keyframes dog-jump-back {
+    0% { transform: scaleX(1) translateY(0); }
+    50% { transform: scaleX(1) translateY(-25px); }
+    100% { transform: scaleX(1) translateY(0); }
+}
+
 .mg-rule-item {
     display: flex;
     flex-direction: column;
