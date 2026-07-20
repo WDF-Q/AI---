@@ -1916,3 +1916,34 @@ async function runJPRouletteGame() {
     updateWinDisplay();
     await sleep(4000);
 }
+
+// 響應式縮放邏輯
+function resizeApp() {
+    const wrapper = document.querySelector('.app-wrapper');
+    if (!wrapper) return;
+    
+    // 暫時解除縮放以取得原始尺寸
+    wrapper.style.transform = 'none';
+    wrapper.style.transformOrigin = 'center center';
+    
+    const rect = wrapper.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // 預留一點邊距
+    const scaleX = (windowWidth - 20) / rect.width;
+    const scaleY = (windowHeight - 20) / rect.height;
+    
+    // 取較小值等比例縮放，且不放大超過 100%
+    let scale = Math.min(scaleX, scaleY);
+    if (scale > 1) scale = 1;
+    
+    wrapper.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', resizeApp);
+window.addEventListener('DOMContentLoaded', () => {
+    // 稍微延遲讓字體等資源載入完畢後再計算
+    setTimeout(resizeApp, 100);
+    setTimeout(resizeApp, 500);
+});

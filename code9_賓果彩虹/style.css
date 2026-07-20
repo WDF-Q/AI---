@@ -32,7 +32,6 @@ body {
 .app-wrapper {
     width: fit-content;
     margin: 0 auto;
-    max-width: 95vw;
     background: rgba(30, 41, 59, 0.7);
     border-radius: 20px;
     padding: 1.5rem;
