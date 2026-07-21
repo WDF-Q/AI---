@@ -1660,7 +1660,6 @@ async function refillBoard(finalCombo = 0) {
                 smallApple.style.bottom = '-8px';
                 smallApple.style.right = '-8px';
                 smallApple.style.zIndex = '10';
-                smallApple.style.filter = 'drop-shadow(0 0 5px rgba(255,255,255,1))';
                 
                 // 清除附著蘋果本身的動畫，避免一直跳動
                 smallApple.style.animation = 'none';
