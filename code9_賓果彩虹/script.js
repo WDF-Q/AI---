@@ -291,7 +291,6 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         // The color maps to the border/shadow color
         const color = btn.dataset.color;
         let borderColor = CSS_VAR_MAP[color] || '#fff';
-        if (color === 'white') borderColor = '#3b82f6'; // special blue border for white
         
         btn.style.border = `2px solid ${borderColor}`;
         btn.style.boxShadow = `0 0 10px ${borderColor}`;
