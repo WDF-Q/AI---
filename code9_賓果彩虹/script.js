@@ -1200,6 +1200,11 @@ async function shootBallAsync(isSafeMode) {
                 if (s2) await applyMiniGameSteps(s2);
             }
             
+            // Game 3 processing for dual colors
+            Game3Manager.processBall(pair[0]);
+            Game3Manager.processBall(pair[1]);
+            
+            
             pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
             DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
             return 'sp';
