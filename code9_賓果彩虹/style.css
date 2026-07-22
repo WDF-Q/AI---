@@ -1130,18 +1130,18 @@ body {
     transition: all 0.3s ease;
 }
 .g3-slot.active {
-    background: var(--g3-target-color, #ef4444);
+    background: var(--slot-bg, var(--g3-target-color, #ef4444));
     border-color: #fff;
     color: #fff;
     text-shadow: 1px 1px 2px #000;
-    box-shadow: 0 0 15px var(--g3-target-color, #ef4444), inset 0 0 10px rgba(255,255,255,0.5);
+    box-shadow: 0 0 15px var(--slot-shadow, var(--g3-target-color, #ef4444)), inset 0 0 10px rgba(255,255,255,0.5);
     transform: scale(1.1);
 }
 .g3-slot.achieved {
-    background: var(--g3-target-color, #ef4444);
+    background: var(--slot-bg, var(--g3-target-color, #ef4444));
     border-color: rgba(255,255,255,0.5);
     color: #fff;
-    box-shadow: 0 0 8px var(--g3-target-color, #ef4444);
+    box-shadow: 0 0 8px var(--slot-shadow, var(--g3-target-color, #ef4444));
     opacity: 0.8;
 }
 .g3-slot.fixed-50 {

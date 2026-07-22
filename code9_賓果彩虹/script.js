@@ -90,6 +90,7 @@ let game3Combo = 0;
 let game3MaxMultiplier = 0;
 let game3TotalWin = 0;
 let game3TotalTargetBalls = 0;
+let game3SlotStyles = [];
 
 function switchActiveGame(gameId) {
     const games = ['game1', 'game3'];
@@ -817,6 +818,7 @@ const Game3Manager = {
         game3MaxMultiplier = 0;
         game3TotalWin = 0;
         game3TotalTargetBalls = 0;
+        game3SlotStyles = [];
         game3MultiplierArray = new Array(9).fill(null);
         
         let startSlot = 0;
@@ -846,8 +848,19 @@ const Game3Manager = {
         this.prepopulateHitTable();
     },
     
-    processBall(color) {
-        if (color === game3TargetColor) {
+    processBall(color, isRainbow = false, dualPair = null) {
+        if (color === game3TargetColor || isRainbow) {
+            
+            let styleObj = { bg: '', shadow: '' };
+            if (isRainbow) {
+                styleObj.bg = 'linear-gradient(45deg, red, orange, yellow, #22c55e, #3b82f6, #a855f7)';
+                styleObj.shadow = '#fff';
+            } else if (dualPair) {
+                styleObj.bg = `linear-gradient(45deg, var(--color-${dualPair[0]}) 50%, var(--color-${dualPair[1]}) 50%)`;
+                styleObj.shadow = `var(--color-${game3TargetColor})`;
+            }
+            game3SlotStyles[game3Combo] = styleObj;
+            
             game3Combo++;
             game3TotalTargetBalls++;
             
@@ -886,6 +899,9 @@ const Game3Manager = {
         const slots = document.querySelectorAll('#game3-top-track .g3-slot');
         slots.forEach((el, index) => {
             el.classList.remove('active', 'achieved');
+            el.style.removeProperty('--slot-bg');
+            el.style.removeProperty('--slot-shadow');
+            
             if (index < 8) {
                 let val = game3MultiplierArray[index];
                 el.textContent = val !== null ? `x${val}` : '';
@@ -893,8 +909,16 @@ const Game3Manager = {
             
             if (index < game3Combo - 1) {
                 el.classList.add('achieved');
+                if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
+                    el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
+                    el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
+                }
             } else if (index === game3Combo - 1 && game3Combo > 0) {
                 el.classList.add('active');
+                if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
+                    el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
+                    el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
+                }
             }
         });
     },
@@ -1211,6 +1235,8 @@ async function shootBallAsync(isSafeMode) {
             historyTracker.rainbow++;
             addBallToHistoryUI('彩色', 'rainbow');
             
+            Game3Manager.processBall(game3TargetColor, true, null); // Game 3 rainbow wildcard
+            
             pendingEventsQueue.push({ type: 'laser_strike' });
             DOM.drawStatus.textContent = '彩色球！獲得雷射！';
             return 'rainbow';
@@ -1231,7 +1257,7 @@ async function shootBallAsync(isSafeMode) {
             
             // Game 3 processing for dual colors
             if (pair.includes(game3TargetColor)) {
-                Game3Manager.processBall(game3TargetColor);
+                Game3Manager.processBall(game3TargetColor, false, pair);
             } else {
                 Game3Manager.processBall(pair[0]);
             }
