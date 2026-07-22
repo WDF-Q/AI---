@@ -841,6 +841,7 @@ const Game3Manager = {
         
         this.updateUI();
         this.resetHitTable();
+        this.prepopulateHitTable();
     },
     
     processBall(color) {
@@ -912,6 +913,31 @@ const Game3Manager = {
                 row.classList.remove('active');
                 let valEl = row.querySelector('.hit-val');
                 if (valEl) valEl.textContent = (i === 1) ? 'OPEN' : '0';
+            }
+        }
+    },
+    
+    prepopulateHitTable() {
+        let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+        let simulatedMaxM = 0;
+        
+        for (let hitCount = 1; hitCount <= 8; hitCount++) {
+            let currentM = 1.0;
+            let slotVal = game3MultiplierArray[hitCount - 1];
+            if (slotVal !== null) {
+                currentM = slotVal;
+            }
+            if (currentM > simulatedMaxM) {
+                simulatedMaxM = currentM;
+            }
+            
+            if (hitCount > 1) {
+                let addScore = Math.floor((game3Bet * baseRate) * simulatedMaxM);
+                let row = document.getElementById(`g3-hit-${hitCount}`);
+                if (row) {
+                    let valEl = row.querySelector('.hit-val');
+                    if (valEl) valEl.textContent = addScore;
+                }
             }
         }
     }
