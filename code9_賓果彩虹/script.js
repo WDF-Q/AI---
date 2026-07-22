@@ -89,6 +89,7 @@ let game3MultiplierArray = [];
 let game3Combo = 0;
 let game3MaxMultiplier = 0;
 let game3TotalWin = 0;
+let game3TotalTargetBalls = 0;
 
 function switchActiveGame(gameId) {
     const games = ['game1', 'game3'];
@@ -815,6 +816,7 @@ const Game3Manager = {
         game3Combo = 0;
         game3MaxMultiplier = 0;
         game3TotalWin = 0;
+        game3TotalTargetBalls = 0;
         game3MultiplierArray = new Array(9).fill(null);
         
         let startSlot = 0;
@@ -847,8 +849,9 @@ const Game3Manager = {
     processBall(color) {
         if (color === game3TargetColor) {
             game3Combo++;
+            game3TotalTargetBalls++;
             
-            let currentM = 1.0; 
+            let currentM = 1.0;
             if (game3Combo > 9) {
                 currentM = 50.0;
             } else {
@@ -862,12 +865,12 @@ const Game3Manager = {
                 game3MaxMultiplier = currentM;
             }
             
+            let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+            let singleHitScore = Math.floor((game3Bet * baseRate) * game3MaxMultiplier);
+            game3TotalWin = singleHitScore * Math.max(0, game3TotalTargetBalls - 1);
+            
             if (game3Combo > 1) {
-                let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
-                let addScore = Math.floor((game3Bet * baseRate) * game3MaxMultiplier);
-                game3TotalWin += addScore;
-                
-                this.updateHitRow(game3Combo, addScore);
+                this.updateHitRow(game3Combo, singleHitScore);
             } else {
                 this.updateHitRow(1, 'OPEN');
             }
