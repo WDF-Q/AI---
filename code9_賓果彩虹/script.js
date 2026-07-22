@@ -92,6 +92,7 @@ let game3TotalWin = 0;
 let game3TotalTargetBalls = 0;
 let game3SlotStyles = [];
 let game3MaxComboReached = 0;
+let game3CurrentComboColor = null;
 
 function switchActiveGame(gameId) {
     const games = ['game1', 'game3'];
@@ -820,6 +821,7 @@ const Game3Manager = {
         game3TotalWin = 0;
         game3TotalTargetBalls = 0;
         game3MaxComboReached = 0;
+        game3CurrentComboColor = null;
         game3SlotStyles = [];
         game3MultiplierArray = new Array(9).fill(null);
         
@@ -846,58 +848,70 @@ const Game3Manager = {
         }
         
         this.updateUI();
-        this.resetHitTable();
-        this.prepopulateHitTable();
+        this.updateHitTable();
     },
     
     processBall(color, isRainbow = false, dualPair = null) {
-        if (color === game3TargetColor || isRainbow) {
-            
-            let styleObj = { bg: '', shadow: '' };
-            if (isRainbow) {
-                styleObj.bg = 'linear-gradient(45deg, red, orange, yellow, #22c55e, #3b82f6, #a855f7)';
-                styleObj.shadow = '#fff';
-            } else if (dualPair) {
-                styleObj.bg = `linear-gradient(45deg, var(--color-${dualPair[0]}) 50%, var(--color-${dualPair[1]}) 50%)`;
-                styleObj.shadow = `var(--color-${game3TargetColor})`;
-            }
-            game3SlotStyles[game3Combo] = styleObj;
-            
-            game3Combo++;
-            game3TotalTargetBalls++;
-            if (game3Combo > game3MaxComboReached) {
-                game3MaxComboReached = game3Combo;
-            }
-            
-            let currentM = 1.0;
-            if (game3Combo > 9) {
-                currentM = 50.0;
+        let logicalColor = color;
+        if (isRainbow) {
+            logicalColor = game3CurrentComboColor || game3TargetColor;
+        } else if (dualPair) {
+            if (game3CurrentComboColor && dualPair.includes(game3CurrentComboColor)) {
+                logicalColor = game3CurrentComboColor;
             } else {
-                let slotVal = game3MultiplierArray[game3Combo - 1];
-                if (slotVal !== null) {
-                    currentM = slotVal;
-                }
+                logicalColor = dualPair[0];
             }
-            
-            if (currentM > game3MaxMultiplier) {
-                game3MaxMultiplier = currentM;
-            }
-            
-            let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
-            let singleHitScore = Math.floor((game3Bet * baseRate) * game3MaxMultiplier);
-            game3TotalWin = singleHitScore * Math.max(0, game3TotalTargetBalls - 1);
-            
-            if (game3Combo > 1) {
-                this.updateHitRow(game3Combo, singleHitScore);
-            } else {
-                this.updateHitRow(1, 'OPEN');
-            }
-            
-        } else {
-            game3Combo = 0;
         }
         
+        if (game3CurrentComboColor === null || logicalColor === game3CurrentComboColor) {
+            game3CurrentComboColor = logicalColor;
+            game3Combo++;
+        } else {
+            game3CurrentComboColor = logicalColor;
+            game3Combo = 1;
+        }
+        
+        let styleObj = { bg: '', shadow: '' };
+        if (isRainbow) {
+            styleObj.bg = 'linear-gradient(45deg, red, orange, yellow, #22c55e, #3b82f6, #a855f7)';
+            styleObj.shadow = '#fff';
+        } else if (dualPair) {
+            styleObj.bg = `linear-gradient(45deg, var(--color-${dualPair[0]}) 50%, var(--color-${dualPair[1]}) 50%)`;
+            styleObj.shadow = `var(--color-${logicalColor})`;
+        } else {
+            styleObj.bg = `var(--color-${logicalColor})`;
+            styleObj.shadow = `var(--color-${logicalColor})`;
+        }
+        game3SlotStyles[game3Combo - 1] = styleObj;
+        
+        if (game3Combo > game3MaxComboReached) {
+            game3MaxComboReached = game3Combo;
+        }
+        
+        let currentM = 1.0;
+        if (game3Combo > 9) {
+            currentM = 50.0;
+        } else {
+            let slotVal = game3MultiplierArray[game3Combo - 1];
+            if (slotVal !== null) {
+                currentM = slotVal;
+            }
+        }
+        
+        if (currentM > game3MaxMultiplier) {
+            game3MaxMultiplier = currentM;
+        }
+        
+        if (logicalColor === game3TargetColor || isRainbow || (dualPair && dualPair.includes(game3TargetColor))) {
+            game3TotalTargetBalls++;
+        }
+        
+        let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+        let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
+        game3TotalWin = Math.floor((game3Bet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
+        
         this.updateUI();
+        this.updateHitTable();
     },
     
     updateUI() {
@@ -935,48 +949,33 @@ const Game3Manager = {
         });
     },
     
-    updateHitRow(hitCount, score) {
-        if (hitCount > 8) return;
-        let row = document.getElementById(`g3-hit-${hitCount}`);
-        if (row) {
-            row.classList.add('active');
-            let valEl = row.querySelector('.hit-val');
-            if (valEl) valEl.textContent = score;
-        }
-    },
-    
-    resetHitTable() {
+    updateHitTable() {
+        let startHit = Math.max(1, game3TotalTargetBalls);
+        let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+        let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
+        
         for (let i = 1; i <= 8; i++) {
             let row = document.getElementById(`g3-hit-${i}`);
-            if (row) {
-                row.classList.remove('active');
-                let valEl = row.querySelector('.hit-val');
-                if (valEl) valEl.textContent = (i === 1) ? 'OPEN' : '0';
-            }
-        }
-    },
-    
-    prepopulateHitTable() {
-        let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
-        let simulatedMaxM = 0;
-        
-        for (let hitCount = 1; hitCount <= 8; hitCount++) {
-            let currentM = 1.0;
-            let slotVal = game3MultiplierArray[hitCount - 1];
-            if (slotVal !== null) {
-                currentM = slotVal;
-            }
-            if (currentM > simulatedMaxM) {
-                simulatedMaxM = currentM;
+            if (!row) continue;
+            
+            let currentBalls = startHit + (i - 1);
+            let lbl = row.querySelector('.hit-lbl');
+            if (lbl) lbl.textContent = currentBalls;
+            
+            let valEl = row.querySelector('.hit-val');
+            if (valEl) {
+                if (currentBalls === 1) {
+                    valEl.textContent = 'OPEN';
+                } else {
+                    let score = Math.floor((game3Bet * baseRate) * maxM) * (currentBalls - 1);
+                    valEl.textContent = score;
+                }
             }
             
-            if (hitCount > 1) {
-                let addScore = Math.floor((game3Bet * baseRate) * simulatedMaxM);
-                let row = document.getElementById(`g3-hit-${hitCount}`);
-                if (row) {
-                    let valEl = row.querySelector('.hit-val');
-                    if (valEl) valEl.textContent = addScore;
-                }
+            if (i === 1 && game3TotalTargetBalls > 0) {
+                row.classList.add('active');
+            } else {
+                row.classList.remove('active');
             }
         }
     }
@@ -1268,11 +1267,7 @@ async function shootBallAsync(isSafeMode) {
             }
             
             // Game 3 processing for dual colors
-            if (pair.includes(game3TargetColor)) {
-                Game3Manager.processBall(game3TargetColor, false, pair);
-            } else {
-                Game3Manager.processBall(pair[0]);
-            }
+            Game3Manager.processBall(null, false, pair);
             
             pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
             DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
@@ -2040,7 +2035,9 @@ async function finishGameOverSequence() {
     DOM.betInputs.forEach(el => el.textContent = "0");
     game1Bet = 0;
     game3Bet = 0;
-    Game3Manager.resetHitTable();
+    game3TotalTargetBalls = 0;
+    game3MaxMultiplier = 0;
+    Game3Manager.updateHitTable();
     updateLadderRewards(0);
     generateBetApples(1);
     generateBetApples(3);
