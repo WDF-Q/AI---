@@ -625,7 +625,7 @@ function initBoard() {
     board = [];
     for (let r = 0; r < ROWS; r++) board.push(new Array(COLS).fill(null));
     
-    const initialMoneyValue = Math.floor(game1Bet / 5);
+    const initialMoneyValue = Math.floor((game1Bet === 0 ? 600 : game1Bet) / 5);
     let colsPool = [0, 1, 2, 3, 4, 5];
     for (let i = colsPool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -859,7 +859,7 @@ const Game3Manager = {
 
         if (isRainbow) {
             matchFound = true;
-            logicalColor = Array.isArray(game3CurrentComboColor) ? game3CurrentComboColor[0] : (game3CurrentComboColor || game3TargetColor);
+            logicalColor = Array.isArray(game3CurrentComboColor) ? game3CurrentComboColor[0] : (game3CurrentComboColor || (game3Bet === 0 ? \'red\' : game3TargetColor));
         } else if (dualPair) {
             if (game3CurrentComboColor) {
                 if (Array.isArray(game3CurrentComboColor)) {
@@ -894,7 +894,7 @@ const Game3Manager = {
         if (matchFound || game3CurrentComboColor === null) {
             if (game3CurrentComboColor === null) {
                 if (isRainbow) {
-                    game3CurrentComboColor = game3TargetColor;
+                    game3CurrentComboColor = (game3Bet === 0 ? \'red\' : game3TargetColor);
                 } else if (dualPair) {
                     game3CurrentComboColor = dualPair;
                 } else {
@@ -961,13 +961,15 @@ const Game3Manager = {
             game3MaxMultiplier = currentM;
         }
 
-        if (!isRainbow && (logicalColor === game3TargetColor || (dualPair && dualPair.includes(game3TargetColor)))) {
+        if (!isRainbow && (logicalColor === (game3Bet === 0 ? \'red\' : game3TargetColor) || (dualPair && dualPair.includes(game3Bet === 0 ? \'red\' : game3TargetColor)))) {
             game3TotalTargetBalls++;
         }
 
-        let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+        let effTarget = game3Bet === 0 ? 'red' : game3TargetColor;
+        let effBet = game3Bet === 0 ? 600 : game3Bet;
+        let baseRate = (effTarget === 'white') ? 1.0 : 0.5;
         let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
-        game3TotalWin = Math.floor((game3Bet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
+        game3TotalWin = Math.floor((effBet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
 
         this.updateUI();
         this.updateHitTable();
@@ -1010,7 +1012,9 @@ const Game3Manager = {
     
     updateHitTable() {
         let startHit = Math.max(1, game3TotalTargetBalls);
-        let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+        let effTarget = game3Bet === 0 ? 'red' : game3TargetColor;
+        let effBet = game3Bet === 0 ? 600 : game3Bet;
+        let baseRate = (effTarget === 'white') ? 1.0 : 0.5;
         let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
         
         for (let i = 1; i <= 8; i++) {
@@ -1026,7 +1030,7 @@ const Game3Manager = {
                 if (currentBalls === 1) {
                     valEl.textContent = 'OPEN';
                 } else {
-                    let score = Math.floor((game3Bet * baseRate) * maxM) * (currentBalls - 1);
+                    let score = Math.floor((effBet * baseRate) * maxM) * (currentBalls - 1);
                     valEl.textContent = score;
                 }
             }
@@ -1551,7 +1555,7 @@ async function startRightEngine() {
                         if (block !== null) {
                             if (block.isMoney) {
                                 moneyCollected += block.moneyValue;
-                                totalWin += block.moneyValue;
+                                if (game1Bet > 0) totalWin += block.moneyValue;
                                 DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
                             } else {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
@@ -1715,7 +1719,7 @@ async function checkMatchesAndChain() {
             
             // 處理金錢球
             for (let block of moneyBlocksToEliminate) {
-                totalWin += block.moneyValue;
+                if (game1Bet > 0) totalWin += block.moneyValue;
                 block.el.style.transform = 'scale(1.5)';
                 block.el.style.opacity = '0';
                 setTimeout((el) => el.remove(), 1000, block.el);
@@ -1777,8 +1781,8 @@ async function checkMatchesAndChain() {
             }
             if (isAllClear && allClearBonusCount < 2) {
                 allClearBonusCount++;
-                let bonus = game1Bet * 30;
-                totalWin += bonus;
+                let bonus = (game1Bet === 0 ? 600 : game1Bet) * 30;
+                if (game1Bet > 0) totalWin += bonus;
                 updateWinDisplay();
                 DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
                 
@@ -1805,14 +1809,14 @@ async function checkMatchesAndChain() {
 
 function getRandomMoneyBallValue() {
     let r = Math.random() * 100; 
-    if (r < 50) return Math.floor(game1Bet * (1/5));
-    if (r < 75) return Math.floor(game1Bet * (2/5));
-    if (r < 85) return Math.floor(game1Bet * (4/5));
-    if (r < 90) return Math.floor(game1Bet * (6/5));
-    if (r < 94) return Math.floor(game1Bet * (8/5));
-    if (r < 97) return Math.floor(game1Bet * (10/5));
-    if (r < 99) return Math.floor(game1Bet * (25/5));
-    return Math.floor(game1Bet * (50/5));
+    if (r < 50) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (1/5));
+    if (r < 75) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (2/5));
+    if (r < 85) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (4/5));
+    if (r < 90) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (6/5));
+    if (r < 94) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (8/5));
+    if (r < 97) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (10/5));
+    if (r < 99) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (25/5));
+    return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (50/5));
 }
 
 function getSafeColorForRefill(r, c) {
@@ -1882,7 +1886,7 @@ async function refillBoard(finalCombo = 0) {
     if (finalCombo >= 4) {
         let lookupChain = finalCombo >= 10 ? 10 : finalCombo;
         let mult = COMBO_MULTIPLIERS[lookupChain];
-        guaranteedRewardValue = Math.floor(game1Bet * mult);
+        guaranteedRewardValue = Math.floor((game1Bet === 0 ? 600 : game1Bet) * mult);
     }
 
     let emptySpots = [];
@@ -2065,7 +2069,7 @@ async function finishGameOverSequence() {
                 else ratio = 0;
                 
                 let reward = Math.floor(activeJPAmount * ratio);
-                if (reward > 0) {
+                if (game1Bet > 0 && reward > 0) {
                     totalWin += reward;
                     updateWinDisplay();
                     DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
@@ -2131,11 +2135,11 @@ function collectApple(type) {
     
     let score = 0;
     switch (type) {
-        case 'gold': score = game1Bet * 2.5; break;
-        case 'silver': score = game1Bet * 1.5; break;
-        case 'bronze': score = game1Bet * 1.0; break;
-        case 'red': score = game1Bet * 0.5; break;
-        case 'green': score = game1Bet * 0.25; break;
+        case 'gold': score = (game1Bet === 0 ? 600 : game1Bet) * 2.5; break;
+        case 'silver': score = (game1Bet === 0 ? 600 : game1Bet) * 1.5; break;
+        case 'bronze': score = (game1Bet === 0 ? 600 : game1Bet) * 1.0; break;
+        case 'red': score = (game1Bet === 0 ? 600 : game1Bet) * 0.5; break;
+        case 'green': score = (game1Bet === 0 ? 600 : game1Bet) * 0.25; break;
     }
     currentAppleScores.push(score);
     
@@ -2256,7 +2260,7 @@ async function runJPRouletteGame() {
     }
     
     DOM.drawStatus.textContent = `🎯 JP轉盤遊戲結束！總共累積獲得 JP獎金 ${currentJPWin} 🎯`;
-    totalWin += currentJPWin;
+    if (game1Bet > 0) totalWin += currentJPWin;
     updateWinDisplay();
     await sleep(4000);
 }
