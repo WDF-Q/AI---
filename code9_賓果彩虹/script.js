@@ -905,16 +905,20 @@ const Game3Manager = {
             if (index < 8) {
                 let val = game3MultiplierArray[index];
                 el.textContent = val !== null ? `x${val}` : '';
+            } else if (index === 8) {
+                el.textContent = 'x50';
             }
             
             if (index < game3Combo - 1) {
                 el.classList.add('achieved');
+                el.textContent = ''; // clear text when lit
                 if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
                     el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
                     el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
                 }
             } else if (index === game3Combo - 1 && game3Combo > 0) {
                 el.classList.add('active');
+                el.textContent = ''; // clear text when lit
                 if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
                     el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
                     el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
