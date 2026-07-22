@@ -308,6 +308,13 @@ document.querySelectorAll('.color-btn').forEach(btn => {
             game3Inner.style.borderColor = borderColor;
             game3Inner.style.boxShadow = `0 0 15px ${borderColor}`;
         }
+
+        // Change HIT TABLE header background
+        let hitTableHeader = document.getElementById('g3-hit-table-header');
+        if (hitTableHeader) {
+            hitTableHeader.style.background = borderColor;
+            hitTableHeader.style.color = (color === 'white' || color === 'yellow') ? '#000' : '#fff';
+        }
     });
 });
 

@@ -1145,9 +1145,6 @@ body {
 }
 .g3-slot.fixed-50 {
     border-radius: 12px;
-    background: linear-gradient(135deg, #f43f5e, #e11d48);
-    border-color: #fecdd3;
-    color: #fff;
 }
 .g3-hit-row {
     display: flex;
