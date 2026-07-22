@@ -231,7 +231,6 @@ document.querySelectorAll('.btn-add-bet').forEach(btn => {
         handleAddBet(gameId);
     });
 });
-});
 
 function handleAddBet(gameId) {
     if (isPlaying) return;
