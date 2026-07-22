@@ -92,6 +92,7 @@ let game3TotalWin = 0;
 let game3TotalTargetBalls = 0;
 let game3SlotStyles = [];
 let game3MaxComboReached = 0;
+let game3ApplesInPlay = [];
 let game3CurrentComboColor = null;
 let game3TrailingRainbows = 0;
 
@@ -822,6 +823,31 @@ const Game3Manager = {
         game3TotalWin = 0;
         game3TotalTargetBalls = 0;
         game3MaxComboReached = 0;
+        game3ApplesInPlay = [];
+        let applesToSpawn = game3PreApples.map(a => a.type);
+        if (applesToSpawn.length > 0 && game3Bet > 0) {
+            let startHitMin = game3TargetColor === 'white' ? 2 : 3;
+            let startHitMax = game3TargetColor === 'white' ? 5 : 7;
+            
+            let offsets = [0];
+            if (applesToSpawn.length >= 2) {
+                offsets.push(offsets[0] + (Math.random() < 0.20 ? 2 : 1));
+            }
+            if (applesToSpawn.length >= 3) {
+                offsets.push(offsets[1] + (Math.random() < 0.20 ? 2 : 1));
+            }
+            
+            let maxOffset = offsets[offsets.length - 1];
+            let maxX = 7 - maxOffset;
+            if (maxX > startHitMax) maxX = startHitMax;
+            if (maxX < startHitMin) maxX = startHitMin;
+            
+            let x = Math.floor(Math.random() * (maxX - startHitMin + 1)) + startHitMin;
+            
+            for (let i = 0; i < applesToSpawn.length; i++) {
+                game3ApplesInPlay.push({ hit: x + offsets[i], type: applesToSpawn[i] });
+            }
+        }
         game3CurrentComboColor = null;
         game3TrailingRainbows = 0;
         game3SlotStyles = [];
@@ -859,7 +885,7 @@ const Game3Manager = {
 
         if (isRainbow) {
             matchFound = true;
-            logicalColor = Array.isArray(game3CurrentComboColor) ? game3CurrentComboColor[0] : (game3CurrentComboColor || (game3Bet === 0 ? \'red\' : game3TargetColor));
+            logicalColor = Array.isArray(game3CurrentComboColor) ? game3CurrentComboColor[0] : (game3CurrentComboColor || (game3Bet === 0 ? 'red' : game3TargetColor));
         } else if (dualPair) {
             if (game3CurrentComboColor) {
                 if (Array.isArray(game3CurrentComboColor)) {
@@ -894,7 +920,7 @@ const Game3Manager = {
         if (matchFound || game3CurrentComboColor === null) {
             if (game3CurrentComboColor === null) {
                 if (isRainbow) {
-                    game3CurrentComboColor = (game3Bet === 0 ? \'red\' : game3TargetColor);
+                    game3CurrentComboColor = (game3Bet === 0 ? 'red' : game3TargetColor);
                 } else if (dualPair) {
                     game3CurrentComboColor = dualPair;
                 } else {
@@ -961,8 +987,16 @@ const Game3Manager = {
             game3MaxMultiplier = currentM;
         }
 
-        if (!isRainbow && (logicalColor === (game3Bet === 0 ? \'red\' : game3TargetColor) || (dualPair && dualPair.includes(game3Bet === 0 ? \'red\' : game3TargetColor)))) {
+        if (!isRainbow && (logicalColor === (game3Bet === 0 ? 'red' : game3TargetColor) || (dualPair && dualPair.includes(game3Bet === 0 ? 'red' : game3TargetColor)))) {
             game3TotalTargetBalls++;
+            
+            let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
+            if (collectedIndex !== -1 && game3Bet > 0) {
+                let collectedApple = game3ApplesInPlay.splice(collectedIndex, 1)[0];
+                collectApple(collectedApple.type);
+                DOM.drawStatus.textContent = `🎯 夾中蘋果！獲得一顆蘋果 🎯`;
+                this.updateHitTable();
+            }
         }
 
         let effTarget = game3Bet === 0 ? 'red' : game3TargetColor;
@@ -1026,6 +1060,17 @@ const Game3Manager = {
             if (lbl) lbl.textContent = currentBalls;
             
             let valEl = row.querySelector('.hit-val');
+            
+            let appleSlot = document.getElementById(`g3-apple-slot-${i}`);
+            if (appleSlot) {
+                let appleData = game3ApplesInPlay.find(a => a.hit === currentBalls);
+                if (appleData) {
+                    appleSlot.innerHTML = `<span class="apple-${appleData.type}" style="font-size: 1.5rem; display: block; animation: float 2s infinite ease-in-out; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">🍎</span>`;
+                } else {
+                    appleSlot.innerHTML = '';
+                }
+            }
+            
             if (valEl) {
                 if (currentBalls === 1) {
                     valEl.textContent = 'OPEN';
