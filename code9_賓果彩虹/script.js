@@ -2000,6 +2000,9 @@ async function finishGameOverSequence() {
     document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'auto');
     DOM.drawStatus.textContent = `請押分，並按開始`;
     DOM.betInputs.forEach(el => el.textContent = "0");
+    game1Bet = 0;
+    game3Bet = 0;
+    Game3Manager.resetHitTable();
     updateLadderRewards(0);
     generateBetApples(1);
     generateBetApples(3);
