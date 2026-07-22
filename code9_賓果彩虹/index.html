@@ -128,8 +128,13 @@
             </div>
 
             <!-- RIGHT PANEL: Match-3 Board & Combo Ladder -->
-            <div class="right-panel">
-                <div class="board-with-ladder">
+            <div class="right-panel" style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- GAMES WRAPPER -->
+                <div class="games-wrapper" id="games-wrapper">
+                    
+                    <!-- 遊戲 1：消消樂 -->
+                    <div class="game-module active" id="game1-container" onclick="switchActiveGame('game1')">
+                        <div class="board-with-ladder">
                     <!-- 左側獎勵塔 -->
                     <div class="left-ladder-col">
                         <div class="all-clear-bonus-panel" style="text-align: center; margin-bottom: 0; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 12px; border: 2px solid #b8860b; box-shadow: 0 0 10px rgba(184, 134, 11, 0.5); box-sizing: border-box; width: 100%;">
@@ -255,14 +260,65 @@
                         <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
                             <span id="bet-input" class="bet-value" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
                         </div>
+                    </div> <!-- 結束 board-with-ladder -->
+                </div> <!-- 結束 game1-container -->
+                
+                <!-- 遊戲 3：夾夾樂 -->
+                <div class="game-module mini" id="game3-container" onclick="switchActiveGame('game3')">
+                    <!-- 夾夾樂 UI 將在後續實作 -->
+                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #0f172a; border: 4px solid #3b82f6; border-radius: 12px; position: relative;">
+                        <!-- 上方 9格區 -->
+                        <div id="game3-top-track" style="display: flex; justify-content: center; gap: 5px; padding: 10px; background: rgba(0,0,0,0.5); border-bottom: 2px solid #1e3a8a;">
+                            <div class="g3-slot empty"></div>
+                            <div class="g3-slot"></div><div class="g3-slot"></div><div class="g3-slot"></div>
+                            <div class="g3-slot"></div><div class="g3-slot"></div><div class="g3-slot"></div>
+                            <div class="g3-slot"></div>
+                            <div class="g3-slot fixed-50">x50</div>
+                        </div>
+                        
+                        <!-- 內容區 (左側 HIT, 中央視覺) -->
+                        <div style="display: flex; flex: 1;">
+                            <!-- 左側 8格 HIT 面板 -->
+                            <div style="width: 200px; border-right: 2px solid #1e3a8a; padding: 10px; display: flex; flex-direction: column; gap: 5px;">
+                                <div style="color: #fff; font-weight: bold; background: #e11d48; text-align: center; padding: 5px; border-radius: 4px;">HIT TABLE</div>
+                                <div id="g3-hit-8" class="g3-hit-row"><span class="hit-lbl">8</span><span class="hit-val">0</span></div>
+                                <div id="g3-hit-7" class="g3-hit-row"><span class="hit-lbl">7</span><span class="hit-val">0</span></div>
+                                <div id="g3-hit-6" class="g3-hit-row"><span class="hit-lbl">6</span><span class="hit-val">0</span></div>
+                                <div id="g3-hit-5" class="g3-hit-row"><span class="hit-lbl">5</span><span class="hit-val">0</span></div>
+                                <div id="g3-hit-4" class="g3-hit-row"><span class="hit-lbl">4</span><span class="hit-val">0</span></div>
+                                <div id="g3-hit-3" class="g3-hit-row"><span class="hit-lbl">3</span><span class="hit-val">0</span></div>
+                                <div id="g3-hit-2" class="g3-hit-row"><span class="hit-lbl">2</span><span class="hit-val">0</span></div>
+                                <div id="g3-hit-1" class="g3-hit-row"><span class="hit-lbl">1</span><span class="hit-val">OPEN</span></div>
+                            </div>
+                            <!-- 中央主視覺 -->
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                                <div style="font-size: 5rem; text-shadow: 0 10px 20px rgba(0,0,0,0.5);">🚢</div>
+                                <div style="font-size: 3rem; position: absolute; top: 150px;">🏗️</div>
+                                <div id="g3-target-display" style="margin-top: auto; margin-bottom: 20px; font-size: 1.5rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 20px; border: 2px solid #fff;">
+                                    本次的目標是 <span id="g3-target-color-name">未選擇</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </div> <!-- 結束 game3-container -->
+                
+                </div> <!-- 結束 games-wrapper -->
 
                 <!-- 押分與控制區 -->
-                <div class="controls-panel" style="margin-top: 20px; background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
+                <div class="controls-panel" style="margin-top: 0px; background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
                     <div class="betting-panel" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <div class="bet-display" style="display: flex; align-items: center; gap: 15px;">
                             <span style="color: #94a3b8;">基本押分: 600</span>
+                            <div id="g3-color-selector" style="display: flex; gap: 5px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; border: 1px solid #475569; align-items: center;">
+                                <span style="color: #94a3b8; font-size: 0.9rem; margin-right: 5px;">夾夾樂目標:</span>
+                                <!-- Colors -->
+                                <div class="color-btn white-btn active" data-color="white" style="width: 25px; height: 25px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid #3b82f6; box-shadow: 0 0 10px #3b82f6;"></div>
+                                <div class="color-btn pink-btn" data-color="pink" style="width: 25px; height: 25px; border-radius: 50%; background: #ec4899; cursor: pointer; border: 2px solid transparent;"></div>
+                                <div class="color-btn red-btn" data-color="red" style="width: 25px; height: 25px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid transparent;"></div>
+                                <div class="color-btn yellow-btn" data-color="yellow" style="width: 25px; height: 25px; border-radius: 50%; background: #eab308; cursor: pointer; border: 2px solid transparent;"></div>
+                                <div class="color-btn green-btn" data-color="green" style="width: 25px; height: 25px; border-radius: 50%; background: #22c55e; cursor: pointer; border: 2px solid transparent;"></div>
+                                <div class="color-btn blue-btn" data-color="blue" style="width: 25px; height: 25px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid transparent;"></div>
+                            </div>
                         </div>
                         <div class="chip-container" style="display: flex; gap: 10px;">
                             <button id="btn-cycle-bet" class="chip-btn" style="width: 150px;">切換加分 (+1)</button>

@@ -80,6 +80,25 @@ let activeJPAmount = 0;
 let currentAppleColors = [];
 let totalCollectedApples = 0;
 
+// ** Game 3 (夾夾樂) 狀態 **
+let game3TargetColor = 'white'; // 預設白色
+let game3MultiplierArray = []; 
+let game3Combo = 0;
+let game3MaxMultiplier = 0;
+let game3TotalWin = 0;
+
+function switchActiveGame(gameId) {
+    const games = ['game1', 'game3'];
+    games.forEach(id => {
+        const el = document.getElementById(id + '-container');
+        if (id === gameId) {
+            el.className = 'game-module active';
+        } else {
+            el.className = 'game-module mini';
+        }
+    });
+}
+
 // ** Decoupled Engine States **
 let leftEngineActive = false;
 let boardState = 'IDLE'; 
@@ -233,6 +252,33 @@ document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     } else {
         alert("沒有上一局的押分紀錄");
     }
+});
+
+// ** Game 3 Target Color Selection **
+document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (isPlaying) return; // Cannot change during game
+        document.querySelectorAll('.color-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.border = '2px solid transparent';
+            b.style.boxShadow = 'none';
+        });
+        btn.classList.add('active');
+        
+        // The color maps to the border/shadow color
+        const color = btn.dataset.color;
+        let borderColor = CSS_VAR_MAP[color] || '#fff';
+        if (color === 'white') borderColor = '#3b82f6'; // special blue border for white
+        
+        btn.style.border = `2px solid ${borderColor}`;
+        btn.style.boxShadow = `0 0 10px ${borderColor}`;
+        
+        game3TargetColor = color;
+        document.getElementById('g3-target-color-name').textContent = COLOR_ZH[color] || color;
+        
+        // Change text color in display
+        document.getElementById('g3-target-color-name').style.color = (color === 'white') ? '#fff' : borderColor;
+    });
 });
 
 DOM.btnStart.addEventListener('click', startGame);
@@ -721,6 +767,113 @@ function updateApplesHP(colCounts) {
     }
 }
 
+const Game3Manager = {
+    initNewGame() {
+        game3Combo = 0;
+        game3MaxMultiplier = 0;
+        game3TotalWin = 0;
+        game3MultiplierArray = new Array(9).fill(null);
+        
+        let startSlot = 0;
+        let startMultiplier = 0;
+        
+        if (game3TargetColor === 'white') {
+            startSlot = Math.floor(Math.random() * 5) + 1; // 1~5 (第2~6格)
+            startMultiplier = 2.0;
+        } else {
+            startSlot = Math.floor(Math.random() * 4) + 2; // 2~5 (第3~6格)
+            startMultiplier = Math.random() < 0.2 ? 1.5 : 2.0;
+        }
+        
+        game3MultiplierArray[8] = 50.0;
+        
+        let currentM = startMultiplier;
+        for (let i = startSlot; i < 8; i++) {
+            game3MultiplierArray[i] = currentM;
+            currentM += 1.0;
+            if (currentM > 2.0) {
+                currentM = Math.floor(currentM); // drop decimals after 2
+            }
+        }
+        
+        this.updateUI();
+        this.resetHitTable();
+    },
+    
+    processBall(color) {
+        if (color === game3TargetColor) {
+            game3Combo++;
+            
+            let currentM = 1.0; 
+            if (game3Combo > 9) {
+                currentM = 50.0;
+            } else {
+                let slotVal = game3MultiplierArray[game3Combo - 1];
+                if (slotVal !== null) {
+                    currentM = slotVal;
+                }
+            }
+            
+            if (currentM > game3MaxMultiplier) {
+                game3MaxMultiplier = currentM;
+            }
+            
+            if (game3Combo > 1) {
+                let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+                let addScore = Math.floor((currentBet * baseRate) * game3MaxMultiplier);
+                game3TotalWin += addScore;
+                
+                this.updateHitRow(game3Combo, addScore);
+            } else {
+                this.updateHitRow(1, 'OPEN');
+            }
+            
+        } else {
+            game3Combo = 0;
+        }
+        
+        this.updateUI();
+    },
+    
+    updateUI() {
+        const slots = document.querySelectorAll('#game3-top-track .g3-slot');
+        slots.forEach((el, index) => {
+            el.classList.remove('active', 'achieved');
+            if (index < 8) {
+                let val = game3MultiplierArray[index];
+                el.textContent = val !== null ? `x${val}` : '';
+            }
+            
+            if (index < game3Combo) {
+                el.classList.add('achieved');
+            } else if (index === game3Combo) {
+                el.classList.add('active');
+            }
+        });
+    },
+    
+    updateHitRow(hitCount, score) {
+        if (hitCount > 8) return;
+        let row = document.getElementById(`g3-hit-${hitCount}`);
+        if (row) {
+            row.classList.add('active');
+            let valEl = row.querySelector('.hit-val');
+            if (valEl) valEl.textContent = score;
+        }
+    },
+    
+    resetHitTable() {
+        for (let i = 1; i <= 8; i++) {
+            let row = document.getElementById(`g3-hit-${i}`);
+            if (row) {
+                row.classList.remove('active');
+                let valEl = row.querySelector('.hit-val');
+                if (valEl) valEl.textContent = (i === 1) ? 'OPEN' : '0';
+            }
+        }
+    }
+};
+
 async function startGame() {
     if (leftEngineActive || boardState !== 'IDLE') return;
     
@@ -782,6 +935,9 @@ async function startGame() {
     pendingEventsQueue = [];
     boardState = 'IDLE';
     
+    // 初始化 Game 3 (夾夾樂)
+    Game3Manager.initNewGame();
+    
     historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
     updateWinDisplay();
     updateLadderActive(0);
@@ -789,6 +945,7 @@ async function startGame() {
     
     DOM.btnStart.disabled = true;
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = true);
+    document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'none'); // 禁用選色
     DOM.ballHistory.innerHTML = '';
     DOM.outOverlay.classList.remove('show');
     
@@ -963,6 +1120,7 @@ async function shootBallAsync(isSafeMode) {
         await spawnAndSpinBall('white', false);
         historyTracker.white++;
         addBallToHistoryUI('白色', 'white');
+        Game3Manager.processBall('white'); // Game 3
         
         if (!isSafeMode) {
             isGameOverTriggered = true;
@@ -1007,6 +1165,7 @@ async function shootBallAsync(isSafeMode) {
         await spawnAndSpinBall(color, false);
         historyTracker[color]++;
         addBallToHistoryUI(COLOR_ZH[color], color);
+        Game3Manager.processBall(color); // Game 3
         
         if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
             await applyMiniGameSteps(currentStepMapping[color]);
@@ -1747,12 +1906,19 @@ async function finishGameOverSequence() {
         }
     }
     
+    if (game3TotalWin > 0) {
+        totalWin += game3TotalWin;
+        updateWinDisplay();
+        DOM.drawStatus.textContent = `夾夾樂結算！獲得 ${game3TotalWin}`;
+        await sleep(2000);
+    }
+
     credit += totalWin;
     updateCreditDisplay();
     DOM.btnStart.disabled = false;
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
-    
-    currentBet = 0;
+    document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'auto');
+    DOM.drawStatus.textContent = `請押分，並按開始`;
     DOM.betInput.textContent = "0";
     updateLadderRewards(0);
     generateBetApples();
