@@ -1130,18 +1130,19 @@ body {
     transition: all 0.3s ease;
 }
 .g3-slot.active {
-    background: linear-gradient(135deg, #facc15, #eab308);
-    border-color: #fef08a;
-    color: #000;
-    text-shadow: none;
-    box-shadow: 0 0 15px #facc15;
+    background: var(--g3-target-color, #ef4444);
+    border-color: #fff;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+    box-shadow: 0 0 15px var(--g3-target-color, #ef4444), inset 0 0 10px rgba(255,255,255,0.5);
     transform: scale(1.1);
 }
 .g3-slot.achieved {
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    border-color: #bae6fd;
+    background: var(--g3-target-color, #ef4444);
+    border-color: rgba(255,255,255,0.5);
     color: #fff;
-    box-shadow: 0 0 10px #38bdf8;
+    box-shadow: 0 0 8px var(--g3-target-color, #ef4444);
+    opacity: 0.8;
 }
 .g3-slot.fixed-50 {
     border-radius: 12px;
@@ -1158,9 +1159,9 @@ body {
     font-weight: bold;
 }
 .g3-hit-row.active {
-    background: #0ea5e9;
-    border-color: #bae6fd;
-    box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+    background: var(--g3-target-color, #ef4444);
+    border-color: #fff;
+    box-shadow: 0 0 10px var(--g3-target-color, #ef4444);
 }
 .g3-hit-row .hit-lbl {
     color: #fcd34d;

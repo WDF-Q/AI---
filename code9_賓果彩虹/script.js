@@ -306,6 +306,7 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         if (game3Inner) {
             game3Inner.style.borderColor = borderColor;
             game3Inner.style.boxShadow = `0 0 15px ${borderColor}`;
+            game3Inner.style.setProperty('--g3-target-color', borderColor);
         }
 
         // Change HIT TABLE header background
@@ -888,7 +889,7 @@ const Game3Manager = {
             
             if (index < game3Combo) {
                 el.classList.add('achieved');
-            } else if (index === game3Combo) {
+            } else if (index === game3Combo && game3Combo > 0) {
                 el.classList.add('active');
             }
         });
