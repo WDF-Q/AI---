@@ -251,14 +251,14 @@
                     
                     <!-- NEW 3-Apple + Bet Area -->
                     <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-left: auto;">
-                        <div id="bet-apple-slots" style="display: flex; gap: 3px; margin-right: 10px;">
+                        <div class="bet-apple-slots" style="display: flex; gap: 3px; margin-right: 10px;">
                             <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
                             <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
                             <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
                         </div>
-                        <button id="btn-add-bet" class="chip-btn" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                        <button class="chip-btn btn-add-bet" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
                         <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
-                            <span id="bet-input" class="bet-value" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                            <span class="bet-value" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
                         </div> <!-- closes div style="..." -->
                     </div> <!-- closes new-bet-area -->
                 </div> <!-- closes bottom-hud-container -->
@@ -296,6 +296,19 @@
                                 <div style="font-size: 3rem; position: absolute; top: 150px;">🏗️</div>
                                 <div id="g3-target-display" style="margin-top: auto; margin-bottom: 20px; font-size: 1.5rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 20px; border: 2px solid #fff;">
                                     本次的目標是 <span id="g3-target-color-name">未選擇</span>
+                                </div>
+                                
+                                <!-- Game 3 Bet Area -->
+                                <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-bottom: 20px;">
+                                    <div class="bet-apple-slots" style="display: flex; gap: 3px; margin-right: 10px;">
+                                        <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                        <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                        <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                    </div>
+                                    <button class="chip-btn btn-add-bet" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                                    <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                                        <span class="bet-value" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

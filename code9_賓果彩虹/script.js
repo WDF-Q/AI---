@@ -115,7 +115,10 @@ let activeBalls = [];
 const DOM = {
     board: document.getElementById('game-board'),
     credit: document.getElementById('credit-display'),
-    betInput: document.getElementById('bet-input'),
+    btnCycleBet: document.getElementById('btn-cycle-bet'),
+    btnStart: document.getElementById('btn-start'),
+    betInputs: document.querySelectorAll('.bet-value'),
+    betAppleSlots: document.querySelectorAll('.bet-apple-slots'),
     win: document.getElementById('win-display'),
     safeIndicator: document.getElementById('safe-indicator'),
     ballCountText: document.getElementById('ball-count-text'),
@@ -132,7 +135,6 @@ const DOM = {
     birdMouthSlots: document.querySelectorAll('.bird-mouth-slot'),
     birdMouth: document.getElementById('bird-mouth'),
     drawStatus: document.getElementById('draw-status'),
-    btnStart: document.getElementById('btn-start'),
     comboOverlay: document.getElementById('combo-overlay'),
     outOverlay: document.getElementById('out-overlay'),
     
@@ -213,14 +215,20 @@ initRouletteVisuals();
 const BET_INCREMENTS = [1, 5, 10, 20, 50, 100, 500];
 let currentIncrementIndex = 0;
 
-document.getElementById('btn-cycle-bet').addEventListener('click', () => {
+DOM.btnCycleBet.addEventListener('click', () => {
     if (isPlaying) return;
     currentIncrementIndex = (currentIncrementIndex + 1) % BET_INCREMENTS.length;
     let inc = BET_INCREMENTS[currentIncrementIndex];
-    document.getElementById('btn-cycle-bet').textContent = `切換加分 (+${inc})`;
+    DOM.btnCycleBet.textContent = `切換加分 (+${inc})`;
 });
 
-document.getElementById('btn-add-bet').addEventListener('click', () => {
+document.querySelectorAll('.btn-add-bet').forEach(btn => {
+    btn.addEventListener('click', () => {
+        handleAddBet();
+    });
+});
+
+function handleAddBet() {
     if (isPlaying) return;
     if (currentBet === 0) {
         currentBet = 600;
@@ -229,10 +237,10 @@ document.getElementById('btn-add-bet').addEventListener('click', () => {
         currentBet += inc;
         if (currentBet > 3000) currentBet = 3000;
     }
-    DOM.betInput.textContent = currentBet;
+    DOM.betInputs.forEach(el => el.textContent = currentBet);
     updateLadderRewards(currentBet);
     generateBetApples();
-});
+}
 
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
@@ -247,7 +255,7 @@ document.getElementById('btn-repeat-bet').addEventListener('click', () => {
             generateBetApples();
         }
         
-        DOM.betInput.textContent = currentBet;
+        DOM.betInputs.forEach(el => el.textContent = currentBet);
         updateLadderRewards(currentBet);
     } else {
         alert("沒有上一局的押分紀錄");
@@ -645,14 +653,15 @@ function upgradeApple(type) {
 }
 
 function generateBetApples() {
-    let betAppleSlots = document.getElementById('bet-apple-slots');
-    if (!betAppleSlots) return;
+    if (DOM.betAppleSlots.length === 0) return;
 
     if (currentBet === 0) {
         preGeneratedApples = [];
-        let slots = betAppleSlots.querySelectorAll('.apple-slot');
-        slots.forEach(slot => {
-            slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
+        DOM.betAppleSlots.forEach(container => {
+            let slots = container.querySelectorAll('.apple-slot');
+            slots.forEach(slot => {
+                slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
+            });
         });
         return;
     }
@@ -686,20 +695,22 @@ function generateBetApples() {
         }
     }
     
-    let slots = betAppleSlots.querySelectorAll('.apple-slot');
-    slots.forEach((slot, index) => {
-        slot.innerHTML = '';
-        if (index < preGeneratedApples.length) {
-            let a = preGeneratedApples[index];
-            let appleEl = document.createElement('div');
-            appleEl.className = `apple-item apple-${a.type}`;
-            appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
-            appleEl.style.fontSize = '1.8rem';
-            appleEl.style.margin = '0';
-            slot.appendChild(appleEl);
-        } else {
-            slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
-        }
+    DOM.betAppleSlots.forEach(container => {
+        let slots = container.querySelectorAll('.apple-slot');
+        slots.forEach((slot, index) => {
+            slot.innerHTML = '';
+            if (index < preGeneratedApples.length) {
+                let a = preGeneratedApples[index];
+                let appleEl = document.createElement('div');
+                appleEl.className = `apple-item apple-${a.type}`;
+                appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
+                appleEl.style.fontSize = '1.8rem';
+                appleEl.style.margin = '0';
+                slot.appendChild(appleEl);
+            } else {
+                slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
+            }
+        });
     });
 }
 
@@ -1919,7 +1930,7 @@ async function finishGameOverSequence() {
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
     document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'auto');
     DOM.drawStatus.textContent = `請押分，並按開始`;
-    DOM.betInput.textContent = "0";
+    DOM.betInputs.forEach(el => el.textContent = "0");
     updateLadderRewards(0);
     generateBetApples();
 }
