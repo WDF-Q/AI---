@@ -152,8 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error);
             }
             
-            // --- DETECT YAHOO FINANCE PRICE ANOMALIES ---
+            // --- DETECT YAHOO FINANCE PRICE ANOMALIES & MISSING DAYS ---
             let hasAnomaly = false;
+            
+            // Check for unrealistic price jumps
             if (data.prices && data.prices.length > 1) {
                 for (let i = 1; i < data.prices.length; i++) {
                     const prevPrice = data.prices[i-1];
@@ -167,9 +169,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+            
+            // Check for missing trading days
+            if (!hasAnomaly && data.labels && data.labels.length > 1) {
+                for (let i = 1; i < data.labels.length; i++) {
+                    let prevDay = new Date(data.labels[i-1]);
+                    let currDay = new Date(data.labels[i]);
+                    let diffDays = Math.round((currDay - prevDay) / (1000 * 60 * 60 * 24));
+                    let currDayOfWeek = currDay.getDay(); // 0 is Sunday, 1 is Mon... 6 is Sat
+                    
+                    if (diffDays > 3) {
+                        hasAnomaly = true; break;
+                    } else if (diffDays === 2 && currDayOfWeek !== 1) { // Gap of 2 days, not landing on Monday
+                        hasAnomaly = true; break;
+                    } else if (diffDays === 3 && currDayOfWeek !== 1 && currDayOfWeek !== 2) { // Gap of 3 days, not landing on Mon/Tue
+                        hasAnomaly = true; break;
+                    }
+                }
+            }
 
             if (hasAnomaly) {
-                throw new Error('Yahoo Finance returned anomalous data (>40% gap)');
+                throw new Error('Yahoo Finance returned anomalous or missing data');
             }
             // ---------------------------------------------
             
@@ -470,18 +490,34 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < data.results.length; i++) {
                 let stock = data.results[i];
                 
-                // Detect yfinance adjustment bug: unrealistic price jumps (>30%)
+                // Detect yfinance adjustment bug: unrealistic price jumps or missing days
                 let hasAnomaly = false;
                 if (!stock.error && stock.data && stock.data.length > 1) {
                     for (let j = 0; j < stock.data.length - 1; j++) {
-                        let currentDay = stock.data[j]; // newer date
-                        let prevDay = stock.data[j+1]; // older date
-                        if (prevDay.close > 0 && currentDay.close > 0) {
-                            let ratio = currentDay.close / prevDay.close;
+                        let currentDayData = stock.data[j]; // newer date (e.g. 7/22 Wed)
+                        let prevDayData = stock.data[j+1];  // older date (e.g. 7/20 Mon)
+                        
+                        // Price jump check
+                        if (prevDayData.close > 0 && currentDayData.close > 0) {
+                            let ratio = currentDayData.close / prevDayData.close;
                             if (ratio > 1.4 || ratio < 0.6) {
                                 hasAnomaly = true;
                                 break;
                             }
+                        }
+                        
+                        // Missing day check
+                        let currDay = new Date(currentDayData.date);
+                        let prevDay = new Date(prevDayData.date);
+                        let diffDays = Math.round((currDay - prevDay) / (1000 * 60 * 60 * 24));
+                        let currDayOfWeek = currDay.getDay(); 
+                        
+                        if (diffDays > 3) {
+                            hasAnomaly = true; break;
+                        } else if (diffDays === 2 && currDayOfWeek !== 1) {
+                            hasAnomaly = true; break;
+                        } else if (diffDays === 3 && currDayOfWeek !== 1 && currDayOfWeek !== 2) {
+                            hasAnomaly = true; break;
                         }
                     }
                 }
