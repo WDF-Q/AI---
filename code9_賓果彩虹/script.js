@@ -1156,6 +1156,7 @@ async function startGame() {
     
     historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
     updateWinDisplay();
+    updateLadderRewards(game1Bet === 0 ? 600 : game1Bet);
     updateLadderActive(0);
     updateHistoryUI();
     
@@ -2171,6 +2172,8 @@ async function engineSleep(ms) {
 
 
 function collectApple(type) {
+    if (game1Bet === 0) return;
+
     if (currentAppleColors.length === 7) {
         currentAppleColors = []; 
         currentAppleScores = [];
