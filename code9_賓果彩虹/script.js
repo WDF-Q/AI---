@@ -887,9 +887,9 @@ const Game3Manager = {
                 el.textContent = val !== null ? `x${val}` : '';
             }
             
-            if (index < game3Combo) {
+            if (index < game3Combo - 1) {
                 el.classList.add('achieved');
-            } else if (index === game3Combo && game3Combo > 0) {
+            } else if (index === game3Combo - 1 && game3Combo > 0) {
                 el.classList.add('active');
             }
         });
