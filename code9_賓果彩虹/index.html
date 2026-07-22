@@ -265,8 +265,8 @@
             </div> <!-- closes game1-container -->
                 <!-- 遊戲 3：夾夾樂 -->
                 <div class="game-module mini" id="game3-container" onclick="switchActiveGame('game3')">
-                    <!-- 夾夾樂 UI 將在後續實作 -->
-                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #0f172a; border: 4px solid #3b82f6; border-radius: 12px; position: relative;">
+                    <!-- UI -->
+                    <div id="game3-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #0f172a; border: 4px solid #ef4444; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
                         <!-- 上方 9格區 -->
                         <div id="game3-top-track" style="display: flex; justify-content: center; gap: 5px; padding: 10px; background: rgba(0,0,0,0.5); border-bottom: 2px solid #1e3a8a;">
                             <div class="g3-slot empty"></div>
@@ -295,17 +295,17 @@
                                 <div style="font-size: 5rem; text-shadow: 0 10px 20px rgba(0,0,0,0.5);">🚢</div>
                                 <div style="font-size: 3rem; position: absolute; top: 150px;">🏗️</div>
                                 <div id="g3-target-display" style="margin-top: auto; margin-bottom: 20px; font-size: 1.5rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 20px; border: 2px solid #fff;">
-                                    本次的目標是 <span id="g3-target-color-name">未選擇</span>
+                                    本次的目標是 <span id="g3-target-color-name" style="color: #ef4444;">紅色</span>
                                 </div>
                                 <div id="g3-color-selector" style="display: flex; gap: 5px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; border: 1px solid #475569; align-items: center; margin-bottom: 20px;">
                                     <span style="color: #94a3b8; font-size: 0.9rem; margin-right: 5px;">目標:</span>
                                     <!-- Colors -->
-                                    <div class="color-btn white-btn active" data-color="white" style="width: 25px; height: 25px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid #3b82f6; box-shadow: 0 0 10px #3b82f6;"></div>
+                                    <div class="color-btn red-btn active" data-color="red" style="width: 25px; height: 25px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
                                     <div class="color-btn pink-btn" data-color="pink" style="width: 25px; height: 25px; border-radius: 50%; background: #ec4899; cursor: pointer; border: 2px solid transparent;"></div>
-                                    <div class="color-btn red-btn" data-color="red" style="width: 25px; height: 25px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid transparent;"></div>
                                     <div class="color-btn yellow-btn" data-color="yellow" style="width: 25px; height: 25px; border-radius: 50%; background: #eab308; cursor: pointer; border: 2px solid transparent;"></div>
                                     <div class="color-btn green-btn" data-color="green" style="width: 25px; height: 25px; border-radius: 50%; background: #22c55e; cursor: pointer; border: 2px solid transparent;"></div>
                                     <div class="color-btn blue-btn" data-color="blue" style="width: 25px; height: 25px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn white-btn" data-color="white" style="width: 25px; height: 25px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid transparent;"></div>
                                 </div>
                                 
                                 <!-- Game 3 Bet Area -->

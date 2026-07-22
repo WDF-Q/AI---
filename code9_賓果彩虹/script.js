@@ -84,7 +84,7 @@ let currentAppleColors = [];
 let totalCollectedApples = 0;
 
 // ** Game 3 (夾夾樂) 狀態 **
-let game3TargetColor = 'white'; // 預設白色
+let game3TargetColor = 'red'; 
 let game3MultiplierArray = []; 
 let game3Combo = 0;
 let game3MaxMultiplier = 0;
@@ -301,6 +301,13 @@ document.querySelectorAll('.color-btn').forEach(btn => {
         
         // Change text color in display
         document.getElementById('g3-target-color-name').style.color = (color === 'white') ? '#fff' : borderColor;
+        
+        // Change Game 3 UI border and shadow
+        let game3Inner = document.getElementById('game3-inner');
+        if (game3Inner) {
+            game3Inner.style.borderColor = borderColor;
+            game3Inner.style.boxShadow = `0 0 15px ${borderColor}`;
+        }
     });
 });
 
