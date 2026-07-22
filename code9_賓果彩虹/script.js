@@ -52,8 +52,11 @@ let currentCombo = 0;
 let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
-let currentBet = 0;
-let previousBet = 0;
+let game1Bet = 0;
+let game3Bet = 0;
+let previousGame1Bet = 0;
+let previousGame3Bet = 0;
+
 let allClearBonusCount = 0;
 
 let historyTracker = {
@@ -223,40 +226,53 @@ DOM.btnCycleBet.addEventListener('click', () => {
 });
 
 document.querySelectorAll('.btn-add-bet').forEach(btn => {
-    btn.addEventListener('click', () => {
-        handleAddBet();
+    btn.addEventListener('click', (e) => {
+        let gameId = parseInt(e.currentTarget.getAttribute('data-game'));
+        handleAddBet(gameId);
     });
 });
+});
 
-function handleAddBet() {
+function handleAddBet(gameId) {
     if (isPlaying) return;
-    if (currentBet === 0) {
-        currentBet = 600;
-    } else {
-        let inc = BET_INCREMENTS[currentIncrementIndex];
-        currentBet += inc;
-        if (currentBet > 3000) currentBet = 3000;
+    let inc = BET_INCREMENTS[currentIncrementIndex];
+    if (gameId === 1) {
+        if (game1Bet === 0) game1Bet = 600;
+        else { game1Bet += inc; if(game1Bet > 3000) game1Bet = 3000; }
+        document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
+        updateLadderRewards(game1Bet);
+        generateBetApples(1);
+    } else if (gameId === 3) {
+        if (game3Bet === 0) game3Bet = 600;
+        else { game3Bet += inc; if(game3Bet > 3000) game3Bet = 3000; }
+        document.querySelectorAll('.bet-value[data-game="3"]').forEach(el => el.textContent = game3Bet);
+        generateBetApples(3);
     }
-    DOM.betInputs.forEach(el => el.textContent = currentBet);
-    updateLadderRewards(currentBet);
-    generateBetApples();
 }
 
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
-    if (previousBet > 0) {
-        currentBet = 600;
-        generateBetApples();
-        
+    if (previousGame1Bet > 0 || previousGame3Bet > 0) {
         let inc = BET_INCREMENTS[currentIncrementIndex];
-        while (currentBet < previousBet) {
-            currentBet += inc;
-            if (currentBet > previousBet) currentBet = previousBet;
-            generateBetApples();
+        if (previousGame1Bet > 0) {
+            game1Bet = 600;
+            while (game1Bet < previousGame1Bet) {
+                game1Bet += inc;
+                if(game1Bet > previousGame1Bet) game1Bet = previousGame1Bet;
+                generateBetApples(1);
+            }
+            document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
+            updateLadderRewards(game1Bet);
         }
-        
-        DOM.betInputs.forEach(el => el.textContent = currentBet);
-        updateLadderRewards(currentBet);
+        if (previousGame3Bet > 0) {
+            game3Bet = 600;
+            while (game3Bet < previousGame3Bet) {
+                game3Bet += inc;
+                if(game3Bet > previousGame3Bet) game3Bet = previousGame3Bet;
+                generateBetApples(3);
+            }
+            document.querySelectorAll('.bet-value[data-game="3"]').forEach(el => el.textContent = game3Bet);
+        }
     } else {
         alert("沒有上一局的押分紀錄");
     }
@@ -290,17 +306,17 @@ document.querySelectorAll('.color-btn').forEach(btn => {
 });
 
 DOM.btnStart.addEventListener('click', startGame);
-updateLadderRewards(currentBet);
+updateLadderRewards(game1Bet);
 
 // --- Apple & Mini Game Logic ---
 DOM.btnDebugApple.addEventListener('click', () => {
-    if (currentBet === 0) {
+    if (game1Bet === 0 && game3Bet === 0) {
         alert('請先點擊下方押注按鈕設定押分！(測試按鈕需要知道押分才能計算蘋果價值)');
         return;
     }
     let appleType = getAppleType();
-    if (typeof preGeneratedApples !== 'undefined' && preGeneratedApples.length > 0) {
-        appleType = preGeneratedApples[0].type;
+    if (typeof game1PreApples !== 'undefined' && game1PreApples.length > 0) {
+        appleType = game1PreApples[0].type;
     }
     collectApple(appleType);
 });
@@ -591,7 +607,7 @@ function initBoard() {
     board = [];
     for (let r = 0; r < ROWS; r++) board.push(new Array(COLS).fill(null));
     
-    const initialMoneyValue = Math.floor(currentBet / 5);
+    const initialMoneyValue = Math.floor(game1Bet / 5);
     let colsPool = [0, 1, 2, 3, 4, 5];
     for (let i = colsPool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -625,7 +641,8 @@ function getAppleType() {
 }
 
 let topApplesState = new Array(COLS).fill(null);
-let preGeneratedApples = [];
+let game1PreApples = [];
+let game3PreApples = [];
 
 function getUpgradeProb(bet) {
     if (bet <= 650) return 0.10;
@@ -652,16 +669,20 @@ function upgradeApple(type) {
     }
 }
 
-function generateBetApples() {
-    if (DOM.betAppleSlots.length === 0) return;
+function generateBetApples(gameId) {
+    let container = document.querySelector(`.bet-apple-slots[data-game="${gameId}"]`);
+    if (!container) return;
+    
+    let currentBet = gameId === 1 ? game1Bet : game3Bet;
+    let preGenerated = gameId === 1 ? game1PreApples : game3PreApples;
 
     if (currentBet === 0) {
-        preGeneratedApples = [];
-        DOM.betAppleSlots.forEach(container => {
-            let slots = container.querySelectorAll('.apple-slot');
-            slots.forEach(slot => {
-                slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
-            });
+        if (gameId === 1) game1PreApples = [];
+        else game3PreApples = [];
+        
+        let slots = container.querySelectorAll('.apple-slot');
+        slots.forEach(slot => {
+            slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
         });
         return;
     }
@@ -674,43 +695,41 @@ function generateBetApples() {
     
     let targetCount = Math.random() < prob3Apples ? 3 : 2;
     
-    if (preGeneratedApples.length === 0) {
+    if (preGenerated.length === 0) {
         for (let i = 0; i < targetCount; i++) {
             let type = getAppleType();
             let hp = Math.floor(Math.random() * 10) + 6;
-            preGeneratedApples.push({ type, hp });
+            preGenerated.push({ type, hp });
         }
     } else {
         let upgradeProb = getUpgradeProb(currentBet);
-        for (let i = 0; i < preGeneratedApples.length; i++) {
+        for (let i = 0; i < preGenerated.length; i++) {
             if (Math.random() < upgradeProb) {
-                preGeneratedApples[i].type = upgradeApple(preGeneratedApples[i].type);
+                preGenerated[i].type = upgradeApple(preGenerated[i].type);
             }
         }
         
-        if (preGeneratedApples.length === 2 && targetCount === 3) {
+        if (preGenerated.length === 2 && targetCount === 3) {
             let type = getAppleType();
             let hp = Math.floor(Math.random() * 10) + 6;
-            preGeneratedApples.push({ type, hp });
+            preGenerated.push({ type, hp });
         }
     }
     
-    DOM.betAppleSlots.forEach(container => {
-        let slots = container.querySelectorAll('.apple-slot');
-        slots.forEach((slot, index) => {
-            slot.innerHTML = '';
-            if (index < preGeneratedApples.length) {
-                let a = preGeneratedApples[index];
-                let appleEl = document.createElement('div');
-                appleEl.className = `apple-item apple-${a.type}`;
-                appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
-                appleEl.style.fontSize = '1.8rem';
-                appleEl.style.margin = '0';
-                slot.appendChild(appleEl);
-            } else {
-                slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
-            }
-        });
+    let slots = container.querySelectorAll('.apple-slot');
+    slots.forEach((slot, index) => {
+        slot.innerHTML = '';
+        if (index < preGenerated.length) {
+            let a = preGenerated[index];
+            let appleEl = document.createElement('div');
+            appleEl.className = `apple-item apple-${a.type}`;
+            appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
+            appleEl.style.fontSize = '1.8rem';
+            appleEl.style.margin = '0';
+            slot.appendChild(appleEl);
+        } else {
+            slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
+        }
     });
 }
 
@@ -739,7 +758,7 @@ function spawnApples() {
     }
     availableSlots.sort(() => Math.random() - 0.5);
     
-    let applesToSpawn = preGeneratedApples.length > 0 ? preGeneratedApples : [];
+    let applesToSpawn = game1PreApples.length > 0 ? game1PreApples : [];
     if (applesToSpawn.length === 0) {
         let count = Math.random() < 0.1 ? 2 : 3;
         for (let i = 0; i < count; i++) {
@@ -831,7 +850,7 @@ const Game3Manager = {
             
             if (game3Combo > 1) {
                 let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
-                let addScore = Math.floor((currentBet * baseRate) * game3MaxMultiplier);
+                let addScore = Math.floor((game3Bet * baseRate) * game3MaxMultiplier);
                 game3TotalWin += addScore;
                 
                 this.updateHitRow(game3Combo, addScore);
@@ -923,16 +942,17 @@ async function startGame() {
         updateMiniGameUI();
     }
     
-    if (currentBet === 0) {
+    if (game1Bet === 0 && game3Bet === 0) {
         alert("請先押分！");
         return;
     }
-    if (credit < currentBet) {
+    if (credit < (game1Bet + game3Bet)) {
         alert("餘額不足！");
         return;
     }
-    previousBet = currentBet;
-    credit -= currentBet;
+    previousGame1Bet = game1Bet;
+    previousGame3Bet = game3Bet;
+    credit -= (game1Bet + game3Bet);
     updateCreditDisplay();
     
     isPlaying = true;
@@ -1616,7 +1636,7 @@ async function checkMatchesAndChain() {
             }
             if (isAllClear && allClearBonusCount < 2) {
                 allClearBonusCount++;
-                let bonus = currentBet * 30;
+                let bonus = game1Bet * 30;
                 totalWin += bonus;
                 updateWinDisplay();
                 DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
@@ -1644,14 +1664,14 @@ async function checkMatchesAndChain() {
 
 function getRandomMoneyBallValue() {
     let r = Math.random() * 100; 
-    if (r < 50) return Math.floor(currentBet * (1/5));
-    if (r < 75) return Math.floor(currentBet * (2/5));
-    if (r < 85) return Math.floor(currentBet * (4/5));
-    if (r < 90) return Math.floor(currentBet * (6/5));
-    if (r < 94) return Math.floor(currentBet * (8/5));
-    if (r < 97) return Math.floor(currentBet * (10/5));
-    if (r < 99) return Math.floor(currentBet * (25/5));
-    return Math.floor(currentBet * (50/5));
+    if (r < 50) return Math.floor(game1Bet * (1/5));
+    if (r < 75) return Math.floor(game1Bet * (2/5));
+    if (r < 85) return Math.floor(game1Bet * (4/5));
+    if (r < 90) return Math.floor(game1Bet * (6/5));
+    if (r < 94) return Math.floor(game1Bet * (8/5));
+    if (r < 97) return Math.floor(game1Bet * (10/5));
+    if (r < 99) return Math.floor(game1Bet * (25/5));
+    return Math.floor(game1Bet * (50/5));
 }
 
 function getSafeColorForRefill(r, c) {
@@ -1721,7 +1741,7 @@ async function refillBoard(finalCombo = 0) {
     if (finalCombo >= 4) {
         let lookupChain = finalCombo >= 10 ? 10 : finalCombo;
         let mult = COMBO_MULTIPLIERS[lookupChain];
-        guaranteedRewardValue = Math.floor(currentBet * mult);
+        guaranteedRewardValue = Math.floor(game1Bet * mult);
     }
 
     let emptySpots = [];
@@ -1932,7 +1952,8 @@ async function finishGameOverSequence() {
     DOM.drawStatus.textContent = `請押分，並按開始`;
     DOM.betInputs.forEach(el => el.textContent = "0");
     updateLadderRewards(0);
-    generateBetApples();
+    generateBetApples(1);
+    generateBetApples(3);
 }
 
 function sleep(ms) {
@@ -1963,11 +1984,11 @@ function collectApple(type) {
     
     let score = 0;
     switch (type) {
-        case 'gold': score = currentBet * 2.5; break;
-        case 'silver': score = currentBet * 1.5; break;
-        case 'bronze': score = currentBet * 1.0; break;
-        case 'red': score = currentBet * 0.5; break;
-        case 'green': score = currentBet * 0.25; break;
+        case 'gold': score = game1Bet * 2.5; break;
+        case 'silver': score = game1Bet * 1.5; break;
+        case 'bronze': score = game1Bet * 1.0; break;
+        case 'red': score = game1Bet * 0.5; break;
+        case 'green': score = game1Bet * 0.25; break;
     }
     currentAppleScores.push(score);
     
