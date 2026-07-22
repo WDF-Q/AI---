@@ -93,6 +93,7 @@ let game3TotalTargetBalls = 0;
 let game3SlotStyles = [];
 let game3MaxComboReached = 0;
 let game3CurrentComboColor = null;
+let game3TrailingRainbows = 0;
 
 function switchActiveGame(gameId) {
     const games = ['game1', 'game3'];
@@ -822,6 +823,7 @@ const Game3Manager = {
         game3TotalTargetBalls = 0;
         game3MaxComboReached = 0;
         game3CurrentComboColor = null;
+        game3TrailingRainbows = 0;
         game3SlotStyles = [];
         game3MultiplierArray = new Array(9).fill(null);
         
@@ -903,6 +905,8 @@ const Game3Manager = {
             }
             game3Combo++;
         } else {
+            let previousTrailing = game3TrailingRainbows;
+            
             if (dualPair) {
                 game3CurrentComboColor = dualPair;
                 logicalColor = dualPair[0];
@@ -910,7 +914,20 @@ const Game3Manager = {
                 game3CurrentComboColor = color;
                 logicalColor = color;
             }
-            game3Combo = 1;
+            game3Combo = previousTrailing + 1;
+            
+            for (let i = 0; i < previousTrailing; i++) {
+                game3SlotStyles[i] = {
+                    bg: 'linear-gradient(45deg, red, orange, yellow, #22c55e, #3b82f6, #a855f7)',
+                    shadow: '#fff'
+                };
+            }
+        }
+        
+        if (isRainbow) {
+            game3TrailingRainbows++;
+        } else {
+            game3TrailingRainbows = 0;
         }
 
         let styleObj = { bg: '', shadow: '' };
@@ -2079,6 +2096,7 @@ async function finishGameOverSequence() {
     game3Bet = 0;
     game3TotalTargetBalls = 0;
     game3MaxMultiplier = 0;
+    game3TrailingRainbows = 0;
     Game3Manager.updateHitTable();
     updateLadderRewards(0);
     generateBetApples(1);
