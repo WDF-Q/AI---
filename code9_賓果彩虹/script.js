@@ -91,6 +91,7 @@ let game3MaxMultiplier = 0;
 let game3TotalWin = 0;
 let game3TotalTargetBalls = 0;
 let game3SlotStyles = [];
+let game3MaxComboReached = 0;
 
 function switchActiveGame(gameId) {
     const games = ['game1', 'game3'];
@@ -818,6 +819,7 @@ const Game3Manager = {
         game3MaxMultiplier = 0;
         game3TotalWin = 0;
         game3TotalTargetBalls = 0;
+        game3MaxComboReached = 0;
         game3SlotStyles = [];
         game3MultiplierArray = new Array(9).fill(null);
         
@@ -863,6 +865,9 @@ const Game3Manager = {
             
             game3Combo++;
             game3TotalTargetBalls++;
+            if (game3Combo > game3MaxComboReached) {
+                game3MaxComboReached = game3Combo;
+            }
             
             let currentM = 1.0;
             if (game3Combo > 9) {
@@ -909,16 +914,19 @@ const Game3Manager = {
                 el.textContent = 'x50';
             }
             
+            // Permanently clear text for any slot that has been reached
+            if (index < game3MaxComboReached) {
+                el.textContent = '';
+            }
+            
             if (index < game3Combo - 1) {
                 el.classList.add('achieved');
-                el.textContent = ''; // clear text when lit
                 if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
                     el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
                     el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
                 }
             } else if (index === game3Combo - 1 && game3Combo > 0) {
                 el.classList.add('active');
-                el.textContent = ''; // clear text when lit
                 if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
                     el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
                     el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
