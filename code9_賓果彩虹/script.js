@@ -853,24 +853,66 @@ const Game3Manager = {
     
     processBall(color, isRainbow = false, dualPair = null) {
         let logicalColor = color;
+        let matchFound = false;
+
         if (isRainbow) {
-            logicalColor = game3CurrentComboColor || game3TargetColor;
+            matchFound = true;
+            logicalColor = Array.isArray(game3CurrentComboColor) ? game3CurrentComboColor[0] : (game3CurrentComboColor || game3TargetColor);
         } else if (dualPair) {
-            if (game3CurrentComboColor && dualPair.includes(game3CurrentComboColor)) {
-                logicalColor = game3CurrentComboColor;
-            } else {
-                logicalColor = dualPair[0];
+            if (game3CurrentComboColor) {
+                if (Array.isArray(game3CurrentComboColor)) {
+                    let common = dualPair.filter(c => game3CurrentComboColor.includes(c));
+                    if (common.length > 0) {
+                        matchFound = true;
+                        logicalColor = common[0];
+                    }
+                } else {
+                    if (dualPair.includes(game3CurrentComboColor)) {
+                        matchFound = true;
+                        logicalColor = game3CurrentComboColor;
+                    }
+                }
+            }
+        } else {
+            if (game3CurrentComboColor) {
+                if (Array.isArray(game3CurrentComboColor)) {
+                    if (game3CurrentComboColor.includes(color)) {
+                        matchFound = true;
+                        logicalColor = color;
+                    }
+                } else {
+                    if (color === game3CurrentComboColor) {
+                        matchFound = true;
+                        logicalColor = color;
+                    }
+                }
             }
         }
-        
-        if (game3CurrentComboColor === null || logicalColor === game3CurrentComboColor) {
-            game3CurrentComboColor = logicalColor;
+
+        if (matchFound || game3CurrentComboColor === null) {
+            if (game3CurrentComboColor === null) {
+                if (isRainbow) {
+                    game3CurrentComboColor = game3TargetColor;
+                } else if (dualPair) {
+                    game3CurrentComboColor = dualPair;
+                } else {
+                    game3CurrentComboColor = color;
+                }
+            } else {
+                game3CurrentComboColor = logicalColor;
+            }
             game3Combo++;
         } else {
-            game3CurrentComboColor = logicalColor;
+            if (dualPair) {
+                game3CurrentComboColor = dualPair;
+                logicalColor = dualPair[0];
+            } else {
+                game3CurrentComboColor = color;
+                logicalColor = color;
+            }
             game3Combo = 1;
         }
-        
+
         let styleObj = { bg: '', shadow: '' };
         if (isRainbow) {
             styleObj.bg = 'linear-gradient(45deg, red, orange, yellow, #22c55e, #3b82f6, #a855f7)';
@@ -883,11 +925,11 @@ const Game3Manager = {
             styleObj.shadow = `var(--color-${logicalColor})`;
         }
         game3SlotStyles[game3Combo - 1] = styleObj;
-        
+
         if (game3Combo > game3MaxComboReached) {
             game3MaxComboReached = game3Combo;
         }
-        
+
         let currentM = 1.0;
         if (game3Combo > 9) {
             currentM = 50.0;
@@ -897,19 +939,19 @@ const Game3Manager = {
                 currentM = slotVal;
             }
         }
-        
+
         if (currentM > game3MaxMultiplier) {
             game3MaxMultiplier = currentM;
         }
-        
-        if (logicalColor === game3TargetColor || isRainbow || (dualPair && dualPair.includes(game3TargetColor))) {
+
+        if (!isRainbow && (logicalColor === game3TargetColor || (dualPair && dualPair.includes(game3TargetColor)))) {
             game3TotalTargetBalls++;
         }
-        
+
         let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
         let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
         game3TotalWin = Math.floor((game3Bet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
-        
+
         this.updateUI();
         this.updateHitTable();
     },
