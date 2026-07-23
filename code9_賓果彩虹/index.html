@@ -220,35 +220,8 @@
                     </div>
                 </div>
                 
-                <!-- 底部紀錄統計區 (New HUD) -->
-                <div class="bottom-hud-container" style="display: flex; flex-direction: row; align-items: flex-end; gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px;">
-                    <!-- COUNT block -->
-                    <div class="hud-count-box" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 5px;">
-                        <span style="font-size: 1rem; font-weight: bold; color: #333; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">COUNT</span>
-                        <span id="ball-count-text" style="font-size: 2.8rem; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; line-height: 0.9;">0</span>
-                    </div>
-
-                    <!-- History Trackers + Recent Balls -->
-                    <div class="hud-tracker-area" style="display: flex; flex-direction: column; flex-grow: 1;">
-                        <!-- Recent Balls Track (The black bar) -->
-                        <div class="recent-balls-track" style="background: #111; border-radius: 12px; height: 35px; width: 257px; display: flex; align-items: center; padding: 0 4px; margin-bottom: 2px; justify-content: flex-start; box-sizing: border-box;">
-                            <div id="ball-history" class="ball-history-container" style="display: flex; flex-direction: row; gap: 2px; overflow: hidden; width: 100%; height: 100%; padding: 0; align-items: center; justify-content: flex-start; min-height: unset;">
-                                <!-- JS 動態產生球 -->
-                            </div>
-                        </div>
-                        
-                        <!-- Square Color Trackers -->
-                        <div class="square-trackers" style="display: flex; gap: 2px;">
-                            <div class="track-square white-block"><span id="track-white" class="track-count">0</span></div>
-                            <div class="track-square pink-block"><span id="track-pink" class="track-count">0</span></div>
-                            <div class="track-square red-block"><span id="track-red" class="track-count">0</span></div>
-                            <div class="track-square yellow-block"><span id="track-yellow" class="track-count">0</span></div>
-                            <div class="track-square green-block"><span id="track-green" class="track-count">0</span></div>
-                            <div class="track-square blue-block"><span id="track-blue" class="track-count">0</span></div>
-                            <div class="track-square rainbow-block"><span id="track-rainbow" class="track-count">0</span></div>
-                        </div>
-                    </div>
-                    
+                <!-- 底部區域 -->
+                <div class="bottom-hud-container" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px;">
                     <!-- NEW 3-Apple + Bet Area -->
                     <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-left: auto;">
                         <div class="bet-apple-slots" data-game="1" style="display: flex; gap: 3px; margin-right: 10px;">
@@ -259,9 +232,9 @@
                         <button class="chip-btn btn-add-bet" data-game="1" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
                         <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
                             <span class="bet-value" data-game="1" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
-                        </div> <!-- closes div style="..." -->
-                    </div> <!-- closes new-bet-area -->
-                </div> <!-- closes bottom-hud-container -->
+                        </div>
+                    </div>
+                </div>
             </div> <!-- closes game1-container -->
                 <!-- 遊戲 3：夾夾樂 -->
                 <div class="game-module mini" id="game3-container" onclick="switchActiveGame('game3')">
@@ -284,14 +257,14 @@
                                     <span>HIT</span>
                                     <span>WIN</span>
                                 </div>
-                                <div id="g3-hit-8" class="g3-hit-row"><span class="hit-lbl">8</span><span class="hit-val">0</span></div>
-                                <div id="g3-hit-7" class="g3-hit-row"><span class="hit-lbl">7</span><span class="hit-val">0</span></div>
-                                <div id="g3-hit-6" class="g3-hit-row"><span class="hit-lbl">6</span><span class="hit-val">0</span></div>
-                                <div id="g3-hit-5" class="g3-hit-row"><span class="hit-lbl">5</span><span class="hit-val">0</span></div>
-                                <div id="g3-hit-4" class="g3-hit-row"><span class="hit-lbl">4</span><span class="hit-val">0</span></div>
-                                <div id="g3-hit-3" class="g3-hit-row"><span class="hit-lbl">3</span><span class="hit-val">0</span></div>
-                                <div id="g3-hit-2" class="g3-hit-row"><span class="hit-lbl">2</span><span class="hit-val">0</span></div>
-                                <div id="g3-hit-1" class="g3-hit-row"><span class="hit-lbl">1</span><span class="hit-val">OPEN</span></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="8"><div id="g3-hit-8" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">8</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-8" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="7"><div id="g3-hit-7" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">7</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-7" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="6"><div id="g3-hit-6" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">6</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-6" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="5"><div id="g3-hit-5" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">5</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-5" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="4"><div id="g3-hit-4" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">4</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-4" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="3"><div id="g3-hit-3" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">3</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-3" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="2"><div id="g3-hit-2" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">2</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-2" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="1"><div id="g3-hit-1" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">1</span><span class="hit-val">OPEN</span></div><div class="g3-apple-slot" id="g3-apple-slot-1" style="width: 24px; height: 24px;"></div></div>
                             </div>
                             <!-- 中央主視覺 -->
                             <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
@@ -331,15 +304,50 @@
                 </div> <!-- 結束 games-wrapper -->
 
                 <!-- 押分與控制區 -->
-                <div class="controls-panel" style="margin-top: 0px; background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
-                    <div class="betting-panel" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <div class="bet-display" style="display: flex; align-items: center; gap: 15px;">
-                            <span style="color: #94a3b8;">基本押分: 600</span>
+                <div class="controls-panel" style="margin-top: 15px; background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155;">
+                    <div class="betting-panel" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+                        
+                        <!-- 全域 COUNT 與顏色球統計區 -->
+                        <div class="global-hud-container" style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.4); padding: 8px 12px; border-radius: 10px; border: 1px solid #334155;">
+                            <!-- COUNT block -->
+                            <div class="hud-count-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-right: 10px; border-right: 1px solid #334155;">
+                                <span style="font-size: 0.8rem; font-weight: bold; color: #94a3b8; letter-spacing: 1px;">COUNT</span>
+                                <span id="ball-count-text" style="font-size: 2.2rem; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000; line-height: 1;">0</span>
+                            </div>
+
+                            <!-- History Trackers + Recent Balls -->
+                            <div class="hud-tracker-area" style="display: flex; flex-direction: column; gap: 4px;">
+                                <!-- Recent Balls Track (The black bar) -->
+                                <div class="recent-balls-track" style="background: #111; border-radius: 8px; height: 32px; width: 257px; display: flex; align-items: center; padding: 0 4px; justify-content: flex-start; box-sizing: border-box;">
+                                    <div id="ball-history" class="ball-history-container" style="display: flex; flex-direction: row; gap: 2px; overflow: hidden; width: 100%; height: 100%; padding: 0; align-items: center; justify-content: flex-start; min-height: unset;">
+                                        <!-- JS 動態產生球 -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Square Color Trackers -->
+                                <div class="square-trackers" style="display: flex; gap: 2px;">
+                                    <div class="track-square white-block"><span id="track-white" class="track-count">0</span></div>
+                                    <div class="track-square pink-block"><span id="track-pink" class="track-count">0</span></div>
+                                    <div class="track-square red-block"><span id="track-red" class="track-count">0</span></div>
+                                    <div class="track-square yellow-block"><span id="track-yellow" class="track-count">0</span></div>
+                                    <div class="track-square green-block"><span id="track-green" class="track-count">0</span></div>
+                                    <div class="track-square blue-block"><span id="track-blue" class="track-count">0</span></div>
+                                    <div class="track-square rainbow-block"><span id="track-rainbow" class="track-count">0</span></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="chip-container" style="display: flex; gap: 10px;">
-                            <button id="btn-cycle-bet" class="chip-btn" style="width: 150px;">切換加分 (+1)</button>
-                            <button id="btn-repeat-bet" class="chip-btn" style="background: #0ea5e9; color: #fff; font-weight: bold; padding: 5px 15px; border-radius: 6px; cursor: pointer; border: 1px solid #0284c7; white-space: nowrap; min-width: 80px; font-size: 1.2rem;">續押</button>
+
+                        <!-- 右側控制組 -->
+                        <div class="right-controls-group" style="display: flex; align-items: center; gap: 15px; margin-left: auto;">
+                            <div class="bet-display" style="display: flex; align-items: center; gap: 15px;">
+                                <span style="color: #94a3b8; font-weight: bold;">基本押分: 600</span>
+                            </div>
+                            <div class="chip-container" style="display: flex; gap: 10px;">
+                                <button id="btn-cycle-bet" class="chip-btn" style="width: 140px;">切換加分 (+1)</button>
+                                <button id="btn-repeat-bet" class="chip-btn" style="background: #0ea5e9; color: #fff; font-weight: bold; padding: 5px 15px; border-radius: 6px; cursor: pointer; border: 1px solid #0284c7; white-space: nowrap; min-width: 80px; font-size: 1.2rem;">續押</button>
+                            </div>
                         </div>
+
                     </div>
                     <button id="btn-start" class="btn-start" style="width: 100%; padding: 15px; font-size: 1.2rem;">🚀 開始遊戲 (START)</button>
                 </div>
