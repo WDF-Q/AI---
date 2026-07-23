@@ -94,7 +94,8 @@ let game3SlotStyles = [];
 let game3MaxComboReached = 0;
 let game3ApplesInPlay = [];
 let game3CurrentComboColor = null;
-let game3TrailingRainbows = 0;
+let game1Win = 0;
+let game3AppleWin = 0;
 
 function switchActiveGame(gameId) {
     const games = ['game1', 'game3'];
@@ -593,6 +594,33 @@ function updateHistoryUI() {
     document.getElementById('track-rainbow').textContent = historyTracker.rainbow;
 }
 
+function updateGame1WinDisplay() {
+    const badge = document.getElementById('game1-win-badge');
+    const text = document.getElementById('game1-win-text');
+    if (badge && text) {
+        if (game1Bet > 0 && isPlaying) {
+            badge.classList.remove('hidden');
+            text.textContent = game1Win;
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+}
+
+function updateGame3WinDisplay() {
+    const badge = document.getElementById('game3-win-badge');
+    const text = document.getElementById('game3-win-text');
+    if (badge && text) {
+        if (game3Bet > 0 && isPlaying) {
+            badge.classList.remove('hidden');
+            let totalG3Win = game3TotalWin + game3AppleWin;
+            text.textContent = totalG3Win;
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+}
+
 
 
 function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = false) {
@@ -812,6 +840,8 @@ const Game3Manager = {
         game3Combo = 0;
         game3MaxMultiplier = 0;
         game3TotalWin = 0;
+        game3AppleWin = 0;
+        updateGame3WinDisplay();
         game3TotalTargetBalls = 0;
         game3MaxComboReached = 0;
         game3ApplesInPlay = [];
@@ -995,8 +1025,10 @@ const Game3Manager = {
                 }
                 appleScore = Math.floor(appleScore);
                 
+                game3AppleWin += appleScore;
                 totalWin += appleScore;
                 updateWinDisplay();
+                updateGame3WinDisplay();
                 
                 collectApple(collectedApple.type, game3Bet);
                 DOM.drawStatus.textContent = `🎯 夾中蘋果！獲得獎金 +${appleScore} 並存入蘋果進度表！ 🎯`;
@@ -1009,6 +1041,7 @@ const Game3Manager = {
         let baseRate = (effTarget === 'white') ? 1.0 : 0.5;
         let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
         game3TotalWin = Math.floor((effBet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
+        updateGame3WinDisplay();
 
         this.updateUI();
         this.updateHitTable();
@@ -1147,6 +1180,8 @@ async function startGame() {
     
     isPlaying = true;
     totalWin = 0;
+    game1Win = 0;
+    game3AppleWin = 0;
     ballCount = 0;
     currentCombo = 0;
     allClearBonusCount = 0;
@@ -1161,6 +1196,8 @@ async function startGame() {
     
     historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
     updateWinDisplay();
+    updateGame1WinDisplay();
+    updateGame3WinDisplay();
     updateLadderRewards(game1Bet === 0 ? 600 : game1Bet);
     updateLadderActive(0);
     updateHistoryUI();
@@ -1606,7 +1643,11 @@ async function startRightEngine() {
                         if (block !== null) {
                             if (block.isMoney) {
                                 moneyCollected += block.moneyValue;
-                                if (game1Bet > 0) totalWin += block.moneyValue;
+                                if (game1Bet > 0) {
+                                    game1Win += block.moneyValue;
+                                    totalWin += block.moneyValue;
+                                    updateGame1WinDisplay();
+                                }
                                 DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
                             } else {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
@@ -1770,7 +1811,11 @@ async function checkMatchesAndChain() {
             
             // 處理金錢球
             for (let block of moneyBlocksToEliminate) {
-                if (game1Bet > 0) totalWin += block.moneyValue;
+                if (game1Bet > 0) {
+                    game1Win += block.moneyValue;
+                    totalWin += block.moneyValue;
+                    updateGame1WinDisplay();
+                }
                 block.el.style.transform = 'scale(1.5)';
                 block.el.style.opacity = '0';
                 setTimeout((el) => el.remove(), 1000, block.el);
@@ -1833,7 +1878,11 @@ async function checkMatchesAndChain() {
             if (isAllClear && allClearBonusCount < 2) {
                 allClearBonusCount++;
                 let bonus = (game1Bet === 0 ? 600 : game1Bet) * 30;
-                if (game1Bet > 0) totalWin += bonus;
+                if (game1Bet > 0) {
+                    game1Win += bonus;
+                    totalWin += bonus;
+                    updateGame1WinDisplay();
+                }
                 updateWinDisplay();
                 DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
                 
@@ -2121,7 +2170,9 @@ async function finishGameOverSequence() {
                 
                 let reward = Math.floor(activeJPAmount * ratio);
                 if (game1Bet > 0 && reward > 0) {
+                    game1Win += reward;
                     totalWin += reward;
+                    updateGame1WinDisplay();
                     updateWinDisplay();
                     DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
                     await sleep(3000);
@@ -2134,14 +2185,15 @@ async function finishGameOverSequence() {
     }
     
     if (game3TotalWin > 0) {
-        totalWin += game3TotalWin;
-        updateWinDisplay();
-        DOM.drawStatus.textContent = `夾夾樂結算！獲得 ${game3TotalWin}`;
+        DOM.drawStatus.textContent = `夾夾樂結算！獲得 ${game3TotalWin + game3AppleWin}`;
         await sleep(2000);
     }
 
     credit += totalWin;
     updateCreditDisplay();
+    isPlaying = false;
+    updateGame1WinDisplay();
+    updateGame3WinDisplay();
     DOM.btnStart.disabled = false;
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
     document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'auto');
@@ -2314,7 +2366,11 @@ async function runJPRouletteGame() {
     }
     
     DOM.drawStatus.textContent = `🎯 JP轉盤遊戲結束！總共累積獲得 JP獎金 ${currentJPWin} 🎯`;
-    if (game1Bet > 0) totalWin += currentJPWin;
+    if (game1Bet > 0) {
+        game1Win += currentJPWin;
+        totalWin += currentJPWin;
+        updateGame1WinDisplay();
+    }
     updateWinDisplay();
     await sleep(4000);
 }

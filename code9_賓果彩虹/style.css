@@ -566,6 +566,56 @@ body {
     display: none;
 }
 
+/* 個別遊戲 WIN 標籤 (Flower/Badge style) */
+.game-win-badge {
+    position: absolute;
+    right: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f472b6 0%, #db2777 60%, #9d174d 100%);
+    border: 3px solid #fef08a;
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.9), inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 4px 8px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 25;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: badgePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes badgePop {
+    0% { transform: translateY(-50%) scale(0); }
+    80% { transform: translateY(-50%) scale(1.15); }
+    100% { transform: translateY(-50%) scale(1); }
+}
+
+.game-win-badge.hidden {
+    display: none !important;
+}
+
+.game-win-badge .win-num {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: #fef08a;
+    text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000;
+    line-height: 1;
+    font-family: 'Fredoka', sans-serif;
+}
+
+.game-win-badge .win-lbl {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+    line-height: 1;
+    margin-top: 1px;
+    letter-spacing: 0.5px;
+}
+
 .combo-ladder {
     display: flex;
     flex-direction: column; /* 由上往下 10~4 */
