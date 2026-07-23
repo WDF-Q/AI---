@@ -247,23 +247,23 @@
                         
                         <!-- 頂部與 HUD 區 -->
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; width: 100%; z-index: 10;">
-                            <!-- 左上 HUD: 現在的 LINE 數 -->
-                            <div class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2px solid #94a3b8; border-radius: 10px; padding: 4px 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-align: center; min-width: 110px;">
-                                <div style="font-size: 0.75rem; font-weight: bold; color: #cbd5e1; border-bottom: 1px solid #64748b; padding-bottom: 2px; margin-bottom: 2px;">現在的LINE數</div>
-                                <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
-                                    <span id="g2-line-count" style="font-size: 1.5rem; font-weight: 900; color: #f59e0b;">0</span>
-                                    <span style="font-size: 0.75rem; color: #94a3b8;">LINE</span>
-                                    <span id="g2-line-score" style="font-size: 1.5rem; font-weight: 900; color: #f97316; margin-left: 6px;">0</span>
+                            <!-- 左上 HUD: 現在的 LINE 數 (放大 1.5倍) -->
+                            <div class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: center; min-width: 125px; transform: scale(1.35); transform-origin: top left;">
+                                <div style="font-size: 0.85rem; font-weight: bold; color: #cbd5e1; border-bottom: 1.5px solid #64748b; padding-bottom: 3px; margin-bottom: 3px;">現在的LINE數</div>
+                                <div style="display: flex; align-items: baseline; justify-content: center; gap: 5px;">
+                                    <span id="g2-line-count" style="font-size: 1.8rem; font-weight: 900; color: #f59e0b;">0</span>
+                                    <span style="font-size: 0.85rem; color: #94a3b8; font-weight: bold;">LINE</span>
+                                    <span id="g2-line-score" style="font-size: 1.8rem; font-weight: 900; color: #f97316; margin-left: 6px;">0</span>
                                 </div>
                             </div>
 
-                            <!-- 頂部中央：NEXT CARD 拱門預備盤 -->
+                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (放大為主體的 1/2 倍 = 49px 邊長) -->
                             <div class="g2-next-card-wrapper" style="position: absolute; left: 50%; transform: translateX(-50%); top: -4px; display: flex; flex-direction: column; align-items: center;">
-                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.8rem; font-weight: 900; padding: 2px 14px; border-radius: 10px 10px 0 0; border: 1.5px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEXT CARD</div>
-                                <div style="background: #0f172a; border: 2px solid #fde047; padding: 4px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center;">
-                                    <div style="font-size: 0.65rem; color: #fde047; font-weight: bold; margin-bottom: 2px;">LV. <span id="g2-next-level">4</span></div>
-                                    <!-- 3x3 預覽 -->
-                                    <div id="g2-next-grid" style="display: grid; grid-template-columns: repeat(3, 18px); gap: 2px;">
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.95rem; font-weight: 900; padding: 3px 18px; border-radius: 10px 10px 0 0; border: 2px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1.5px; box-shadow: 0 3px 6px rgba(0,0,0,0.5);">NEXT CARD</div>
+                                <div style="background: #0f172a; border: 2.5px solid #fde047; padding: 6px; border-radius: 0 0 10px 10px; box-shadow: 0 5px 12px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
+                                    <div style="font-size: 0.85rem; color: #fde047; font-weight: 900; margin-bottom: 3px;">LV. <span id="g2-next-level">4</span></div>
+                                    <!-- 3x3 預覽 (為主體的 1/2 倍) -->
+                                    <div id="g2-next-grid" style="display: grid; grid-template-columns: repeat(3, 49px); gap: 3px;">
                                         <div class="g2-mini-tile blue"></div>
                                         <div class="g2-mini-tile yellow"></div>
                                         <div class="g2-mini-tile pink"></div>
@@ -277,24 +277,24 @@
                                 </div>
                             </div>
 
-                            <!-- 右上 HUD: 蘋果門檻 -->
-                            <div class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2px solid #94a3b8; border-radius: 10px; padding: 4px 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-align: right; min-width: 100px;">
-                                <div style="font-size: 0.75rem; color: #e2e8f0; font-weight: bold;">5 LINE <span style="font-size: 0.9rem;">🍏</span></div>
-                                <div style="font-size: 0.75rem; color: #e2e8f0; font-weight: bold;">4 LINE <span style="font-size: 0.9rem;">🍎</span></div>
-                                <div style="font-size: 0.75rem; color: #e2e8f0; font-weight: bold;">3 LINE <span style="font-size: 0.9rem;">🍏</span></div>
+                            <!-- 右上 HUD: 蘋果門檻 (放大 1.5倍) -->
+                            <div class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 6px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: right; min-width: 115px; transform: scale(1.35); transform-origin: top right;">
+                                <div style="font-size: 0.85rem; color: #e2e8f0; font-weight: bold;">5 LINE <span style="font-size: 1rem;">🍏</span></div>
+                                <div style="font-size: 0.85rem; color: #e2e8f0; font-weight: bold;">4 LINE <span style="font-size: 1rem;">🍎</span></div>
+                                <div style="font-size: 0.85rem; color: #e2e8f0; font-weight: bold;">3 LINE <span style="font-size: 1rem;">🍏</span></div>
                             </div>
                         </div>
 
-                        <!-- 中央：3x3 主卡與石框 -->
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 15px; position: relative;">
+                        <!-- 中央：3x3 主卡與石框 (放大 1.2倍) -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; position: relative;">
                             <!-- 當前等級 -->
-                            <div style="font-size: 1.3rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 4px;">
-                                LV. <span id="g2-main-level" style="font-size: 1.8rem; color: #fff;">1</span>
+                            <div style="font-size: 1.4rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 3px;">
+                                LV. <span id="g2-main-level" style="font-size: 1.9rem; color: #fff;">1</span>
                             </div>
 
                             <!-- 3x3 棋盤主體 -->
-                            <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4px solid #64748b; border-radius: 14px; padding: 8px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
-                                <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 82px); grid-template-rows: repeat(3, 82px); gap: 6px;">
+                            <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4.5px solid #64748b; border-radius: 16px; padding: 9px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
+                                <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 98px); grid-template-rows: repeat(3, 98px); gap: 6px;">
                                     <!-- JS 動態生成 9 個方塊 -->
                                 </div>
                             </div>

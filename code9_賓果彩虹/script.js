@@ -2699,6 +2699,7 @@ function resizeApp() {
 
 window.addEventListener('resize', resizeApp);
 window.addEventListener('DOMContentLoaded', () => {
+    switchActiveGame('game1');
     Game2Manager.init();
     setTimeout(resizeApp, 100);
     setTimeout(resizeApp, 500);
