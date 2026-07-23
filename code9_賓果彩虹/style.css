@@ -1271,11 +1271,11 @@ body {
 
 /* --- 遊戲 2 (連連樂 / 賓果連線 / 九宮格) CSS --- */
 .g2-mini-tile {
-    width: 49px;
-    height: 49px;
-    border-radius: 6px;
-    border: 1.5px solid rgba(255,255,255,0.4);
-    box-shadow: inset 0 2px 4px rgba(255,255,255,0.3);
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.4);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.3);
 }
 .g2-mini-tile.yellow { background: linear-gradient(135deg, #fef08a, #eab308); }
 .g2-mini-tile.blue { background: linear-gradient(135deg, #93c5fd, #3b82f6); }
