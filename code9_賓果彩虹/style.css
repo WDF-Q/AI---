@@ -1266,3 +1266,84 @@ body {
     55% { height: 105px; }
     100% { height: 10px; }
 }
+
+/* --- 遊戲 2 (連連樂 / 賓果連線 / 九宮格) CSS --- */
+.g2-mini-tile {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+.g2-mini-tile.yellow { background: #eab308; }
+.g2-mini-tile.blue { background: #3b82f6; }
+.g2-mini-tile.red { background: #ef4444; }
+.g2-mini-tile.green { background: #22c55e; }
+.g2-mini-tile.pink { background: #ec4899; }
+.g2-mini-tile.white { background: #ffffff; }
+
+.g2-tile {
+    position: relative;
+    width: 82px;
+    height: 82px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    cursor: pointer;
+    border: 3px solid rgba(255,255,255,0.4);
+    box-shadow: inset 0 4px 6px rgba(255,255,255,0.4), 0 4px 10px rgba(0,0,0,0.5);
+    transition: all 0.25s ease;
+    user-select: none;
+}
+
+.g2-tile.yellow { background: linear-gradient(135deg, #fef08a, #eab308); border-color: #fde047; }
+.g2-tile.blue { background: linear-gradient(135deg, #93c5fd, #3b82f6); border-color: #60a5fa; }
+.g2-tile.red { background: linear-gradient(135deg, #fca5a5, #ef4444); border-color: #f87171; }
+.g2-tile.green { background: linear-gradient(135deg, #86efac, #22c55e); border-color: #4ade80; }
+.g2-tile.pink { background: linear-gradient(135deg, #fbcfe8, #ec4899); border-color: #f472b6; }
+.g2-tile.white { background: linear-gradient(135deg, #ffffff, #cbd5e1); border-color: #ffffff; }
+
+.g2-tile .g2-paw-icon {
+    font-size: 2.2rem;
+    opacity: 0.35;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.g2-tile .g2-sp-badge {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #fde047;
+    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000;
+    line-height: 1.1;
+    text-align: center;
+    background: linear-gradient(135deg, #a855f7, #ec4899, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+
+.g2-tile .g2-free-text {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #facc15;
+    text-shadow: 0 0 8px #facc15, 2px 2px 0 #000;
+    letter-spacing: 1px;
+}
+
+.g2-tile.hit {
+    border-color: #fde047 !important;
+    box-shadow: 0 0 18px #facc15, inset 0 0 10px rgba(255,255,255,0.8);
+    transform: scale(0.96);
+}
+
+.g2-tile.hit::after {
+    content: "✓";
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 1.5rem;
+    color: #22c55e;
+    font-weight: 900;
+    text-shadow: 0 0 6px #000;
+}

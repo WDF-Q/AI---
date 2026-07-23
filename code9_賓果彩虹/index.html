@@ -240,6 +240,91 @@
                     </div>
                 </div>
             </div> <!-- closes game1-container -->
+
+                <!-- 遊戲 2：連連樂 / 賓果連線 / 九宮格 -->
+                <div class="game-module mini" id="game2-container" onclick="switchActiveGame('game2')">
+                    <div id="game2-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); border: 4px solid #8b5cf6; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); padding: 8px 12px 5px 12px; box-sizing: border-box; justify-content: space-between; overflow: hidden;">
+                        
+                        <!-- 頂部與 HUD 區 -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; width: 100%; z-index: 10;">
+                            <!-- 左上 HUD: 現在的 LINE 數 -->
+                            <div class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2px solid #94a3b8; border-radius: 10px; padding: 4px 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-align: center; min-width: 110px;">
+                                <div style="font-size: 0.75rem; font-weight: bold; color: #cbd5e1; border-bottom: 1px solid #64748b; padding-bottom: 2px; margin-bottom: 2px;">現在的LINE數</div>
+                                <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                    <span id="g2-line-count" style="font-size: 1.5rem; font-weight: 900; color: #f59e0b;">0</span>
+                                    <span style="font-size: 0.75rem; color: #94a3b8;">LINE</span>
+                                    <span id="g2-line-score" style="font-size: 1.5rem; font-weight: 900; color: #f97316; margin-left: 6px;">0</span>
+                                </div>
+                            </div>
+
+                            <!-- 頂部中央：NEXT CARD 拱門預備盤 -->
+                            <div class="g2-next-card-wrapper" style="position: absolute; left: 50%; transform: translateX(-50%); top: -4px; display: flex; flex-direction: column; align-items: center;">
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.8rem; font-weight: 900; padding: 2px 14px; border-radius: 10px 10px 0 0; border: 1.5px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEXT CARD</div>
+                                <div style="background: #0f172a; border: 2px solid #fde047; padding: 4px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center;">
+                                    <div style="font-size: 0.65rem; color: #fde047; font-weight: bold; margin-bottom: 2px;">LV. <span id="g2-next-level">4</span></div>
+                                    <!-- 3x3 預覽 -->
+                                    <div id="g2-next-grid" style="display: grid; grid-template-columns: repeat(3, 18px); gap: 2px;">
+                                        <div class="g2-mini-tile blue"></div>
+                                        <div class="g2-mini-tile yellow"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile green"></div>
+                                        <div class="g2-mini-tile blue"></div>
+                                        <div class="g2-mini-tile red"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile yellow"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右上 HUD: 蘋果門檻 -->
+                            <div class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2px solid #94a3b8; border-radius: 10px; padding: 4px 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-align: right; min-width: 100px;">
+                                <div style="font-size: 0.75rem; color: #e2e8f0; font-weight: bold;">5 LINE <span style="font-size: 0.9rem;">🍏</span></div>
+                                <div style="font-size: 0.75rem; color: #e2e8f0; font-weight: bold;">4 LINE <span style="font-size: 0.9rem;">🍎</span></div>
+                                <div style="font-size: 0.75rem; color: #e2e8f0; font-weight: bold;">3 LINE <span style="font-size: 0.9rem;">🍏</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 中央：3x3 主卡與石框 -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 15px; position: relative;">
+                            <!-- 當前等級 -->
+                            <div style="font-size: 1.3rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 4px;">
+                                LV. <span id="g2-main-level" style="font-size: 1.8rem; color: #fff;">1</span>
+                            </div>
+
+                            <!-- 3x3 棋盤主體 -->
+                            <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4px solid #64748b; border-radius: 14px; padding: 8px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
+                                <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 82px); grid-template-rows: repeat(3, 82px); gap: 6px;">
+                                    <!-- JS 動態生成 9 個方塊 -->
+                                </div>
+                            </div>
+
+                            <!-- 底部卡號標籤 -->
+                            <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.85rem; font-weight: bold; padding: 2px 16px; border-radius: 12px; border: 1.5px solid #fde047; margin-top: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+                                <span id="g2-card-num-text">第 1 張</span>
+                            </div>
+                        </div>
+
+                        <!-- 底部 BET 區域 -->
+                        <div class="new-bet-area" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-bottom: 2px; position: relative; width: max-content; align-self: center;">
+                            <div class="bet-apple-slots" data-game="2" style="display: flex; gap: 3px; margin-right: 10px;">
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                            </div>
+                            <button class="chip-btn btn-add-bet" data-game="2" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                            <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                                <span class="bet-value" data-game="2" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                            </div>
+                            <div class="game-win-badge hidden" id="game2-win-badge" data-game="2">
+                                <span class="win-num" id="game2-win-text">0</span>
+                                <span class="win-lbl">WIN</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
                 <!-- 遊戲 3：夾夾樂 -->
                 <div class="game-module mini" id="game3-container" onclick="switchActiveGame('game3')">
                     <!-- UI -->

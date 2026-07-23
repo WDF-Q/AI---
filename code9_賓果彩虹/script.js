@@ -53,8 +53,10 @@ let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
 let game1Bet = 0;
+let game2Bet = 0;
 let game3Bet = 0;
 let previousGame1Bet = 0;
+let previousGame2Bet = 0;
 let previousGame3Bet = 0;
 
 let allClearBonusCount = 0;
@@ -93,15 +95,24 @@ let game3TotalTargetBalls = 0;
 let game3SlotStyles = [];
 let game3MaxComboReached = 0;
 let game1Win = 0;
+let game2Win = 0;
 
 function switchActiveGame(gameId) {
-    const games = ['game1', 'game3'];
+    const games = ['game1', 'game2', 'game3'];
+    let miniCount = 0;
     games.forEach(id => {
         const el = document.getElementById(id + '-container');
-        if (id === gameId) {
-            el.className = 'game-module active';
-        } else {
-            el.className = 'game-module mini';
+        if (el) {
+            if (id === gameId) {
+                el.className = 'game-module active';
+                el.style.left = '0px';
+                el.style.top = '0px';
+            } else {
+                el.className = 'game-module mini';
+                el.style.left = '103%';
+                el.style.top = (miniCount * 210) + 'px';
+                miniCount++;
+            }
         }
     });
 }
@@ -245,6 +256,11 @@ function handleAddBet(gameId) {
         document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
         updateLadderRewards(game1Bet);
         generateBetApples(1);
+    } else if (gameId === 2) {
+        if (game2Bet === 0) game2Bet = 600;
+        else { game2Bet += inc; if(game2Bet > 3000) game2Bet = 3000; }
+        document.querySelectorAll('.bet-value[data-game="2"]').forEach(el => el.textContent = game2Bet);
+        generateBetApples(2);
     } else if (gameId === 3) {
         if (game3Bet === 0) game3Bet = 600;
         else { game3Bet += inc; if(game3Bet > 3000) game3Bet = 3000; }
@@ -255,12 +271,17 @@ function handleAddBet(gameId) {
 
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
-    if (previousGame1Bet > 0 || previousGame3Bet > 0) {
+    if (previousGame1Bet > 0 || previousGame2Bet > 0 || previousGame3Bet > 0) {
         if (previousGame1Bet > 0) {
             game1Bet = previousGame1Bet;
             document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
             updateLadderRewards(game1Bet);
             generateBetApples(1);
+        }
+        if (previousGame2Bet > 0) {
+            game2Bet = previousGame2Bet;
+            document.querySelectorAll('.bet-value[data-game="2"]').forEach(el => el.textContent = game2Bet);
+            generateBetApples(2);
         }
         if (previousGame3Bet > 0) {
             game3Bet = previousGame3Bet;
@@ -585,8 +606,9 @@ function updateWinDisplay() { DOM.win.textContent = totalWin; }
 
 function recalculateTotalWin() {
     let g1 = game1Bet > 0 ? game1Win : 0;
+    let g2 = game2Bet > 0 ? game2Win : 0;
     let g3 = game3Bet > 0 ? game3TotalWin : 0;
-    totalWin = g1 + g3 + bonusWin;
+    totalWin = g1 + g2 + g3 + bonusWin;
     updateWinDisplay();
 }
 
@@ -858,6 +880,177 @@ function updateApplesHP(colCounts) {
         }
     }
 }
+
+function updateGame2WinDisplay() {
+    const badge = document.getElementById('game2-win-badge');
+    const txt = document.getElementById('game2-win-text');
+    if (badge && txt) {
+        if (game2Win > 0 && game2Bet > 0) {
+            badge.classList.remove('hidden');
+            txt.textContent = game2Win;
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+}
+
+const Game2Manager = {
+    gridData: [],
+    nextGridData: [],
+
+    init() {
+        game2Win = 0;
+        game2LineCount = 0;
+        this.generateCard(game2Level);
+        this.generateNextCard(game2Level + 1);
+        this.renderUI();
+        updateGame2WinDisplay();
+    },
+
+    generateCard(level) {
+        const colors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        this.gridData = [];
+        for (let i = 0; i < 9; i++) {
+            let tileType = 'color';
+            let color = colors[Math.floor(Math.random() * colors.length)];
+            let spText = '';
+
+            if (i === 8 && Math.random() < 0.35) {
+                tileType = 'free';
+            } else if ((i === 0 || i === 4) && Math.random() < 0.3) {
+                tileType = 'sp';
+                spText = 'SP立直';
+            } else if (i === 3 && Math.random() < 0.25) {
+                tileType = 'sp';
+                spText = 'SP';
+            }
+
+            this.gridData.push({
+                id: i,
+                type: tileType,
+                color: color,
+                spText: spText,
+                hit: tileType === 'free'
+            });
+        }
+    },
+
+    generateNextCard(level) {
+        const colors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        this.nextGridData = [];
+        for (let i = 0; i < 9; i++) {
+            this.nextGridData.push({
+                color: colors[Math.floor(Math.random() * colors.length)]
+            });
+        }
+        const nextLvlEl = document.getElementById('g2-next-level');
+        if (nextLvlEl) nextLvlEl.textContent = (level > 8 ? 'MAX' : level);
+        this.renderNextGrid();
+    },
+
+    renderNextGrid() {
+        const container = document.getElementById('g2-next-grid');
+        if (!container) return;
+        container.innerHTML = '';
+        this.nextGridData.forEach(t => {
+            const d = document.createElement('div');
+            d.className = `g2-mini-tile ${t.color}`;
+            container.appendChild(d);
+        });
+    },
+
+    renderUI() {
+        const gridEl = document.getElementById('game2-grid');
+        if (!gridEl) return;
+        gridEl.innerHTML = '';
+
+        const mainLvlEl = document.getElementById('g2-main-level');
+        const cardNumEl = document.getElementById('g2-card-num-text');
+        const lineCountEl = document.getElementById('g2-line-count');
+        const lineScoreEl = document.getElementById('g2-line-score');
+
+        if (mainLvlEl) mainLvlEl.textContent = (game2Level > 8 ? 'MAX' : game2Level);
+        if (cardNumEl) cardNumEl.textContent = `第 ${game2CardNum} 張`;
+        if (lineCountEl) lineCountEl.textContent = game2LineCount;
+        if (lineScoreEl) lineScoreEl.textContent = game2Win;
+
+        this.gridData.forEach(tile => {
+            const div = document.createElement('div');
+            div.className = `g2-tile ${tile.color} ${tile.hit ? 'hit' : ''}`;
+            if (tile.type === 'free') {
+                div.innerHTML = `<span class="g2-free-text">FREE</span>`;
+            } else if (tile.type === 'sp') {
+                div.innerHTML = `<div class="g2-sp-badge">${tile.spText}</div>`;
+            } else {
+                div.innerHTML = `<div class="g2-paw-icon">🐾</div>`;
+            }
+            gridEl.appendChild(div);
+        });
+    },
+
+    processBall(logicalColor) {
+        if (!this.gridData || this.gridData.length === 0) return;
+
+        let hitMade = false;
+        this.gridData.forEach(tile => {
+            if (!tile.hit) {
+                if (logicalColor === 'rainbow' || tile.color === logicalColor) {
+                    tile.hit = true;
+                    hitMade = true;
+                }
+            }
+        });
+
+        if (hitMade) {
+            this.checkLines();
+            this.renderUI();
+        }
+    },
+
+    checkLines() {
+        const linePatterns = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        let completedLines = 0;
+        linePatterns.forEach(pattern => {
+            if (pattern.every(idx => this.gridData[idx] && this.gridData[idx].hit)) {
+                completedLines++;
+            }
+        });
+
+        if (completedLines > game2LineCount) {
+            let newLines = completedLines - game2LineCount;
+            game2LineCount = completedLines;
+
+            if (game2Bet > 0) {
+                let linePayout = Math.floor(game2Bet * 0.4 * game2LineCount);
+                game2Win = linePayout;
+                updateGame2WinDisplay();
+                recalculateTotalWin();
+            }
+
+            if (game2LineCount >= 3 && game2Bet > 0) {
+                collectApple(game2LineCount >= 4 ? 'red' : 'green', game2Bet);
+            }
+        }
+
+        if (this.gridData.every(t => t.hit)) {
+            setTimeout(() => this.nextCardAnimation(), 800);
+        }
+    },
+
+    nextCardAnimation() {
+        game2CardNum++;
+        game2Level = (game2Level % 8) + 1;
+        this.generateCard(game2Level);
+        this.generateNextCard((game2Level % 8) + 1);
+        game2LineCount = 0;
+        this.renderUI();
+    }
+};
 
 const Game3Manager = {
     initNewGame() {
@@ -1174,21 +1367,23 @@ async function startGame() {
         updateMiniGameUI();
     }
     
-    if (game1Bet === 0 && game3Bet === 0) {
+    if (game1Bet === 0 && game2Bet === 0 && game3Bet === 0) {
         alert("請先押分！");
         return;
     }
-    if (credit < (game1Bet + game3Bet)) {
+    if (credit < (game1Bet + game2Bet + game3Bet)) {
         alert("餘額不足！");
         return;
     }
     previousGame1Bet = game1Bet;
+    previousGame2Bet = game2Bet;
     previousGame3Bet = game3Bet;
-    credit -= (game1Bet + game3Bet);
+    credit -= (game1Bet + game2Bet + game3Bet);
     updateCreditDisplay();
     
     isPlaying = true;
     game1Win = 0;
+    game2Win = 0;
     bonusWin = 0;
     ballCount = 0;
     currentCombo = 0;
@@ -1199,12 +1394,14 @@ async function startGame() {
     pendingEventsQueue = [];
     boardState = 'IDLE';
     
-    // 初始化 Game 3 (夾夾樂)
+    // 初始化 Game 2 (連連樂) 與 Game 3 (夾夾樂)
+    Game2Manager.init();
     Game3Manager.initNewGame();
     
     historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
     recalculateTotalWin();
     updateGame1WinDisplay();
+    updateGame2WinDisplay();
     updateGame3WinDisplay();
     updateLadderRewards(game1Bet === 0 ? 600 : game1Bet);
     updateLadderActive(0);
@@ -1387,6 +1584,7 @@ async function shootBallAsync(isSafeMode) {
         await spawnAndSpinBall('white', false);
         historyTracker.white++;
         addBallToHistoryUI('白色', 'white');
+        Game2Manager.processBall('white'); // Game 2
         Game3Manager.processBall('white'); // Game 3
         
         if (!isSafeMode) {
@@ -1405,6 +1603,7 @@ async function shootBallAsync(isSafeMode) {
             historyTracker.rainbow++;
             addBallToHistoryUI('彩色', 'rainbow');
             
+            Game2Manager.processBall('rainbow'); // Game 2
             Game3Manager.processBall(game3TargetColor, true, null); // Game 3 rainbow wildcard
             
             pendingEventsQueue.push({ type: 'laser_strike' });
@@ -1425,7 +1624,9 @@ async function shootBallAsync(isSafeMode) {
                 if (s2) await applyMiniGameSteps(s2);
             }
             
-            // Game 3 processing for dual colors
+            // Game 2 and Game 3 processing for dual colors
+            Game2Manager.processBall(pair[0]);
+            Game2Manager.processBall(pair[1]);
             Game3Manager.processBall(null, false, pair);
             
             pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
@@ -1437,6 +1638,7 @@ async function shootBallAsync(isSafeMode) {
         await spawnAndSpinBall(color, false);
         historyTracker[color]++;
         addBallToHistoryUI(COLOR_ZH[color], color);
+        Game2Manager.processBall(color); // Game 2
         Game3Manager.processBall(color); // Game 3
         
         if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
@@ -2176,7 +2378,7 @@ async function finishGameOverSequence() {
                 else ratio = 0;
                 
                 let reward = Math.floor(activeJPAmount * ratio);
-                if ((game1Bet > 0 || game3Bet > 0) && reward > 0) {
+                if ((game1Bet > 0 || game2Bet > 0 || game3Bet > 0) && reward > 0) {
                     bonusWin += reward;
                     recalculateTotalWin();
                     DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
@@ -2189,9 +2391,14 @@ async function finishGameOverSequence() {
         }
     }
     
+    if (game2Bet > 0 && game2Win > 0) {
+        DOM.drawStatus.textContent = `連連樂結算！獲得 ${game2Win}`;
+        await sleep(1500);
+    }
+
     if (game3Bet > 0 && game3TotalWin > 0) {
         DOM.drawStatus.textContent = `夾夾樂結算！獲得 ${game3TotalWin}`;
-        await sleep(2000);
+        await sleep(1500);
     }
 
     recalculateTotalWin();
@@ -2199,6 +2406,7 @@ async function finishGameOverSequence() {
     updateCreditDisplay();
     isPlaying = false;
     updateGame1WinDisplay();
+    updateGame2WinDisplay();
     updateGame3WinDisplay();
     DOM.btnStart.disabled = false;
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
@@ -2206,6 +2414,7 @@ async function finishGameOverSequence() {
     DOM.drawStatus.textContent = `請押分，並按開始`;
     DOM.betInputs.forEach(el => el.textContent = "0");
     game1Bet = 0;
+    game2Bet = 0;
     game3Bet = 0;
     game3TotalTargetBalls = 0;
     game3MaxMultiplier = 0;
@@ -2405,7 +2614,7 @@ function resizeApp() {
 
 window.addEventListener('resize', resizeApp);
 window.addEventListener('DOMContentLoaded', () => {
-    // 稍微延遲讓字體等資源載入完畢後再計算
+    Game2Manager.init();
     setTimeout(resizeApp, 100);
     setTimeout(resizeApp, 500);
 });
