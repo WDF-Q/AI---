@@ -578,8 +578,17 @@ function updateLadderRewards(bet) {
     }
 }
 
+let bonusWin = 0;
+
 function updateCreditDisplay() { DOM.credit.textContent = credit; }
 function updateWinDisplay() { DOM.win.textContent = totalWin; }
+
+function recalculateTotalWin() {
+    let g1 = game1Bet > 0 ? game1Win : 0;
+    let g3 = game3Bet > 0 ? game3TotalWin : 0;
+    totalWin = g1 + g3 + bonusWin;
+    updateWinDisplay();
+}
 
 function updateHistoryUI() {
     document.getElementById('track-red').textContent = historyTracker.red;
@@ -1021,6 +1030,7 @@ const Game3Manager = {
         let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
         game3TotalWin = Math.floor((effBet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
         updateGame3WinDisplay();
+        recalculateTotalWin();
 
         this.updateUI();
         this.updateHitTable();
@@ -1158,8 +1168,8 @@ async function startGame() {
     updateCreditDisplay();
     
     isPlaying = true;
-    totalWin = 0;
     game1Win = 0;
+    bonusWin = 0;
     ballCount = 0;
     currentCombo = 0;
     allClearBonusCount = 0;
@@ -1173,7 +1183,7 @@ async function startGame() {
     Game3Manager.initNewGame();
     
     historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
-    updateWinDisplay();
+    recalculateTotalWin();
     updateGame1WinDisplay();
     updateGame3WinDisplay();
     updateLadderRewards(game1Bet === 0 ? 600 : game1Bet);
@@ -1623,8 +1633,8 @@ async function startRightEngine() {
                                 moneyCollected += block.moneyValue;
                                 if (game1Bet > 0) {
                                     game1Win += block.moneyValue;
-                                    totalWin += block.moneyValue;
                                     updateGame1WinDisplay();
+                                    recalculateTotalWin();
                                 }
                                 DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
                             } else {
@@ -1791,8 +1801,8 @@ async function checkMatchesAndChain() {
             for (let block of moneyBlocksToEliminate) {
                 if (game1Bet > 0) {
                     game1Win += block.moneyValue;
-                    totalWin += block.moneyValue;
                     updateGame1WinDisplay();
+                    recalculateTotalWin();
                 }
                 block.el.style.transform = 'scale(1.5)';
                 block.el.style.opacity = '0';
@@ -1858,10 +1868,9 @@ async function checkMatchesAndChain() {
                 let bonus = (game1Bet === 0 ? 600 : game1Bet) * 30;
                 if (game1Bet > 0) {
                     game1Win += bonus;
-                    totalWin += bonus;
                     updateGame1WinDisplay();
+                    recalculateTotalWin();
                 }
-                updateWinDisplay();
                 DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
                 
                 let gameBoardEl = document.getElementById('game-board');
@@ -2147,11 +2156,9 @@ async function finishGameOverSequence() {
                 else ratio = 0;
                 
                 let reward = Math.floor(activeJPAmount * ratio);
-                if (game1Bet > 0 && reward > 0) {
-                    game1Win += reward;
-                    totalWin += reward;
-                    updateGame1WinDisplay();
-                    updateWinDisplay();
+                if ((game1Bet > 0 || game3Bet > 0) && reward > 0) {
+                    bonusWin += reward;
+                    recalculateTotalWin();
                     DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
                     await sleep(3000);
                 } else {
@@ -2162,11 +2169,12 @@ async function finishGameOverSequence() {
         }
     }
     
-    if (game3TotalWin > 0) {
+    if (game3Bet > 0 && game3TotalWin > 0) {
         DOM.drawStatus.textContent = `夾夾樂結算！獲得 ${game3TotalWin}`;
         await sleep(2000);
     }
 
+    recalculateTotalWin();
     credit += totalWin;
     updateCreditDisplay();
     isPlaying = false;
@@ -2344,12 +2352,10 @@ async function runJPRouletteGame() {
     }
     
     DOM.drawStatus.textContent = `🎯 JP轉盤遊戲結束！總共累積獲得 JP獎金 ${currentJPWin} 🎯`;
-    if (game1Bet > 0) {
-        game1Win += currentJPWin;
-        totalWin += currentJPWin;
-        updateGame1WinDisplay();
+    if (game1Bet > 0 || game3Bet > 0) {
+        bonusWin += currentJPWin;
+        recalculateTotalWin();
     }
-    updateWinDisplay();
     await sleep(4000);
 }
 
