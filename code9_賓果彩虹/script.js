@@ -92,10 +92,7 @@ let game3TotalWin = 0;
 let game3TotalTargetBalls = 0;
 let game3SlotStyles = [];
 let game3MaxComboReached = 0;
-let game3ApplesInPlay = [];
-let game3CurrentComboColor = null;
 let game1Win = 0;
-let game3AppleWin = 0;
 
 function switchActiveGame(gameId) {
     const games = ['game1', 'game3'];
@@ -613,8 +610,7 @@ function updateGame3WinDisplay() {
     if (badge && text) {
         if (game3Bet > 0 && isPlaying) {
             badge.classList.remove('hidden');
-            let totalG3Win = game3TotalWin + game3AppleWin;
-            text.textContent = totalG3Win;
+            text.textContent = game3TotalWin;
         } else {
             badge.classList.add('hidden');
         }
@@ -840,7 +836,6 @@ const Game3Manager = {
         game3Combo = 0;
         game3MaxMultiplier = 0;
         game3TotalWin = 0;
-        game3AppleWin = 0;
         updateGame3WinDisplay();
         game3TotalTargetBalls = 0;
         game3MaxComboReached = 0;
@@ -1014,24 +1009,8 @@ const Game3Manager = {
             let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
             if (collectedIndex !== -1 && game3Bet > 0) {
                 let collectedApple = game3ApplesInPlay.splice(collectedIndex, 1)[0];
-                
-                let appleScore = 0;
-                switch (collectedApple.type) {
-                    case 'gold': appleScore = game3Bet * 2.5; break;
-                    case 'silver': appleScore = game3Bet * 1.5; break;
-                    case 'bronze': appleScore = game3Bet * 1.0; break;
-                    case 'red': appleScore = game3Bet * 0.5; break;
-                    case 'green': appleScore = game3Bet * 0.25; break;
-                }
-                appleScore = Math.floor(appleScore);
-                
-                game3AppleWin += appleScore;
-                totalWin += appleScore;
-                updateWinDisplay();
-                updateGame3WinDisplay();
-                
                 collectApple(collectedApple.type, game3Bet);
-                DOM.drawStatus.textContent = `🎯 夾中蘋果！獲得獎金 +${appleScore} 並存入蘋果進度表！ 🎯`;
+                DOM.drawStatus.textContent = `🎯 夾中蘋果！已存入蘋果進度表！ 🎯`;
                 this.updateHitTable();
             }
         }
@@ -1181,7 +1160,6 @@ async function startGame() {
     isPlaying = true;
     totalWin = 0;
     game1Win = 0;
-    game3AppleWin = 0;
     ballCount = 0;
     currentCombo = 0;
     allClearBonusCount = 0;
@@ -2185,7 +2163,7 @@ async function finishGameOverSequence() {
     }
     
     if (game3TotalWin > 0) {
-        DOM.drawStatus.textContent = `夾夾樂結算！獲得 ${game3TotalWin + game3AppleWin}`;
+        DOM.drawStatus.textContent = `夾夾樂結算！獲得 ${game3TotalWin}`;
         await sleep(2000);
     }
 
