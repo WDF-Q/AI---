@@ -984,8 +984,22 @@ const Game3Manager = {
             let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
             if (collectedIndex !== -1 && game3Bet > 0) {
                 let collectedApple = game3ApplesInPlay.splice(collectedIndex, 1)[0];
-                collectApple(collectedApple.type);
-                DOM.drawStatus.textContent = `🎯 夾中蘋果！獲得一顆蘋果 🎯`;
+                
+                let appleScore = 0;
+                switch (collectedApple.type) {
+                    case 'gold': appleScore = game3Bet * 2.5; break;
+                    case 'silver': appleScore = game3Bet * 1.5; break;
+                    case 'bronze': appleScore = game3Bet * 1.0; break;
+                    case 'red': appleScore = game3Bet * 0.5; break;
+                    case 'green': appleScore = game3Bet * 0.25; break;
+                }
+                appleScore = Math.floor(appleScore);
+                
+                totalWin += appleScore;
+                updateWinDisplay();
+                
+                collectApple(collectedApple.type, game3Bet);
+                DOM.drawStatus.textContent = `🎯 夾中蘋果！獲得獎金 +${appleScore} 並存入蘋果進度表！ 🎯`;
                 this.updateHitTable();
             }
         }
@@ -2162,8 +2176,9 @@ async function engineSleep(ms) {
 }
 
 
-function collectApple(type) {
-    if (game1Bet === 0) return;
+function collectApple(type, customBet = null) {
+    let activeBet = customBet || (game1Bet > 0 ? game1Bet : 600);
+    if (game1Bet === 0 && !customBet) return;
 
     if (currentAppleColors.length === 7) {
         currentAppleColors = []; 
@@ -2174,13 +2189,13 @@ function collectApple(type) {
     
     let score = 0;
     switch (type) {
-        case 'gold': score = (game1Bet === 0 ? 600 : game1Bet) * 2.5; break;
-        case 'silver': score = (game1Bet === 0 ? 600 : game1Bet) * 1.5; break;
-        case 'bronze': score = (game1Bet === 0 ? 600 : game1Bet) * 1.0; break;
-        case 'red': score = (game1Bet === 0 ? 600 : game1Bet) * 0.5; break;
-        case 'green': score = (game1Bet === 0 ? 600 : game1Bet) * 0.25; break;
+        case 'gold': score = activeBet * 2.5; break;
+        case 'silver': score = activeBet * 1.5; break;
+        case 'bronze': score = activeBet * 1.0; break;
+        case 'red': score = activeBet * 0.5; break;
+        case 'green': score = activeBet * 0.25; break;
     }
-    currentAppleScores.push(score);
+    currentAppleScores.push(Math.floor(score));
     
     totalCollectedApples++;
     
