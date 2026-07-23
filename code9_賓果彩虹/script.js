@@ -1065,7 +1065,7 @@ const Game3Manager = {
             if (appleSlot) {
                 let appleData = game3ApplesInPlay.find(a => a.hit === currentBalls);
                 if (appleData) {
-                    appleSlot.innerHTML = `<span class="apple-${appleData.type}" style="font-size: 1.5rem; display: block; animation: float 2s infinite ease-in-out; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">🍎</span>`;
+                    appleSlot.innerHTML = `<span class="apple-item apple-${appleData.type}" style="font-size: 1.5rem; display: block; animation: float 2s infinite ease-in-out;">🍎</span>`;
                 } else {
                     appleSlot.innerHTML = '';
                 }
