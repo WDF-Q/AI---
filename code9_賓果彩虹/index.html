@@ -274,7 +274,7 @@
                                 <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="1"><div id="g3-hit-1" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">1</span><span class="hit-val">OPEN</span></div><div class="g3-apple-slot" id="g3-apple-slot-1" style="width: 24px; height: 24px;"></div></div>
                             </div>
                             <!-- 中央主視覺：海盜船、小猴子、鋼爪吊繩與海底寶箱 -->
-                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; width: 100%; height: 100%; min-height: 280px; overflow: hidden; padding-top: 10px;">
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; padding: 10px 10px 5px 10px;">
                                 <!-- 頂部：海盜船與猴子 -->
                                 <div class="g3-ship-wrapper" style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px 14px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
                                     <span class="g3-ship-icon" style="font-size: 2.8rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transform: scaleX(-1); display: inline-block;">🚢</span>
@@ -292,17 +292,17 @@
 
                                 <!-- 底部：海底寶箱 -->
                                 <div class="g3-treasure-wrapper" style="position: relative; z-index: 5; margin-top: auto; margin-bottom: 5px; display: flex; flex-direction: column; align-items: center;">
-                                    <div style="font-size: 3rem; filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.9)); animation: treasureGlow 2.5s infinite alternate;">🧰</div>
-                                    <div style="font-size: 1.1rem; margin-top: -12px; text-shadow: 0 0 8px #f59e0b;">👑🪙💎💰</div>
+                                    <div style="font-size: 2.8rem; filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.9)); animation: treasureGlow 2.5s infinite alternate;">🧰</div>
+                                    <div style="font-size: 1rem; margin-top: -12px; text-shadow: 0 0 8px #f59e0b;">👑🪙💎💰</div>
                                 </div>
 
                                 <!-- 本次目標 -->
-                                <div id="g3-target-display" style="z-index: 10; margin-bottom: 8px; font-size: 1.2rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.75); padding: 5px 14px; border-radius: 20px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                                <div id="g3-target-display" style="z-index: 10; margin-bottom: 6px; font-size: 1.15rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.75); padding: 4px 12px; border-radius: 20px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
                                     本次的目標是 <span id="g3-target-color-name" style="color: #ef4444;">紅色</span>
                                 </div>
                                 
                                 <!-- 選色面板 -->
-                                <div id="g3-color-selector" style="z-index: 10; display: flex; gap: 5px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px; border: 1px solid #475569; align-items: center; margin-bottom: 10px;">
+                                <div id="g3-color-selector" style="z-index: 10; display: flex; gap: 5px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px; border: 1px solid #475569; align-items: center; margin-bottom: 8px;">
                                     <span style="color: #94a3b8; font-size: 0.85rem; margin-right: 5px;">目標:</span>
                                     <div class="color-btn red-btn active" data-color="red" style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
                                     <div class="color-btn pink-btn" data-color="pink" style="width: 24px; height: 24px; border-radius: 50%; background: #ec4899; cursor: pointer; border: 2px solid transparent;"></div>
@@ -311,10 +311,9 @@
                                     <div class="color-btn blue-btn" data-color="blue" style="width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid transparent;"></div>
                                     <div class="color-btn white-btn" data-color="white" style="width: 24px; height: 24px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid transparent;"></div>
                                 </div>
-                            </div>
-                                
+
                                 <!-- Game 3 Bet Area -->
-                                <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-bottom: 20px; position: relative;">
+                                <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-bottom: 5px; position: relative;">
                                     <div class="bet-apple-slots" data-game="3" style="display: flex; gap: 3px; margin-right: 10px;">
                                         <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
                                         <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
