@@ -273,23 +273,45 @@
                                 <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="2"><div id="g3-hit-2" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">2</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-2" style="width: 24px; height: 24px;"></div></div>
                                 <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="1"><div id="g3-hit-1" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">1</span><span class="hit-val">OPEN</span></div><div class="g3-apple-slot" id="g3-apple-slot-1" style="width: 24px; height: 24px;"></div></div>
                             </div>
-                            <!-- 中央主視覺 -->
-                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-                                <div style="font-size: 5rem; text-shadow: 0 10px 20px rgba(0,0,0,0.5);">🚢</div>
-                                <div style="font-size: 3rem; position: absolute; top: 150px;">🏗️</div>
-                                <div id="g3-target-display" style="margin-top: auto; margin-bottom: 20px; font-size: 1.5rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 20px; border: 2px solid #fff;">
+                            <!-- 中央主視覺：海盜船、小猴子、鋼爪吊繩與海底寶箱 -->
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; width: 100%; height: 100%; min-height: 280px; overflow: hidden; padding-top: 10px;">
+                                <!-- 頂部：海盜船與猴子 -->
+                                <div class="g3-ship-wrapper" style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(0,0,0,0.4); padding: 4px 14px; border-radius: 20px; border: 1.5px solid rgba(255,255,255,0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                                    <span class="g3-ship-icon" style="font-size: 2.8rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transform: scaleX(-1); display: inline-block;">🚢</span>
+                                    <span class="g3-monkey-icon" style="font-size: 2rem; transform: translateY(-4px); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); animation: monkeyBounce 2s infinite ease-in-out; display: inline-block;">🐒</span>
+                                    <div class="g3-winch-wheel" style="font-size: 1.4rem; transform: translateY(2px); display: inline-block;">⚙️</div>
+                                </div>
+                                
+                                <!-- 中央：鋼爪與拉繩組件 -->
+                                <div class="g3-claw-assembly" id="g3-claw-assembly" style="position: absolute; top: 48px; left: 50%; transform: translateX(-50%); z-index: 8; display: flex; flex-direction: column; align-items: center; width: 40px; pointer-events: none;">
+                                    <!-- 繩索 -->
+                                    <div class="g3-rope" id="g3-rope" style="width: 3px; height: 10px; background: repeating-linear-gradient(0deg, #f59e0b, #f59e0b 3px, #78350f 3px, #78350f 6px); box-shadow: 0 0 4px rgba(0,0,0,0.6);"></div>
+                                    <!-- 爪子 -->
+                                    <div class="g3-claw-head" id="g3-claw-head" style="font-size: 2.2rem; margin-top: -6px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">🏗️</div>
+                                </div>
+
+                                <!-- 底部：海底寶箱 -->
+                                <div class="g3-treasure-wrapper" style="position: relative; z-index: 5; margin-top: auto; margin-bottom: 5px; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="font-size: 3rem; filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.9)); animation: treasureGlow 2.5s infinite alternate;">🧰</div>
+                                    <div style="font-size: 1.1rem; margin-top: -12px; text-shadow: 0 0 8px #f59e0b;">👑🪙💎💰</div>
+                                </div>
+
+                                <!-- 本次目標 -->
+                                <div id="g3-target-display" style="z-index: 10; margin-bottom: 8px; font-size: 1.2rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.75); padding: 5px 14px; border-radius: 20px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
                                     本次的目標是 <span id="g3-target-color-name" style="color: #ef4444;">紅色</span>
                                 </div>
-                                <div id="g3-color-selector" style="display: flex; gap: 5px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; border: 1px solid #475569; align-items: center; margin-bottom: 20px;">
-                                    <span style="color: #94a3b8; font-size: 0.9rem; margin-right: 5px;">目標:</span>
-                                    <!-- Colors -->
-                                    <div class="color-btn red-btn active" data-color="red" style="width: 25px; height: 25px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
-                                    <div class="color-btn pink-btn" data-color="pink" style="width: 25px; height: 25px; border-radius: 50%; background: #ec4899; cursor: pointer; border: 2px solid transparent;"></div>
-                                    <div class="color-btn yellow-btn" data-color="yellow" style="width: 25px; height: 25px; border-radius: 50%; background: #eab308; cursor: pointer; border: 2px solid transparent;"></div>
-                                    <div class="color-btn green-btn" data-color="green" style="width: 25px; height: 25px; border-radius: 50%; background: #22c55e; cursor: pointer; border: 2px solid transparent;"></div>
-                                    <div class="color-btn blue-btn" data-color="blue" style="width: 25px; height: 25px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid transparent;"></div>
-                                    <div class="color-btn white-btn" data-color="white" style="width: 25px; height: 25px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid transparent;"></div>
+                                
+                                <!-- 選色面板 -->
+                                <div id="g3-color-selector" style="z-index: 10; display: flex; gap: 5px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px; border: 1px solid #475569; align-items: center; margin-bottom: 10px;">
+                                    <span style="color: #94a3b8; font-size: 0.85rem; margin-right: 5px;">目標:</span>
+                                    <div class="color-btn red-btn active" data-color="red" style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
+                                    <div class="color-btn pink-btn" data-color="pink" style="width: 24px; height: 24px; border-radius: 50%; background: #ec4899; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn yellow-btn" data-color="yellow" style="width: 24px; height: 24px; border-radius: 50%; background: #eab308; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn green-btn" data-color="green" style="width: 24px; height: 24px; border-radius: 50%; background: #22c55e; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn blue-btn" data-color="blue" style="width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn white-btn" data-color="white" style="width: 24px; height: 24px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid transparent;"></div>
                                 </div>
+                            </div>
                                 
                                 <!-- Game 3 Bet Area -->
                                 <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-bottom: 20px; position: relative;">

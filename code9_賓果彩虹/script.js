@@ -590,6 +590,25 @@ function recalculateTotalWin() {
     updateWinDisplay();
 }
 
+function triggerClawDropAnimation() {
+    const clawAssy = document.getElementById('g3-claw-assembly');
+    const rope = document.getElementById('g3-rope');
+    if (clawAssy && rope) {
+        clawAssy.classList.remove('claw-grabbing');
+        rope.classList.remove('rope-stretching');
+        
+        void clawAssy.offsetWidth; // Force reflow
+        
+        clawAssy.classList.add('claw-grabbing');
+        rope.classList.add('rope-stretching');
+        
+        setTimeout(() => {
+            clawAssy.classList.remove('claw-grabbing');
+            rope.classList.remove('rope-stretching');
+        }, 1300);
+    }
+}
+
 function updateHistoryUI() {
     document.getElementById('track-red').textContent = historyTracker.red;
     document.getElementById('track-pink').textContent = historyTracker.pink;
@@ -1014,6 +1033,7 @@ const Game3Manager = {
 
         if (!isRainbow && (logicalColor === (game3Bet === 0 ? 'red' : game3TargetColor) || (dualPair && dualPair.includes(game3Bet === 0 ? 'red' : game3TargetColor)))) {
             game3TotalTargetBalls++;
+            triggerClawDropAnimation();
             
             let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
             if (collectedIndex !== -1 && game3Bet > 0) {
