@@ -566,24 +566,22 @@ body {
     display: none;
 }
 
-/* 個別遊戲 WIN 標籤 (Flower/Badge style) */
+/* 個別遊戲 WIN 浮動分數 (無外框、字體1.5倍、不遮擋BET) */
 .game-win-badge {
     position: absolute;
-    right: -30px;
+    left: calc(100% + 12px);
     top: 50%;
     transform: translateY(-50%);
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #f472b6 0%, #db2777 60%, #9d174d 100%);
-    border: 3px solid #fef08a;
-    box-shadow: 0 0 12px rgba(236, 72, 153, 0.9), inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 4px 8px rgba(0,0,0,0.5);
+    background: transparent;
+    border: none;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 25;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;
+    pointer-events: none;
     animation: badgePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -598,22 +596,22 @@ body {
 }
 
 .game-win-badge .win-num {
-    font-size: 1.15rem;
+    font-size: 1.75rem;
     font-weight: 900;
     color: #fef08a;
-    text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000;
+    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 0 10px rgba(251, 191, 36, 0.8);
     line-height: 1;
     font-family: 'Fredoka', sans-serif;
 }
 
 .game-win-badge .win-lbl {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 900;
-    color: #ffffff;
-    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+    color: #f472b6;
+    text-shadow: 1.5px 1.5px 0 #000, -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000;
     line-height: 1;
-    margin-top: 1px;
-    letter-spacing: 0.5px;
+    margin-top: 2px;
+    letter-spacing: 1px;
 }
 
 .combo-ladder {
