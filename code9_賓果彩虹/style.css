@@ -1332,18 +1332,8 @@ body {
 }
 
 .g2-tile.hit {
-    border-color: #fde047 !important;
-    box-shadow: 0 0 18px #facc15, inset 0 0 10px rgba(255,255,255,0.8);
-    transform: scale(0.96);
-}
-
-.g2-tile.hit::after {
-    content: "✓";
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 1.5rem;
-    color: #22c55e;
-    font-weight: 900;
-    text-shadow: 0 0 6px #000;
+    background: rgba(15, 23, 42, 0.92) !important;
+    border-width: 3.5px !important;
+    box-shadow: 0 0 14px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,0,0,0.6) !important;
+    transform: scale(0.97);
 }

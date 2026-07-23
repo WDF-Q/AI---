@@ -894,54 +894,109 @@ function updateGame2WinDisplay() {
     }
 }
 
+// LV1 ~ LV5 模板數據 (依據上傳之對應圖片)
+const G2_TEMPLATES = {
+    1: [
+        ['SP', 'c1', 'c2', 'SP', 'SP', 'c3', 'c4', 'c5', 'FREE'],
+        ['SP', 'c1', 'c1', 'c4', 'SP', 'c2', 'c4', 'c3', 'FREE']
+    ],
+    2: [
+        ['c4', 'c3', 'c1', 'c2', 'SP', 'c2', 'c5', 'c1', 'FREE'],
+        ['c2', 'c3', 'c4', 'c1', 'SP', 'c2', 'c5', 'c1', 'FREE'],
+        ['c1', 'c2', 'c3', 'FREE', 'SP', 'c4', 'c5', 'SP', 'FREE']
+    ],
+    3: [
+        ['c1', 'FREE', 'c2', 'FREE', 'SP', 'FREE', 'c4', 'FREE', 'c3'],
+        ['c4', 'c3', 'c3', 'c1', 'c1', 'c2', 'c5', 'c2', 'c4']
+    ],
+    4: [
+        ['c1', 'c2', 'c3', 'c5', 'c1', 'c4', 'c4', 'c3', 'c2'],
+        ['c1', 'c2', 'c2', 'c2', 'c3', 'c4', 'c1', 'c2', 'c3']
+    ],
+    5: [
+        ['c2', 'FREE', 'c1', 'FREE', 'SP', 'FREE', 'c1', 'FREE', 'c3'],
+        ['c3', 'c1', 'c1', 'c2', 'c1', 'c2', 'c5', 'c2', 'c4']
+    ]
+};
+
 const Game2Manager = {
     gridData: [],
     nextGridData: [],
 
     init() {
+        game2Level = 1;
+        game2CardNum = 1;
         game2Win = 0;
         game2LineCount = 0;
-        this.generateCard(game2Level);
-        this.generateNextCard(game2Level + 1);
+        this.generateCard(1);
+        this.generateNextCard(2);
         this.renderUI();
         updateGame2WinDisplay();
     },
 
     generateCard(level) {
-        const colors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        let lvlKey = Math.min(5, Math.max(1, level));
+        let tList = G2_TEMPLATES[lvlKey] || G2_TEMPLATES[1];
+        let tLayout = tList[Math.floor(Math.random() * tList.length)];
+
+        // 顏色1~5 隨機分配不重複
+        let allColors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        allColors.sort(() => Math.random() - 0.5);
+        let colorMap = {
+            'c1': allColors[0],
+            'c2': allColors[1],
+            'c3': allColors[2],
+            'c4': allColors[3],
+            'c5': allColors[4]
+        };
+
         this.gridData = [];
         for (let i = 0; i < 9; i++) {
-            let tileType = 'color';
-            let color = colors[Math.floor(Math.random() * colors.length)];
-            let spText = '';
-
-            if (i === 8 && Math.random() < 0.35) {
-                tileType = 'free';
-            } else if ((i === 0 || i === 4) && Math.random() < 0.3) {
-                tileType = 'sp';
-                spText = 'SP立直';
-            } else if (i === 3 && Math.random() < 0.25) {
-                tileType = 'sp';
-                spText = 'SP';
+            let key = tLayout[i];
+            if (key === 'FREE') {
+                this.gridData.push({
+                    id: i,
+                    type: 'free',
+                    color: 'purple',
+                    spText: 'FREE',
+                    hit: true // FREE 預設即獲得
+                });
+            } else if (key === 'SP') {
+                this.gridData.push({
+                    id: i,
+                    type: 'sp',
+                    color: 'sp',
+                    spText: 'SP',
+                    hit: false
+                });
+            } else {
+                let assignedColor = colorMap[key];
+                this.gridData.push({
+                    id: i,
+                    type: 'color',
+                    color: assignedColor,
+                    spText: key,
+                    hit: false
+                });
             }
-
-            this.gridData.push({
-                id: i,
-                type: tileType,
-                color: color,
-                spText: spText,
-                hit: tileType === 'free'
-            });
         }
     },
 
     generateNextCard(level) {
-        const colors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        let lvlKey = Math.min(5, Math.max(1, level));
+        let tList = G2_TEMPLATES[lvlKey] || G2_TEMPLATES[1];
+        let tLayout = tList[Math.floor(Math.random() * tList.length)];
+        let allColors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        allColors.sort(() => Math.random() - 0.5);
+        let colorMap = {
+            'c1': allColors[0], 'c2': allColors[1], 'c3': allColors[2], 'c4': allColors[3], 'c5': allColors[4]
+        };
+
         this.nextGridData = [];
         for (let i = 0; i < 9; i++) {
-            this.nextGridData.push({
-                color: colors[Math.floor(Math.random() * colors.length)]
-            });
+            let key = tLayout[i];
+            let c = key.startsWith('c') ? colorMap[key] : (key === 'FREE' ? 'purple' : 'sp');
+            this.nextGridData.push({ color: c });
         }
         const nextLvlEl = document.getElementById('g2-next-level');
         if (nextLvlEl) nextLvlEl.textContent = (level > 8 ? 'MAX' : level);
@@ -977,12 +1032,20 @@ const Game2Manager = {
         this.gridData.forEach(tile => {
             const div = document.createElement('div');
             div.className = `g2-tile ${tile.color} ${tile.hit ? 'hit' : ''}`;
-            if (tile.type === 'free') {
-                div.innerHTML = `<span class="g2-free-text">FREE</span>`;
-            } else if (tile.type === 'sp') {
-                div.innerHTML = `<div class="g2-sp-badge">${tile.spText}</div>`;
+
+            if (tile.hit) {
+                let borderColor = tile.color === 'sp' ? '#a855f7' : (tile.color === 'purple' ? '#facc15' : `var(--color-${tile.color}, #facc15)`);
+                div.style.borderColor = borderColor;
+                div.style.background = 'rgba(15, 23, 42, 0.9)';
+                div.innerHTML = `<span class="g2-hit-text" style="font-size: 1.6rem; font-weight: 900; color: #facc15; text-shadow: 0 0 8px #facc15, 2px 2px 0 #000;">HIT</span>`;
             } else {
-                div.innerHTML = `<div class="g2-paw-icon">🐾</div>`;
+                if (tile.type === 'free') {
+                    div.innerHTML = `<span class="g2-free-text">FREE</span>`;
+                } else if (tile.type === 'sp') {
+                    div.innerHTML = `<div class="g2-sp-badge">SP</div>`;
+                } else {
+                    div.innerHTML = `<div class="g2-paw-icon">🐾</div>`;
+                }
             }
             gridEl.appendChild(div);
         });
@@ -994,7 +1057,13 @@ const Game2Manager = {
         let hitMade = false;
         this.gridData.forEach(tile => {
             if (!tile.hit) {
-                if (logicalColor === 'rainbow' || tile.color === logicalColor) {
+                if (logicalColor === 'rainbow') {
+                    // 彩色洞命中：獲得 SP 格子與任意對應格子！
+                    if (tile.type === 'sp' || tile.type === 'color') {
+                        tile.hit = true;
+                        hitMade = true;
+                    }
+                } else if (tile.color === logicalColor) {
                     tile.hit = true;
                     hitMade = true;
                 }
@@ -1044,9 +1113,9 @@ const Game2Manager = {
 
     nextCardAnimation() {
         game2CardNum++;
-        game2Level = (game2Level % 8) + 1;
+        game2Level = (game2Level % 5) + 1; // 升級 LV1~LV5
         this.generateCard(game2Level);
-        this.generateNextCard((game2Level % 8) + 1);
+        this.generateNextCard((game2Level % 5) + 1);
         game2LineCount = 0;
         this.renderUI();
     }
