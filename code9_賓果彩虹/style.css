@@ -374,7 +374,7 @@ body {
 /* 右側：多遊戲切換區 */
 .games-wrapper {
     position: relative;
-    width: 820px; /* 原本消消樂的大約寬度 */
+    width: 610px;
     height: 720px;
 }
 
