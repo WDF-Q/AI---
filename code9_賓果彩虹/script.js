@@ -894,7 +894,7 @@ function updateGame2WinDisplay() {
     }
 }
 
-// LV1 ~ LV5 模板數據 (依據上傳之對應圖片)
+// LV1 ~ LV8 & LV MAX (LV9) 模板數據
 const G2_TEMPLATES = {
     1: [
         ['SP', 'c1', 'c2', 'SP', 'SP', 'c3', 'c4', 'c5', 'FREE'],
@@ -916,6 +916,22 @@ const G2_TEMPLATES = {
     5: [
         ['c2', 'FREE', 'c1', 'FREE', 'SP', 'FREE', 'c1', 'FREE', 'c3'],
         ['c3', 'c1', 'c1', 'c2', 'c1', 'c2', 'c5', 'c2', 'c4']
+    ],
+    6: [
+        ['c1', 'SP', 'c2', 'c3', 'FREE', 'c4', 'c5', 'SP', 'c1'],
+        ['c1', 'c2', 'SP', 'c3', 'c4', 'c5', 'SP', 'c1', 'c2']
+    ],
+    7: [
+        ['SP', 'c1', 'SP', 'c2', 'FREE', 'c3', 'SP', 'c4', 'SP'],
+        ['c1', 'c2', 'c3', 'c4', 'SP', 'FREE', 'c5', 'c1', 'c2']
+    ],
+    8: [
+        ['c1', 'c2', 'c3', 'FREE', 'FREE', 'FREE', 'c4', 'SP', 'c5'],
+        ['SP', 'c1', 'c2', 'c3', 'SP', 'c4', 'c5', 'c1', 'FREE']
+    ],
+    9: [ // LV MAX
+        ['FREE', 'SP', 'FREE', 'SP', 'FREE', 'SP', 'FREE', 'SP', 'FREE'],
+        ['c1', 'FREE', 'c1', 'FREE', 'SP', 'FREE', 'c2', 'FREE', 'c2']
     ]
 };
 
@@ -935,12 +951,12 @@ const Game2Manager = {
     },
 
     generateCard(level) {
-        let lvlKey = Math.min(5, Math.max(1, level));
+        let lvlKey = level >= 9 ? 9 : Math.max(1, level);
         let tList = G2_TEMPLATES[lvlKey] || G2_TEMPLATES[1];
         let tLayout = tList[Math.floor(Math.random() * tList.length)];
 
-        // 顏色1~5 隨機分配不重複
-        let allColors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        // 顏色1~5 隨機分配不重複 (從 黃、藍、紅、綠、粉 5 種色球中抽出，不包含白)
+        let allColors = ['yellow', 'blue', 'red', 'green', 'pink'];
         allColors.sort(() => Math.random() - 0.5);
         let colorMap = {
             'c1': allColors[0],
@@ -983,10 +999,10 @@ const Game2Manager = {
     },
 
     generateNextCard(level) {
-        let lvlKey = Math.min(5, Math.max(1, level));
+        let lvlKey = level >= 9 ? 9 : Math.max(1, level);
         let tList = G2_TEMPLATES[lvlKey] || G2_TEMPLATES[1];
         let tLayout = tList[Math.floor(Math.random() * tList.length)];
-        let allColors = ['yellow', 'blue', 'red', 'green', 'pink', 'white'];
+        let allColors = ['yellow', 'blue', 'red', 'green', 'pink'];
         allColors.sort(() => Math.random() - 0.5);
         let colorMap = {
             'c1': allColors[0], 'c2': allColors[1], 'c3': allColors[2], 'c4': allColors[3], 'c5': allColors[4]
@@ -999,7 +1015,7 @@ const Game2Manager = {
             this.nextGridData.push({ color: c });
         }
         const nextLvlEl = document.getElementById('g2-next-level');
-        if (nextLvlEl) nextLvlEl.textContent = (level > 8 ? 'MAX' : level);
+        if (nextLvlEl) nextLvlEl.textContent = (level >= 9 ? 'MAX' : level);
         this.renderNextGrid();
     },
 
@@ -1024,7 +1040,7 @@ const Game2Manager = {
         const lineCountEl = document.getElementById('g2-line-count');
         const lineScoreEl = document.getElementById('g2-line-score');
 
-        if (mainLvlEl) mainLvlEl.textContent = (game2Level > 8 ? 'MAX' : game2Level);
+        if (mainLvlEl) mainLvlEl.textContent = (game2Level >= 9 ? 'MAX' : game2Level);
         if (cardNumEl) cardNumEl.textContent = `第 ${game2CardNum} 張`;
         if (lineCountEl) lineCountEl.textContent = game2LineCount;
         if (lineScoreEl) lineScoreEl.textContent = game2Win;
@@ -1113,9 +1129,9 @@ const Game2Manager = {
 
     nextCardAnimation() {
         game2CardNum++;
-        game2Level = (game2Level % 5) + 1; // 升級 LV1~LV5
+        game2Level = (game2Level % 9) + 1; // 升級 LV1~LV8 -> LV MAX (9)
         this.generateCard(game2Level);
-        this.generateNextCard((game2Level % 5) + 1);
+        this.generateNextCard((game2Level % 9) + 1);
         game2LineCount = 0;
         this.renderUI();
     }
