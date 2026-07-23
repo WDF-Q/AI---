@@ -258,25 +258,16 @@ function handleAddBet(gameId) {
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
     if (previousGame1Bet > 0 || previousGame3Bet > 0) {
-        let inc = BET_INCREMENTS[currentIncrementIndex];
         if (previousGame1Bet > 0) {
-            game1Bet = 600;
-            while (game1Bet < previousGame1Bet) {
-                game1Bet += inc;
-                if(game1Bet > previousGame1Bet) game1Bet = previousGame1Bet;
-                generateBetApples(1);
-            }
+            game1Bet = previousGame1Bet;
             document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
             updateLadderRewards(game1Bet);
+            generateBetApples(1);
         }
         if (previousGame3Bet > 0) {
-            game3Bet = 600;
-            while (game3Bet < previousGame3Bet) {
-                game3Bet += inc;
-                if(game3Bet > previousGame3Bet) game3Bet = previousGame3Bet;
-                generateBetApples(3);
-            }
+            game3Bet = previousGame3Bet;
             document.querySelectorAll('.bet-value[data-game="3"]').forEach(el => el.textContent = game3Bet);
+            generateBetApples(3);
         }
     } else {
         alert("沒有上一局的押分紀錄");
