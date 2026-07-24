@@ -810,19 +810,20 @@ function renderGame2AppleHUD() {
     hudContainer.innerHTML = html;
 }
 
-function checkGame2AppleReward(currentLines) {
-    if (game2Bet <= 0 || game2AppleThresholds.length === 0) return;
+function checkGame2AppleReward(cardCompletedLines) {
+    if (game2Bet <= 0 || !game2AppleThresholds || game2AppleThresholds.length === 0 || cardCompletedLines <= 0) return;
 
-    let updated = false;
-    game2AppleThresholds.forEach(item => {
-        if (!item.collected && currentLines >= item.lines) {
-            item.collected = true;
-            updated = true;
-            collectApple(item.type, game2Bet);
-        }
-    });
+    // 依據「這一張棋盤一次性獲得的最大連線數 (cardCompletedLines)」做判定
+    // 篩選出：尚未收集 且 門檻數值 <= 這一張棋盤連線數 的項目
+    let eligibleItems = game2AppleThresholds.filter(item => !item.collected && item.lines <= cardCompletedLines);
 
-    if (updated) {
+    if (eligibleItems.length > 0) {
+        // 取門檻 LINE 數最大的那一個 (以最大連線數的門檻判定，一張棋盤只會獲得 1 顆蘋果！)
+        eligibleItems.sort((a, b) => b.lines - a.lines);
+        let bestItem = eligibleItems[0];
+
+        bestItem.collected = true;
+        collectApple(bestItem.type, game2Bet);
         renderGame2AppleHUD();
     }
 }
@@ -1482,7 +1483,7 @@ const Game2Manager = {
             }
 
             if (game2Bet > 0) {
-                checkGame2AppleReward(game2LineCount);
+                checkGame2AppleReward(completedLines);
             }
 
             // 1. 在對應格子上繪製黃金雷射連線光條與方塊脈衝動畫
