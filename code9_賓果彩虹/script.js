@@ -959,14 +959,14 @@ function getRandomGame2Level() {
 }
 
 const G2_LINE_COORDS = {
-    '0,1,2': [20, 58, 304, 58],   // 第一橫行
-    '3,4,5': [20, 162, 304, 162], // 第二橫行
-    '6,7,8': [20, 266, 304, 266], // 第三橫行
-    '0,3,6': [58, 20, 58, 304],   // 第一直列
-    '1,4,7': [162, 20, 162, 304], // 第二直列
-    '2,5,8': [266, 20, 266, 304], // 第三直列
-    '0,4,8': [25, 25, 299, 299],  // 主對角線 \
-    '2,4,6': [299, 25, 25, 299]   // 反對角線 /
+    '0,1,2': [15, 58, 309, 58],   // 第一橫行
+    '3,4,5': [15, 163, 309, 163], // 第二橫行
+    '6,7,8': [15, 268, 309, 268], // 第三橫行
+    '0,3,6': [58, 15, 58, 309],   // 第一直列
+    '1,4,7': [163, 15, 163, 309], // 第二直列
+    '2,5,8': [268, 15, 268, 309], // 第三直列
+    '0,4,8': [20, 20, 304, 304],  // 主對角線 \
+    '2,4,6': [304, 20, 20, 304]   // 反對角線 /
 };
 
 const Game2Manager = {
@@ -975,9 +975,11 @@ const Game2Manager = {
     nextGridDataFull: [],
     nextLevel: 2,
     isCardChanging: false,
+    winningMatchedPatterns: [],
 
     init() {
         this.isCardChanging = false;
+        this.winningMatchedPatterns = [];
         game2Level = 1;
         game2CardNum = 1;
         game2Win = 0;
@@ -1103,12 +1105,20 @@ const Game2Manager = {
         if (lineCountEl) lineCountEl.textContent = game2LineCount;
         if (lineScoreEl) lineScoreEl.textContent = game2Win;
 
-        this.gridData.forEach(tile => {
+        let winningIndices = new Set();
+        if (this.winningMatchedPatterns && this.winningMatchedPatterns.length > 0) {
+            this.winningMatchedPatterns.forEach(pattern => {
+                pattern.forEach(idx => winningIndices.add(idx));
+            });
+        }
+
+        this.gridData.forEach((tile, index) => {
             const div = document.createElement('div');
             let isRainbowBorder = (tile.type === 'free' || tile.type === 'sp' || tile.color === 'sp' || tile.color === 'purple');
+            let isWinningTile = winningIndices.has(index);
 
             if (tile.hit) {
-                div.className = `g2-tile hit ${isRainbowBorder ? 'rainbow-border' : tile.color}`;
+                div.className = `g2-tile hit ${isRainbowBorder ? 'rainbow-border' : tile.color} ${isWinningTile ? 'winning' : ''}`;
                 if (!isRainbowBorder) {
                     div.style.borderColor = `var(--color-${tile.color}, #facc15)`;
                 } else {
@@ -1116,7 +1126,7 @@ const Game2Manager = {
                 }
                 div.innerHTML = `<span class="g2-hit-text" style="font-size: 1.6rem; font-weight: 900; color: #facc15; text-shadow: 0 0 8px #facc15, 2px 2px 0 #000;">HIT</span>`;
             } else {
-                div.className = `g2-tile ${tile.color}`;
+                div.className = `g2-tile ${tile.color} ${isWinningTile ? 'winning' : ''}`;
                 if (tile.type === 'sp') {
                     div.innerHTML = `<div class="g2-sp-badge">SP</div>`;
                 } else if (tile.type === 'free') {
@@ -1127,6 +1137,10 @@ const Game2Manager = {
             }
             gridEl.appendChild(div);
         });
+
+        if (this.winningMatchedPatterns && this.winningMatchedPatterns.length > 0) {
+            this.drawWinningLines(this.winningMatchedPatterns);
+        }
     },
 
     upgradeNextCardLevel(levelBoost = 1) {
@@ -1149,15 +1163,12 @@ const Game2Manager = {
 
         if (logicalColor === 'rainbow') {
             // 彩色洞：
-            // 1) 檢查主棋盤 SP 格子是否【已經處於 HIT 狀態】
             let spAlreadyHit = this.gridData.some(tile => (tile.type === 'sp' || tile.color === 'sp') && tile.hit);
 
-            // 主棋盤在 LV MAX 時，進任何彩色球都會提升備用棋盤等級 (+2)；在 LV1~8 時，需 SP 已經是 HIT 狀態才提升 (+2)
             if (isMainCardLvMax || spAlreadyHit) {
                 nextCardLevelBoost += 2;
             }
 
-            // 2) 命中尚未 HIT 的 SP 格子
             this.gridData.forEach(tile => {
                 if (!tile.hit && (tile.type === 'sp' || tile.color === 'sp')) {
                     tile.hit = true;
@@ -1166,15 +1177,12 @@ const Game2Manager = {
             });
         } else if (logicalColor && logicalColor !== 'white') {
             // 標準單色洞（黃、藍、紅、綠、粉）：
-            // 1) 檢查主棋盤該顏色的格子是否【已經處於 HIT 狀態】
             let colorAlreadyHit = this.gridData.some(tile => tile.color === logicalColor && tile.hit);
 
-            // 主棋盤在 LV MAX 時，進任何顏色球都會提升備用棋盤等級 (+1)；在 LV1~8 時，需該顏色已經是 HIT 狀態才提升 (+1)
             if (isMainCardLvMax || colorAlreadyHit) {
                 nextCardLevelBoost += 1;
             }
 
-            // 2) 命中尚未 HIT 的對應顏色格子
             this.gridData.forEach(tile => {
                 if (!tile.hit && tile.color === logicalColor) {
                     tile.hit = true;
@@ -1183,7 +1191,6 @@ const Game2Manager = {
             });
         }
 
-        // 若觸發備用棋盤升級或 LV MAX 變色切換 (僅在主棋盤未銷毀切換期間升級)
         if (nextCardLevelBoost > 0 && !this.isCardChanging) {
             this.upgradeNextCardLevel(nextCardLevelBoost);
         }
@@ -1192,7 +1199,6 @@ const Game2Manager = {
             this.renderUI();
         }
 
-        // 如果不是 3球批次模式，單球進洞時直接進行連線與銷毀檢定
         if (!isBatchMode) {
             this.evaluateLineCheck();
         }
@@ -1217,7 +1223,6 @@ const Game2Manager = {
                 group.appendChild(line);
             }
 
-            // 方塊黃金光圈高亮與脈衝
             pattern.forEach(idx => {
                 if (gridEl && gridEl.children[idx]) {
                     gridEl.children[idx].classList.add('winning');
@@ -1229,6 +1234,7 @@ const Game2Manager = {
     clearWinningLines() {
         const group = document.getElementById('g2-lines-group');
         if (group) group.innerHTML = '';
+        this.winningMatchedPatterns = [];
     },
 
     evaluateLineCheck() {
@@ -1248,6 +1254,7 @@ const Game2Manager = {
         });
 
         if (matchedPatterns.length > 0) {
+            this.winningMatchedPatterns = matchedPatterns;
             let completedLines = matchedPatterns.length;
             game2LineCount += completedLines;
 
@@ -1264,10 +1271,8 @@ const Game2Manager = {
             // 1. 在對應格子上繪製黃金雷射連線與方塊脈衝動畫
             this.drawWinningLines(matchedPatterns);
 
-            // 2. 延遲 650ms 等玩家看清劃線動畫後，再觸發銷毀與補充
-            setTimeout(() => {
-                this.triggerCardDestructionAndNextDrop();
-            }, 650);
+            // 2. 觸發銷毀與補充（連線與劃線會在主棋盤上持續停留，並在銷毀時一同消失）
+            this.triggerCardDestructionAndNextDrop();
         }
     },
 
@@ -1298,7 +1303,7 @@ const Game2Manager = {
 
             // 重新渲染UI (保留本局累加連線數與獎金)
             this.renderUI();
-        }, 500);
+        }, 600);
     }
 };
 
