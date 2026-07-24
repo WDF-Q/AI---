@@ -1459,3 +1459,57 @@ body {
     0% { filter: brightness(1) drop-shadow(0 0 10px #fde047); }
     100% { filter: brightness(1.5) drop-shadow(0 0 25px #ef4444); }
 }
+
+/* 遊戲 2 左側 ODDS 賠率對照表樣式 */
+.g2-odds-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid #475569;
+    transition: all 0.25s ease;
+}
+
+.g2-odds-label {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #cbd5e1;
+}
+
+.g2-odds-label small {
+    font-size: 0.58rem;
+    color: #94a3b8;
+    font-weight: bold;
+}
+
+.g2-odds-val {
+    font-size: 0.92rem;
+    font-weight: 900;
+    color: #fde047;
+    text-shadow: 1px 1px 0 #78350f, 0 0 4px rgba(250, 204, 21, 0.5);
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* 達成 / 當前連線高亮光圈 (亮金黃 / 橘紅動態背景) */
+.g2-odds-row.active {
+    background: linear-gradient(90deg, #b45309, #d97706) !important;
+    border-color: #fde047 !important;
+    box-shadow: 0 0 10px #fde047, inset 0 0 6px #fef08a !important;
+    transform: scale(1.05);
+}
+
+.g2-odds-row.active .g2-odds-label,
+.g2-odds-row.active .g2-odds-label small {
+    color: #ffffff !important;
+    text-shadow: 1px 1px 2px #000 !important;
+}
+
+.g2-odds-row.active .g2-odds-val {
+    color: #fef08a !important;
+    text-shadow: 0 0 8px #fde047, 1px 1px 0 #000 !important;
+}

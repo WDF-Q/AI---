@@ -908,6 +908,29 @@ function updateGame2WinDisplay() {
             badge.classList.add('hidden');
         }
     }
+    updateGame2OddsPanel();
+}
+
+function updateGame2OddsPanel() {
+    let bet = game2Bet > 0 ? game2Bet : 600;
+    const lineTiers = [20, 15, 10, 5, 4, 3, 2, 1];
+
+    lineTiers.forEach(lines => {
+        let valEl = document.getElementById(`g2-odds-val-${lines}`);
+        if (valEl) {
+            let winAmount = calculateGame2TotalPayout(bet, lines);
+            valEl.textContent = winAmount;
+        }
+
+        let rowEl = document.querySelector(`.g2-odds-row[data-lines="${lines}"]`);
+        if (rowEl) {
+            if (game2LineCount >= lines) {
+                rowEl.classList.add('active');
+            } else {
+                rowEl.classList.remove('active');
+            }
+        }
+    });
 }
 
 // LV1 ~ LV8 & LV MAX (LV9) 模板數據
@@ -1109,6 +1132,8 @@ const Game2Manager = {
         if (cardNumEl) cardNumEl.textContent = `第 ${game2CardNum} 張`;
         if (lineCountEl) lineCountEl.textContent = game2LineCount;
         if (lineScoreEl) lineScoreEl.textContent = game2Win;
+
+        updateGame2OddsPanel();
 
         let winningIndices = new Set();
         if (this.winningMatchedPatterns && this.winningMatchedPatterns.length > 0) {
