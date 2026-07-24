@@ -941,6 +941,26 @@ function updateGame2OddsPanel() {
             }
         }
     });
+
+    updateGame2BonusDisplay();
+}
+
+function updateGame2BonusDisplay() {
+    const lineCountHud = document.getElementById('g2-line-count-hud');
+    const bonusPanel = document.getElementById('g2-bonus-panel');
+    const bonusAmtEl = document.getElementById('g2-bonus-amount');
+
+    if (game2Bet === 0) {
+        if (lineCountHud) lineCountHud.classList.remove('hidden');
+        if (bonusPanel) bonusPanel.classList.add('hidden');
+    } else {
+        if (lineCountHud) lineCountHud.classList.add('hidden');
+        if (bonusPanel) bonusPanel.classList.remove('hidden');
+        if (bonusAmtEl) {
+            let bonusAmount = game2Bet * 30; // 30 LINE BONUS = BET * 30 (BET 600 -> 18000)
+            bonusAmtEl.textContent = bonusAmount;
+        }
+    }
 }
 
 // LV1 ~ LV8 & LV MAX (LV9) 模板數據

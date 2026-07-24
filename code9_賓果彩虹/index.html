@@ -247,13 +247,29 @@
                         
                         <!-- 頂部與 HUD 區 -->
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; width: 100%; z-index: 10;">
-                            <!-- 左上 HUD: 現在的 LINE 數 (縮小為 0.7倍) -->
-                            <div class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: center; min-width: 125px; transform: scale(0.95); transform-origin: top left;">
-                                <div style="font-size: 0.85rem; font-weight: bold; color: #cbd5e1; border-bottom: 1.5px solid #64748b; padding-bottom: 3px; margin-bottom: 3px;">現在的LINE數</div>
-                                <div style="display: flex; align-items: baseline; justify-content: center; gap: 5px;">
-                                    <span id="g2-line-count" style="font-size: 1.8rem; font-weight: 900; color: #f59e0b;">0</span>
-                                    <span style="font-size: 0.85rem; color: #94a3b8; font-weight: bold;">LINE</span>
-                                    <span id="g2-line-score" style="font-size: 1.8rem; font-weight: 900; color: #f97316; margin-left: 6px;">0</span>
+                            <!-- 左上 HUD 區 (無壓分時顯示 LINE 數，有壓分時顯示 BONUS 欄位) -->
+                            <div style="position: relative;">
+                                <!-- 1) 無壓分時 (game2Bet === 0)：現在的 LINE 數 -->
+                                <div id="g2-line-count-hud" class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: center; min-width: 125px; transform: scale(0.95); transform-origin: top left;">
+                                    <div style="font-size: 0.85rem; font-weight: bold; color: #cbd5e1; border-bottom: 1.5px solid #64748b; padding-bottom: 3px; margin-bottom: 3px;">現在的LINE數</div>
+                                    <div style="display: flex; align-items: baseline; justify-content: center; gap: 5px;">
+                                        <span id="g2-line-count" style="font-size: 1.8rem; font-weight: 900; color: #f59e0b;">0</span>
+                                        <span style="font-size: 0.85rem; color: #94a3b8; font-weight: bold;">LINE</span>
+                                        <span id="g2-line-score" style="font-size: 1.8rem; font-weight: 900; color: #f97316; margin-left: 6px;">0</span>
+                                    </div>
+                                </div>
+
+                                <!-- 2) 有壓分時 (game2Bet > 0)：連連樂 BONUS 欄位 (如截圖) -->
+                                <div id="g2-bonus-panel" class="g2-bonus-box hidden" style="background: linear-gradient(180deg, #831843, #500724); border: 3px solid #ec4899; border-radius: 12px; padding: 5px 12px; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.5), inset 0 0 10px rgba(0,0,0,0.8); text-align: center; min-width: 125px; transform: scale(1.1); transform-origin: top left;">
+                                    <div style="font-size: 0.85rem; font-weight: 900; color: #fef08a; text-shadow: 0 0 6px #ec4899, 1px 1px 0 #000; letter-spacing: 1px;">
+                                        連連樂<span style="color: #60a5fa; margin-left: 2px;">BONUS</span>
+                                    </div>
+                                    <div style="font-size: 1.15rem; font-weight: 900; color: #fde047; text-shadow: 1px 1px 0 #78350f; margin-top: -2px;">
+                                        30 <small style="font-size: 0.75rem; color: #fff;">LINE</small>
+                                    </div>
+                                    <div id="g2-bonus-amount" style="font-size: 1.7rem; font-weight: 900; color: #fef08a; text-shadow: 0 0 10px #f59e0b, 2px 2px 0 #000, -1px -1px 0 #000; line-height: 1; margin-top: 1px;">
+                                        18000
+                                    </div>
                                 </div>
                             </div>
 
