@@ -369,6 +369,12 @@
                                     <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 98px); grid-template-rows: repeat(3, 98px); gap: 6px;">
                                         <!-- JS 動態生成 9 個方塊 -->
                                     </div>
+
+                                    <!-- 當張棋盤連線即時獲得金額的拱型/橢圓勳章動畫 (連線時出現，棋盤消失時同步消失) -->
+                                    <div id="g2-card-win-overlay" class="hidden" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0); transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #ffffff 0%, #fef3c7 65%, #fcd34d 100%); border: 5px solid #d97706; outline: 3px solid #78350f; border-radius: 50% / 45%; padding: 10px 30px; box-shadow: 0 0 30px rgba(245, 158, 11, 0.95), inset 0 0 15px rgba(254, 240, 138, 0.9), 0 8px 25px rgba(0,0,0,0.8); text-align: center; min-width: 155px; box-sizing: border-box;">
+                                        <div id="g2-card-win-amount" style="font-size: 2.8rem; font-weight: 900; color: #f59e0b; text-shadow: 2px 2px 0 #78350f, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; line-height: 1; letter-spacing: 1px; font-family: 'Trebuchet MS', 'Arial Black', sans-serif;">120</div>
+                                        <div style="font-size: 1.6rem; font-weight: 900; color: #d97706; text-shadow: 1.5px 1.5px 0 #78350f, -1px -1px 0 #000; letter-spacing: 3px; margin-top: -3px; font-family: 'Trebuchet MS', sans-serif;">WIN</div>
+                                    </div>
                                 </div>
 
                                 <!-- 底部卡號標籤 (字體大小縮小成 0.6倍 = 1.02rem) -->

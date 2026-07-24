@@ -1058,6 +1058,28 @@ function updateGame2WinDisplay() {
     updateGame2OddsPanel();
 }
 
+function showGame2CardWinOverlay(amount) {
+    const overlay = document.getElementById('g2-card-win-overlay');
+    const amtEl = document.getElementById('g2-card-win-amount');
+    if (overlay && amtEl) {
+        amtEl.textContent = amount;
+        overlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            overlay.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+    }
+}
+
+function hideGame2CardWinOverlay() {
+    const overlay = document.getElementById('g2-card-win-overlay');
+    if (overlay) {
+        overlay.style.transform = 'translate(-50%, -50%) scale(0)';
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 300);
+    }
+}
+
 function updateGame2OddsPanel() {
     let bet = game2Bet > 0 ? game2Bet : 600;
     let tiers = getGame2OddsTiers(game2LineCount);
@@ -1514,12 +1536,17 @@ const Game2Manager = {
         if (matchedPatterns.length > 0) {
             this.winningMatchedPatterns = matchedPatterns;
             let completedLines = matchedPatterns.length;
+            let prevLines = game2LineCount;
             game2LineCount += completedLines;
 
             if (game2Bet > 0) {
-                game2Win = calculateGame2TotalPayout(game2Bet, game2LineCount);
+                let cardWin = calculateGame2TotalPayout(game2Bet, game2LineCount) - calculateGame2TotalPayout(game2Bet, prevLines);
                 updateGame2WinDisplay();
                 recalculateTotalWin();
+
+                if (cardWin > 0) {
+                    showGame2CardWinOverlay(cardWin);
+                }
             }
 
             if (game2Bet > 0) {
@@ -1539,6 +1566,9 @@ const Game2Manager = {
     triggerCardDestructionAndNextDrop() {
         if (this.isCardChanging) return;
         this.isCardChanging = true;
+
+        // 當該張棋盤消失銷毀的同時，即時獲取金額勳章動畫同時消失！
+        hideGame2CardWinOverlay();
 
         const frameEl = document.querySelector('.g2-card-frame');
         if (frameEl) {
