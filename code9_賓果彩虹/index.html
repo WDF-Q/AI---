@@ -294,6 +294,16 @@
 
                             <!-- 3x3 棋盤主體 -->
                             <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4.5px solid #64748b; border-radius: 16px; padding: 9px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
+                                <svg id="g2-line-svg-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
+                                    <defs>
+                                        <linearGradient id="g2-line-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#fef08a" />
+                                            <stop offset="50%" stop-color="#f59e0b" />
+                                            <stop offset="100%" stop-color="#ef4444" />
+                                        </linearGradient>
+                                    </defs>
+                                    <g id="g2-lines-group"></g>
+                                </svg>
                                 <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 98px); grid-template-rows: repeat(3, 98px); gap: 6px;">
                                     <!-- JS 動態生成 9 個方塊 -->
                                 </div>

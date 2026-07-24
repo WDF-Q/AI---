@@ -958,6 +958,17 @@ function getRandomGame2Level() {
     else return 9;              // LV MAX (LV9): 2%
 }
 
+const G2_LINE_COORDS = {
+    '0,1,2': [20, 58, 304, 58],   // 第一橫行
+    '3,4,5': [20, 162, 304, 162], // 第二橫行
+    '6,7,8': [20, 266, 304, 266], // 第三橫行
+    '0,3,6': [58, 20, 58, 304],   // 第一直列
+    '1,4,7': [162, 20, 162, 304], // 第二直列
+    '2,5,8': [266, 20, 266, 304], // 第三直列
+    '0,4,8': [25, 25, 299, 299],  // 主對角線 \
+    '2,4,6': [299, 25, 25, 299]   // 反對角線 /
+};
+
 const Game2Manager = {
     gridData: [],
     nextGridData: [],
@@ -971,6 +982,7 @@ const Game2Manager = {
         game2CardNum = 1;
         game2Win = 0;
         game2LineCount = 0;
+        this.clearWinningLines();
         this.generateCard(1); // 初始主體固定為 LV1 模板
         let firstNextLvl = Math.floor(Math.random() * 3) + 1; // 第一張備用棋盤固定在 LV1~LV3 隨機
         this.generateNextCard(firstNextLvl);
@@ -1181,6 +1193,39 @@ const Game2Manager = {
         }
     },
 
+    drawWinningLines(matchedPatterns) {
+        const group = document.getElementById('g2-lines-group');
+        const gridEl = document.getElementById('game2-grid');
+        if (!group) return;
+        group.innerHTML = '';
+
+        matchedPatterns.forEach(pattern => {
+            let key = pattern.join(',');
+            let coords = G2_LINE_COORDS[key];
+            if (coords) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', coords[0]);
+                line.setAttribute('y1', coords[1]);
+                line.setAttribute('x2', coords[2]);
+                line.setAttribute('y2', coords[3]);
+                line.setAttribute('class', 'g2-winning-stroke');
+                group.appendChild(line);
+            }
+
+            // 方塊黃金光圈高亮與脈衝
+            pattern.forEach(idx => {
+                if (gridEl && gridEl.children[idx]) {
+                    gridEl.children[idx].classList.add('winning');
+                }
+            });
+        });
+    },
+
+    clearWinningLines() {
+        const group = document.getElementById('g2-lines-group');
+        if (group) group.innerHTML = '';
+    },
+
     evaluateLineCheck() {
         if (this.isCardChanging) return;
 
@@ -1190,15 +1235,15 @@ const Game2Manager = {
             [0, 4, 8], [2, 4, 6]
         ];
 
-        let completedLines = 0;
+        let matchedPatterns = [];
         linePatterns.forEach(pattern => {
             if (pattern.every(idx => this.gridData[idx] && this.gridData[idx].hit)) {
-                completedLines++;
+                matchedPatterns.push(pattern);
             }
         });
 
-        if (completedLines > 0) {
-            // 在一局內，連線數累加
+        if (matchedPatterns.length > 0) {
+            let completedLines = matchedPatterns.length;
             game2LineCount += completedLines;
 
             if (game2Bet > 0) {
@@ -1211,8 +1256,13 @@ const Game2Manager = {
                 collectApple(game2LineCount >= 4 ? 'red' : 'green', game2Bet);
             }
 
-            // 觸發主體銷毀與備用棋盤補充
-            this.triggerCardDestructionAndNextDrop();
+            // 1. 在對應格子上繪製黃金雷射連線與方塊脈衝動畫
+            this.drawWinningLines(matchedPatterns);
+
+            // 2. 延遲 650ms 等玩家看清劃線動畫後，再觸發銷毀與補充
+            setTimeout(() => {
+                this.triggerCardDestructionAndNextDrop();
+            }, 650);
         }
     },
 
@@ -1227,6 +1277,7 @@ const Game2Manager = {
 
         setTimeout(() => {
             if (frameEl) frameEl.classList.remove('g2-card-destroying');
+            this.clearWinningLines();
 
             // 備用棋盤下降補充成為主體棋盤
             game2CardNum++;
