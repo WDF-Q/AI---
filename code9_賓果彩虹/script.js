@@ -947,17 +947,21 @@ function updateGame2OddsPanel() {
 
 function updateGame2BonusDisplay() {
     const lineCountHud = document.getElementById('g2-line-count-hud');
-    const bonusPanel = document.getElementById('g2-bonus-panel');
+    const leftActivePanel = document.getElementById('g2-left-active-panel');
     const bonusAmtEl = document.getElementById('g2-bonus-amount');
 
     if (game2Bet === 0) {
+        // 沒有壓分的情況 (game2Bet === 0):
+        // 只保留 "現在的 LINE 數" 欄位；ODDS 與 BONUS 欄位完全隱藏！
         if (lineCountHud) lineCountHud.classList.remove('hidden');
-        if (bonusPanel) bonusPanel.classList.add('hidden');
+        if (leftActivePanel) leftActivePanel.classList.add('hidden');
     } else {
+        // 有壓分的情況 (game2Bet > 0):
+        // "現在的 LINE 數" 欄位隱藏；只保留 ODDS 與 BONUS 欄位！
         if (lineCountHud) lineCountHud.classList.add('hidden');
-        if (bonusPanel) bonusPanel.classList.remove('hidden');
+        if (leftActivePanel) leftActivePanel.classList.remove('hidden');
         if (bonusAmtEl) {
-            let bonusAmount = game2Bet * 30; // 30 LINE BONUS = BET * 30 (BET 600 -> 18000)
+            let bonusAmount = game2Bet * 30; // 30 LINE BONUS = BET * 30
             bonusAmtEl.textContent = bonusAmount;
         }
     }
