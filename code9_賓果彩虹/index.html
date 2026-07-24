@@ -257,11 +257,11 @@
                                 </div>
                             </div>
 
-                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (放大為主體的 1/2 倍 = 49px 邊長) -->
-                            <div class="g2-next-card-wrapper" style="position: absolute; left: 50%; transform: translateX(-50%); top: -4px; display: flex; flex-direction: column; align-items: center;">
-                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.95rem; font-weight: 900; padding: 3px 18px; border-radius: 10px 10px 0 0; border: 2px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1.5px; box-shadow: 0 3px 6px rgba(0,0,0,0.5);">NEXT CARD</div>
-                                <div style="background: #0f172a; border: 2.5px solid #fde047; padding: 6px; border-radius: 0 0 10px 10px; box-shadow: 0 5px 12px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
-                                    <div style="font-size: 0.85rem; color: #fde047; font-weight: 900; margin-bottom: 3px;">LV. <span id="g2-next-level">4</span></div>
+                            <!-- 頂部中央：NEXT CARD 拱門預備盤 -->
+                            <div class="g2-next-card-wrapper" style="position: absolute; left: 50%; transform: translateX(-50%); top: -8px; display: flex; flex-direction: column; align-items: center; z-index: 12;">
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.85rem; font-weight: 900; padding: 2px 14px; border-radius: 8px 8px 0 0; border: 1.5px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEXT CARD</div>
+                                <div style="background: #0f172a; border: 2px solid #fde047; padding: 4px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
+                                    <div style="font-size: 0.75rem; color: #fde047; font-weight: 900; margin-bottom: 2px;">LV. <span id="g2-next-level">4</span></div>
                                     <!-- 3x3 預覽 (縮小為 24px 邊長) -->
                                     <div id="g2-next-grid" style="display: grid; grid-template-columns: repeat(3, 24px); gap: 2px;">
                                         <div class="g2-mini-tile blue"></div>
@@ -286,10 +286,10 @@
                         </div>
 
                         <!-- 中央：3x3 主卡與石框 (放大 1.2倍) -->
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; position: relative;">
-                            <!-- 當前等級 -->
-                            <div style="font-size: 1.4rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 3px;">
-                                LV. <span id="g2-main-level" style="font-size: 1.9rem; color: #fff;">1</span>
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 14px; position: relative;">
+                            <!-- 當前等級 (清楚露出不被遮擋) -->
+                            <div style="font-size: 1.3rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 2px; z-index: 5;">
+                                LV. <span id="g2-main-level" style="font-size: 1.8rem; color: #fff;">1</span>
                             </div>
 
                             <!-- 3x3 棋盤主體 -->
@@ -299,8 +299,8 @@
                                 </div>
                             </div>
 
-                            <!-- 底部卡號標籤 (字體放大為目前的 2倍) -->
-                            <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 1.7rem; font-weight: 900; padding: 4px 24px; border-radius: 16px; border: 2px solid #fde047; margin-top: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.6); text-shadow: 1px 1px 3px #000;">
+                            <!-- 底部卡號標籤 (字體大小縮小成 0.6倍 = 1.02rem) -->
+                            <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 1.02rem; font-weight: bold; padding: 2px 16px; border-radius: 12px; border: 1.5px solid #fde047; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
                                 <span id="g2-card-num-text">第 1 張</span>
                             </div>
                         </div>
