@@ -3173,24 +3173,26 @@ async function runJPRouletteGame() {
     await sleep(4000);
 }
 
-// 響應式縮放邏輯
+// 響應式全螢幕直視自適應縮放引擎（專為平板與多端螢幕設計，確保 100% 免滑動直視全畫面）
 function resizeApp() {
     const wrapper = document.querySelector('.app-wrapper');
     if (!wrapper) return;
     
-    // 暫時解除縮放以取得原始尺寸
+    // 暫時解除縮放以取得真實原始尺寸
     wrapper.style.transform = 'none';
     wrapper.style.transformOrigin = 'center center';
     
-    const rect = wrapper.getBoundingClientRect();
+    const appWidth = wrapper.offsetWidth;
+    const appHeight = wrapper.offsetHeight;
+    
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // 預留一點邊距
-    const scaleX = (windowWidth - 20) / rect.width;
-    const scaleY = (windowHeight - 20) / rect.height;
+    // 預留 10px 邊距安全值
+    const scaleX = (windowWidth - 10) / appWidth;
+    const scaleY = (windowHeight - 10) / appHeight;
     
-    // 取較小值等比例縮放，且不放大超過 100%
+    // 取較小值等比例縮放，最大不超過 100% 原始大小
     let scale = Math.min(scaleX, scaleY);
     if (scale > 1) scale = 1;
     
@@ -3198,9 +3200,18 @@ function resizeApp() {
 }
 
 window.addEventListener('resize', resizeApp);
+window.addEventListener('orientationchange', () => {
+    setTimeout(resizeApp, 100);
+    setTimeout(resizeApp, 300);
+});
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resizeApp);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     switchActiveGame('game1');
     Game2Manager.init();
-    setTimeout(resizeApp, 100);
-    setTimeout(resizeApp, 500);
+    setTimeout(resizeApp, 50);
+    setTimeout(resizeApp, 200);
+    setTimeout(resizeApp, 600);
 });
