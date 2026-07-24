@@ -1047,17 +1047,17 @@ const Game2Manager = {
 
         this.gridData.forEach(tile => {
             const div = document.createElement('div');
-            div.className = `g2-tile ${tile.color} ${tile.hit ? 'hit' : ''}`;
+            let isRainbowBorder = (tile.type === 'free' || tile.type === 'sp' || tile.color === 'sp' || tile.color === 'purple');
 
             if (tile.hit) {
-                let borderColor = tile.color === 'sp' ? '#a855f7' : (tile.color === 'purple' ? '#facc15' : `var(--color-${tile.color}, #facc15)`);
-                div.style.borderColor = borderColor;
-                div.style.background = 'rgba(15, 23, 42, 0.9)';
+                div.className = `g2-tile hit ${isRainbowBorder ? 'rainbow-border' : tile.color}`;
+                if (!isRainbowBorder) {
+                    div.style.borderColor = `var(--color-${tile.color}, #facc15)`;
+                }
                 div.innerHTML = `<span class="g2-hit-text" style="font-size: 1.6rem; font-weight: 900; color: #facc15; text-shadow: 0 0 8px #facc15, 2px 2px 0 #000;">HIT</span>`;
             } else {
-                if (tile.type === 'free') {
-                    div.innerHTML = `<span class="g2-free-text">FREE</span>`;
-                } else if (tile.type === 'sp') {
+                div.className = `g2-tile ${tile.color}`;
+                if (tile.type === 'sp') {
                     div.innerHTML = `<div class="g2-sp-badge">SP</div>`;
                 } else {
                     div.innerHTML = `<div class="g2-paw-icon">🐾</div>`;
@@ -1074,12 +1074,13 @@ const Game2Manager = {
         this.gridData.forEach(tile => {
             if (!tile.hit) {
                 if (logicalColor === 'rainbow') {
-                    // 彩色洞命中：獲得 SP 格子與任意對應格子！
-                    if (tile.type === 'sp' || tile.type === 'color') {
+                    // 彩色洞：觸發 SP / JP 格子 hit!
+                    if (tile.type === 'sp' || tile.color === 'sp') {
                         tile.hit = true;
                         hitMade = true;
                     }
                 } else if (tile.color === logicalColor) {
+                    // 對應顏色進洞：觸發該顏色的格子 hit!
                     tile.hit = true;
                     hitMade = true;
                 }

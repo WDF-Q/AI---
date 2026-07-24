@@ -1344,3 +1344,13 @@ body {
     box-shadow: 0 0 14px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,0,0,0.6) !important;
     transform: scale(0.97);
 }
+
+/* 彩色框 (SP / JP / FREE 獲得後的彩虹漸層邊框) */
+.g2-tile.hit.rainbow-border {
+    border: 3.5px solid transparent !important;
+    background-image: linear-gradient(rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.92)), 
+                      linear-gradient(135deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.7), inset 0 0 10px rgba(0,0,0,0.6) !important;
+}
