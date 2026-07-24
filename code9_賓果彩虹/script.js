@@ -797,10 +797,10 @@ function renderGame2AppleHUD() {
         let isDone = item.collected;
 
         if (isDone) {
-            // 已達成：金色字體 "獲得！" (粗體) + 該詞條右邊的蘋果
+            // 已達成：金色字體 "獲得！" (粗體) + 該詞條右邊原色蘋果 (不使用 inline filter 覆蓋 CSS 顏色)
             html += `<div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 1.05rem; font-weight: 900; line-height: 1.15; margin-bottom: 2px;">
                 <span style="color: #fde047; text-shadow: 0 0 6px #f59e0b, 1px 1px 0 #78350f, -1px -1px 0 #000; font-weight: 900; letter-spacing: 1px;">獲得！</span>
-                <span class="apple-item apple-${item.type}" style="font-size: 1.2rem; margin: 0; filter: drop-shadow(0 0 5px #fde047);">🍎</span>
+                <span class="apple-item apple-${item.type}" style="font-size: 1.2rem; margin: 0;">🍎</span>
             </div>`;
         } else {
             // 未達成：顯示門檻 LINE 數與蘋果
