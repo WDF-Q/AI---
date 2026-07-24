@@ -791,11 +791,7 @@ function renderGame2AppleHUD() {
 
     let html = '';
     game2AppleThresholds.forEach(item => {
-        let emoji = '🍏';
-        if (item.type === 'red') emoji = '🍎';
-        else if (item.type === 'gold') emoji = '🌟🍎';
-        else if (item.type === 'bronze') emoji = '🥉🍎';
-        else if (item.type === 'silver') emoji = '🥈🍎';
+        let emoji = (item.type === 'green') ? '🍏' : '🍎';
 
         let isDone = item.collected;
         let style = isDone 
