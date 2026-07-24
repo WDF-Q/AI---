@@ -1205,24 +1205,48 @@ const Game2Manager = {
     },
 
     drawWinningLines(matchedPatterns) {
-        const group = document.getElementById('g2-lines-group');
+        const barsContainer = document.getElementById('g2-line-bars-container');
+        const svgGroup = document.getElementById('g2-lines-group');
         const gridEl = document.getElementById('game2-grid');
-        if (!group) return;
-        group.innerHTML = '';
+
+        if (barsContainer) barsContainer.innerHTML = '';
+        if (svgGroup) svgGroup.innerHTML = '';
+
+        const patternClassMap = {
+            '0,1,2': 'row-0',
+            '3,4,5': 'row-1',
+            '6,7,8': 'row-2',
+            '0,3,6': 'col-0',
+            '1,4,7': 'col-1',
+            '2,5,8': 'col-2',
+            '0,4,8': 'diag-1',
+            '2,4,6': 'diag-2'
+        };
 
         matchedPatterns.forEach(pattern => {
             let key = pattern.join(',');
+            let clsName = patternClassMap[key];
+
+            // 1. 生成 HTML 實體耀眼光條 (絕對層級覆蓋於方塊最頂層)
+            if (clsName && barsContainer) {
+                const bar = document.createElement('div');
+                bar.className = `g2-line-bar ${clsName}`;
+                barsContainer.appendChild(bar);
+            }
+
+            // 2. 生成 SVG 光雕線條
             let coords = G2_LINE_COORDS[key];
-            if (coords) {
+            if (coords && svgGroup) {
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', coords[0]);
                 line.setAttribute('y1', coords[1]);
                 line.setAttribute('x2', coords[2]);
                 line.setAttribute('y2', coords[3]);
                 line.setAttribute('class', 'g2-winning-stroke');
-                group.appendChild(line);
+                svgGroup.appendChild(line);
             }
 
+            // 3. 給連線方塊加上黃金光圈與脈衝高亮
             pattern.forEach(idx => {
                 if (gridEl && gridEl.children[idx]) {
                     gridEl.children[idx].classList.add('winning');
@@ -1232,8 +1256,10 @@ const Game2Manager = {
     },
 
     clearWinningLines() {
-        const group = document.getElementById('g2-lines-group');
-        if (group) group.innerHTML = '';
+        const barsContainer = document.getElementById('g2-line-bars-container');
+        const svgGroup = document.getElementById('g2-lines-group');
+        if (barsContainer) barsContainer.innerHTML = '';
+        if (svgGroup) svgGroup.innerHTML = '';
         this.winningMatchedPatterns = [];
     },
 
@@ -1268,11 +1294,13 @@ const Game2Manager = {
                 collectApple(game2LineCount >= 4 ? 'red' : 'green', game2Bet);
             }
 
-            // 1. 在對應格子上繪製黃金雷射連線與方塊脈衝動畫
+            // 1. 在對應格子上繪製黃金雷射連線光條與方塊脈衝動畫
             this.drawWinningLines(matchedPatterns);
 
-            // 2. 觸發銷毀與補充（連線與劃線會在主棋盤上持續停留，並在銷毀時一同消失）
-            this.triggerCardDestructionAndNextDrop();
+            // 2. 觸發連線時【先停留 1 秒 (1000ms)】讓玩家清晰看清主棋盤連線狀況，之後再觸發銷毀！
+            setTimeout(() => {
+                this.triggerCardDestructionAndNextDrop();
+            }, 1000);
         }
     },
 
