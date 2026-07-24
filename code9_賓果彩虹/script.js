@@ -1115,25 +1115,59 @@ const Game2Manager = {
         });
     },
 
+    upgradeNextCardLevel(levelBoost = 1) {
+        if (this.nextLevel >= 9) {
+            // 已經達到 LV MAX (LV9)：重新生成 LV MAX 盤面（自動切換為其它顏色/排版組合）
+            this.generateNextCard(9);
+        } else {
+            // 提升等級（最多提升至 LV MAX = LV9）
+            let targetLevel = Math.min(9, this.nextLevel + levelBoost);
+            this.generateNextCard(targetLevel);
+        }
+    },
+
     processBall(logicalColor, isBatchMode = false) {
         if (!this.gridData || this.gridData.length === 0) return;
 
         let hitMade = false;
-        this.gridData.forEach(tile => {
-            if (!tile.hit) {
-                if (logicalColor === 'rainbow') {
-                    // 彩色洞：觸發 SP / JP 格子 hit!
-                    if (tile.type === 'sp' || tile.color === 'sp') {
-                        tile.hit = true;
-                        hitMade = true;
-                    }
-                } else if (tile.color === logicalColor) {
-                    // 對應顏色進洞：觸發該顏色的格子 hit!
+        let nextCardLevelBoost = 0;
+
+        if (logicalColor === 'rainbow') {
+            // 彩色洞：
+            // 1) 檢查主棋盤 SP 格子是否【已經處於 HIT 狀態】
+            let spAlreadyHit = this.gridData.some(tile => (tile.type === 'sp' || tile.color === 'sp') && tile.hit);
+            if (spAlreadyHit) {
+                nextCardLevelBoost += 2; // SP 已是 HIT 狀態，備用棋盤等級 +2！
+            }
+
+            // 2) 命中尚未 HIT 的 SP 格子
+            this.gridData.forEach(tile => {
+                if (!tile.hit && (tile.type === 'sp' || tile.color === 'sp')) {
                     tile.hit = true;
                     hitMade = true;
                 }
+            });
+        } else if (logicalColor && logicalColor !== 'white') {
+            // 標準單色洞（黃、藍、紅、綠、粉）：
+            // 1) 檢查主棋盤該顏色的格子是否【已經處於 HIT 狀態】
+            let colorAlreadyHit = this.gridData.some(tile => tile.color === logicalColor && tile.hit);
+            if (colorAlreadyHit) {
+                nextCardLevelBoost += 1; // 該顏色已是 HIT 狀態，備用棋盤等級 +1！
             }
-        });
+
+            // 2) 命中尚未 HIT 的對應顏色格子
+            this.gridData.forEach(tile => {
+                if (!tile.hit && tile.color === logicalColor) {
+                    tile.hit = true;
+                    hitMade = true;
+                }
+            });
+        }
+
+        // 若觸發備用棋盤升級或 LV MAX 變色切換
+        if (nextCardLevelBoost > 0) {
+            this.upgradeNextCardLevel(nextCardLevelBoost);
+        }
 
         if (hitMade) {
             this.renderUI();
