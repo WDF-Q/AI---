@@ -243,10 +243,10 @@
 
                 <!-- 遊戲 2：連連樂 / 賓果連線 / 九宮格 -->
                 <div class="game-module mini" id="game2-container" onclick="switchActiveGame('game2')">
-                    <div id="game2-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); border: 4px solid #8b5cf6; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); padding: 12px 12px 5px 12px; box-sizing: border-box; justify-content: space-between; overflow: hidden;">
+                    <div id="game2-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); border: 4px solid #8b5cf6; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); padding: 8px 12px 12px 12px; box-sizing: border-box; justify-content: space-between; overflow: hidden;">
                         
-                        <!-- 頂部與 HUD 區 (高度自動契合 NEXT CARD 備用棋盤，兩側欄位依據底邊 absolute bottom:0 精準對齊) -->
-                        <div style="display: flex; justify-content: center; align-items: flex-end; position: relative; width: 100%; z-index: 10; margin-top: 4px; padding-bottom: 2px;">
+                        <!-- 頂部與 HUD 區 (精簡高度，兩側欄位依據底邊 absolute bottom:0 精準對齊) -->
+                        <div style="display: flex; justify-content: center; align-items: flex-end; position: relative; width: 100%; z-index: 10; margin-top: 2px; padding-bottom: 0px;">
                             <!-- 左上 HUD 區 (對齊備用棋盤底邊) -->
                             <div style="position: absolute; left: 0; bottom: 0; min-width: 125px; display: flex; align-items: flex-end; justify-content: flex-start; z-index: 15;">
                                 <!-- 1) 無壓分時 (game2Bet === 0)：現在的 LINE 數 -->
@@ -260,7 +260,7 @@
                                 </div>
 
                                 <!-- 2) 有壓分時 (game2Bet > 0)：連連樂 BONUS 欄位 (對齊備用棋盤底邊) -->
-                                <div id="g2-bonus-panel" class="g2-bonus-box hidden" style="background: linear-gradient(180deg, #831843, #500724); border: 2.5px solid #ec4899; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.5), inset 0 0 10px rgba(0,0,0,0.8); text-align: center; min-width: 125px; transform: scale(1.05); transform-origin: bottom left;">
+                                <div id="g2-bonus-panel" class="g2-bonus-box hidden" style="background: linear-gradient(180deg, #831843, #500724); border: 2.5px solid #ec4899; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.5), inset 0 0 10px rgba(0,0,0,0.8); text-align: center; min-width: 125px; transform: scale(1.02); transform-origin: bottom left;">
                                     <div style="font-size: 0.85rem; font-weight: 900; color: #fef08a; text-shadow: 0 0 6px #ec4899, 1px 1px 0 #000; letter-spacing: 1px;">
                                         連連樂<span style="color: #60a5fa; margin-left: 2px;">BONUS</span>
                                     </div>
@@ -273,13 +273,13 @@
                                 </div>
                             </div>
 
-                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (保持尺寸放大 1.1 倍，作為中央高度與底邊基準) -->
-                            <div class="g2-next-card-wrapper" style="position: relative; display: flex; flex-direction: column; align-items: center; z-index: 12; transform: scale(1.1); transform-origin: bottom center;">
+                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (比例 1.0x 完美尺寸，為中央高度與底邊基準) -->
+                            <div class="g2-next-card-wrapper" style="position: relative; display: flex; flex-direction: column; align-items: center; z-index: 12; transform: scale(1.0); transform-origin: bottom center;">
                                 <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.76rem; font-weight: 900; padding: 2px 12px; border-radius: 6px 6px 0 0; border: 1.5px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEXT CARD</div>
-                                <div style="background: #0f172a; border: 2px solid #fde047; padding: 6px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
-                                    <div style="font-size: 0.88rem; color: #fde047; font-weight: 900; margin-bottom: 3px;">LV. <span id="g2-next-level">4</span></div>
+                                <div style="background: #0f172a; border: 2px solid #fde047; padding: 5px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
+                                    <div style="font-size: 0.85rem; color: #fde047; font-weight: 900; margin-bottom: 2px;">LV. <span id="g2-next-level">4</span></div>
                                     <!-- 3x3 預覽 (完整 32px 邊長) -->
-                                    <div id="g2-next-grid" style="display: grid; grid-template-columns: repeat(3, 32px); gap: 3px;">
+                                    <div id="g2-next-grid" style="display: grid; grid-template-columns: repeat(3, 32px); gap: 2.5px;">
                                         <div class="g2-mini-tile blue"></div>
                                         <div class="g2-mini-tile yellow"></div>
                                         <div class="g2-mini-tile pink"></div>
@@ -295,7 +295,7 @@
 
                             <!-- 右上 HUD: 蘋果門檻 (往左移動 34px / 約 1 個蘋果寬度，對齊備用棋盤底邊) -->
                             <div style="position: absolute; right: 34px; bottom: 0; min-width: 115px; display: flex; align-items: flex-end; justify-content: flex-end; z-index: 15;">
-                                <div id="g2-apple-hud" class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 4px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: right; min-width: 115px; transform: scale(1.3); transform-origin: bottom right;">
+                                <div id="g2-apple-hud" class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 4px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: right; min-width: 115px; transform: scale(1.22); transform-origin: bottom right;">
                                     <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">5 LINE <span style="font-size: 1.2rem;">🍏</span></div>
                                     <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">4 LINE <span style="font-size: 1.2rem;">🍎</span></div>
                                     <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15;">3 LINE <span style="font-size: 1.2rem;">🍏</span></div>
@@ -303,8 +303,8 @@
                             </div>
                         </div>
 
-                        <!-- 中央：左側靠左對齊 ODDS 欄位 + 100% 左右置中 3x3 主卡區域 -->
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 10px; position: relative; width: 100%;">
+                        <!-- 中央：左側靠左對齊 ODDS 欄位 + 100% 左右置中 3x3 主卡區域 (緊湊 margin-top: 2px) -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2px; position: relative; width: 100%;">
                             <!-- 左側靠左對齊：ODDS 賠率欄位 (靠左貼齊，與主棋盤保持適當空間，高度 368px) -->
                             <div id="g2-odds-panel" class="hidden" style="position: absolute; left: 2px; bottom: 0; height: 368px; background: linear-gradient(180deg, #334155, #0f172a); border: 2.5px solid #64748b; border-radius: 12px; padding: 6px 5px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; width: 108px; box-sizing: border-box; z-index: 15;">
                                 <div style="font-size: 0.82rem; font-weight: 900; color: #f97316; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; border-bottom: 1.5px solid #475569; width: 100%; text-align: center; padding-bottom: 2px; margin-bottom: 4px;">
