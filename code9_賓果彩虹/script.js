@@ -780,14 +780,17 @@ function renderGame2AppleHUD() {
     const hudContainer = document.getElementById('g2-apple-hud');
     if (!hudContainer) return;
 
-    if (game2Bet === 0 || game2AppleThresholds.length === 0) {
-        hudContainer.innerHTML = `
-            <div style="font-size: 1.02rem; color: #94a3b8; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">5 LINE <span style="font-size: 1.2rem; filter: grayscale(1) opacity(0.5);">🍏</span></div>
-            <div style="font-size: 1.02rem; color: #94a3b8; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">4 LINE <span style="font-size: 1.2rem; filter: grayscale(1) opacity(0.5);">🍎</span></div>
-            <div style="font-size: 1.02rem; color: #94a3b8; font-weight: bold; line-height: 1.15;">3 LINE <span style="font-size: 1.2rem; filter: grayscale(1) opacity(0.5);">🍏</span></div>
-        `;
+    // 壓分階段（!isPlaying）隱藏蘋果門檻欄位（增添神秘感，避免壓分時詞條亂跳）
+    // 只有在遊戲開始後（isPlaying === true）且有壓分（game2Bet > 0）時才顯示正式選定的門檻與蘋果！
+    if (!isPlaying || game2Bet === 0 || !game2AppleThresholds || game2AppleThresholds.length === 0) {
+        hudContainer.style.display = 'none';
+        hudContainer.classList.add('hidden');
+        hudContainer.innerHTML = '';
         return;
     }
+
+    hudContainer.style.display = 'block';
+    hudContainer.classList.remove('hidden');
 
     let html = '';
     game2AppleThresholds.forEach(item => {
