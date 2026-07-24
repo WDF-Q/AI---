@@ -285,21 +285,21 @@
                             </div>
                         </div>
 
-                        <!-- 中央：3x3 主卡與石框 (放大 1.2倍) -->
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 14px; position: relative;">
+                        <!-- 中央：左側 ODDS 賠率對照表 + 3x3 主卡區域 -->
+                        <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; margin-top: 10px; gap: 14px; position: relative; width: 100%;">
                             <!-- 左側：ODDS 賠率對照表 (固定顯示 20, 15, 10, 5, 4, 3, 2, 1 LINE 及動態金額) -->
-                            <div id="g2-odds-panel" style="position: absolute; left: -118px; top: 52%; transform: translateY(-50%); background: linear-gradient(180deg, #334155, #0f172a); border: 2.5px solid #64748b; border-radius: 12px; padding: 5px 6px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; min-width: 106px; z-index: 15;">
+                            <div id="g2-odds-panel" style="background: linear-gradient(180deg, #334155, #0f172a); border: 2.5px solid #64748b; border-radius: 12px; padding: 5px 6px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; min-width: 106px; z-index: 15;">
                                 <div style="font-size: 0.8rem; font-weight: 900; color: #f97316; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; border-bottom: 1.5px solid #475569; width: 100%; text-align: center; padding-bottom: 2px; margin-bottom: 3px;">
                                     ODDS
                                 </div>
                                 <div id="g2-odds-list" style="display: flex; flex-direction: column; gap: 3px; width: 100%;">
                                     <div class="g2-odds-row" data-lines="20">
                                         <div class="g2-odds-label">20<small>LINE</small></div>
-                                        <span class="g2-odds-val" id="g2-odds-val-20">3600</span>
+                                        <span class="g2-odds-val" id="g2-odds-val-20">3000</span>
                                     </div>
                                     <div class="g2-odds-row" data-lines="15">
                                         <div class="g2-odds-label">15<small>LINE</small></div>
-                                        <span class="g2-odds-val" id="g2-odds-val-15">2400</span>
+                                        <span class="g2-odds-val" id="g2-odds-val-15">2100</span>
                                     </div>
                                     <div class="g2-odds-row" data-lines="10">
                                         <div class="g2-odds-label">10<small>LINE</small></div>
@@ -328,32 +328,35 @@
                                 </div>
                             </div>
 
-                            <!-- 當前等級 (清楚露出不被遮擋) -->
-                            <div style="font-size: 1.3rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 2px; z-index: 5;">
-                                LV. <span id="g2-main-level" style="font-size: 1.8rem; color: #fff;">1</span>
-                            </div>
-
-                            <!-- 3x3 棋盤主體 -->
-                            <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4.5px solid #64748b; border-radius: 16px; padding: 9px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
-                                <div id="g2-line-bars-container" style="position: absolute; top: 9px; left: 9px; width: 306px; height: 306px; pointer-events: none; z-index: 25; overflow: visible;"></div>
-                                <svg id="g2-line-svg-overlay" viewBox="0 0 324 324" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; overflow: visible;">
-                                    <defs>
-                                        <linearGradient id="g2-line-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="#fef08a" />
-                                            <stop offset="50%" stop-color="#f59e0b" />
-                                            <stop offset="100%" stop-color="#ef4444" />
-                                        </linearGradient>
-                                    </defs>
-                                    <g id="g2-lines-group"></g>
-                                </svg>
-                                <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 98px); grid-template-rows: repeat(3, 98px); gap: 6px;">
-                                    <!-- JS 動態生成 9 個方塊 -->
+                            <!-- 右側：3x3 主卡與石框 -->
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <!-- 當前等級 (清楚露出不被遮擋) -->
+                                <div style="font-size: 1.3rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 2px; z-index: 5;">
+                                    LV. <span id="g2-main-level" style="font-size: 1.8rem; color: #fff;">1</span>
                                 </div>
-                            </div>
 
-                            <!-- 底部卡號標籤 (字體大小縮小成 0.6倍 = 1.02rem) -->
-                            <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 1.02rem; font-weight: bold; padding: 2px 16px; border-radius: 12px; border: 1.5px solid #fde047; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
-                                <span id="g2-card-num-text">第 1 張</span>
+                                <!-- 3x3 棋盤主體 -->
+                                <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4.5px solid #64748b; border-radius: 16px; padding: 9px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
+                                    <div id="g2-line-bars-container" style="position: absolute; top: 9px; left: 9px; width: 306px; height: 306px; pointer-events: none; z-index: 25; overflow: visible;"></div>
+                                    <svg id="g2-line-svg-overlay" viewBox="0 0 324 324" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; overflow: visible;">
+                                        <defs>
+                                            <linearGradient id="g2-line-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stop-color="#fef08a" />
+                                                <stop offset="50%" stop-color="#f59e0b" />
+                                                <stop offset="100%" stop-color="#ef4444" />
+                                            </linearGradient>
+                                        </defs>
+                                        <g id="g2-lines-group"></g>
+                                    </svg>
+                                    <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 98px); grid-template-rows: repeat(3, 98px); gap: 6px;">
+                                        <!-- JS 動態生成 9 個方塊 -->
+                                    </div>
+                                </div>
+
+                                <!-- 底部卡號標籤 (字體大小縮小成 0.6倍 = 1.02rem) -->
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 1.02rem; font-weight: bold; padding: 2px 16px; border-radius: 12px; border: 1.5px solid #fde047; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+                                    <span id="g2-card-num-text">第 1 張</span>
+                                </div>
                             </div>
                         </div>
 
