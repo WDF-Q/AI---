@@ -54,6 +54,7 @@ let ballCount = 0;
 let credit = 10000;
 let game1Bet = 0;
 let game2Bet = 0;
+let game2LvMaxCombo = 0;
 let game3Bet = 0;
 let previousGame1Bet = 0;
 let previousGame2Bet = 0;
@@ -1080,6 +1081,17 @@ function hideGame2CardWinOverlay() {
     }
 }
 
+function updateGame2ComboBadge() {
+    const badge = document.getElementById('g2-combo-badge');
+    if (!badge) return;
+    if (game2LvMaxCombo > 0) {
+        badge.textContent = `combo ${game2LvMaxCombo}`;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
 function updateGame2OddsPanel() {
     let bet = game2Bet > 0 ? game2Bet : 600;
     let tiers = getGame2OddsTiers(game2LineCount);
@@ -1230,6 +1242,9 @@ const Game2Manager = {
 
     init() {
         this.isCardChanging = false;
+        this.isLvMaxComboChain = false;
+        game2LvMaxCombo = 0;
+        updateGame2ComboBadge();
         this.winningMatchedPatterns = [];
         game2Level = 1;
         game2CardNum = 1;
@@ -1539,6 +1554,13 @@ const Game2Manager = {
             let prevLines = game2LineCount;
             game2LineCount += completedLines;
 
+            // 判斷是否是在 LV MAX 狀態下達成連線消除
+            if (game2Level >= 9) {
+                game2LvMaxCombo++;
+                this.isLvMaxComboChain = true;
+                updateGame2ComboBadge();
+            }
+
             if (game2Bet > 0) {
                 let cardWin = calculateGame2TotalPayout(game2Bet, game2LineCount) - calculateGame2TotalPayout(game2Bet, prevLines);
                 updateGame2WinDisplay();
@@ -1579,19 +1601,33 @@ const Game2Manager = {
             if (frameEl) frameEl.classList.remove('g2-card-destroying');
             this.clearWinningLines();
 
-            // 備用棋盤下降補充成為主體棋盤
             game2CardNum++;
-            game2Level = this.nextLevel;
-            this.gridData = this.nextGridDataFull;
 
-            // 第二張開始的備用棋盤，依據設定的權重機率抽 LV1 ~ LV MAX
-            let newNextLevel = getRandomGame2Level();
-            this.generateNextCard(newNextLevel);
+            // 判斷是否是在 LV MAX 狀態下消除並觸發連擊 combo
+            if (this.isLvMaxComboChain) {
+                // 主棋盤在 LV MAX 狀態下消除：下一張棋盤【不會】從上方的備用棋盤補充！
+                // 主棋盤在這張消失後，自動更新一張同樣是 LV MAX 的棋盤，備用棋盤保持凍結保留！
+                game2Level = 9;
+                this.generateCard(9);
+                this.isLvMaxComboChain = false;
+            } else {
+                // 若未達成 LV MAX 消除，Combo 中斷，恢復正常從備用棋盤補充
+                game2LvMaxCombo = 0;
+                updateGame2ComboBadge();
+
+                // 備用棋盤下降補充成為主體棋盤
+                game2Level = this.nextLevel;
+                this.gridData = this.nextGridDataFull;
+
+                // 第二張開始的備用棋盤，依據設定的權重機率抽 LV1 ~ LV MAX
+                let newNextLevel = getRandomGame2Level();
+                this.generateNextCard(newNextLevel);
+            }
 
             // 重置卡片變更狀態標誌
             this.isCardChanging = false;
 
-            // 重新渲染UI (保留本局累加連線數與獎金)
+            // 重新渲染UI
             this.renderUI();
         }, 600);
     }
