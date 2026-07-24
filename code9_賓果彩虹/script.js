@@ -938,14 +938,17 @@ const G2_TEMPLATES = {
 const Game2Manager = {
     gridData: [],
     nextGridData: [],
+    nextGridDataFull: [],
+    nextLevel: 2,
 
     init() {
         game2Level = 1;
         game2CardNum = 1;
         game2Win = 0;
         game2LineCount = 0;
-        this.generateCard(1);
-        this.generateNextCard(2);
+        this.generateCard(1); // 初始固定為 LV1 模板
+        let randomNextLvl = Math.floor(Math.random() * 9) + 1;
+        this.generateNextCard(randomNextLvl); // 備用棋盤隨機生成 LV1~LV9
         this.renderUI();
         updateGame2WinDisplay();
     },
@@ -999,7 +1002,8 @@ const Game2Manager = {
     },
 
     generateNextCard(level) {
-        let lvlKey = level >= 9 ? 9 : Math.max(1, level);
+        this.nextLevel = level >= 9 ? 9 : Math.max(1, level);
+        let lvlKey = this.nextLevel;
         let tList = G2_TEMPLATES[lvlKey] || G2_TEMPLATES[1];
         let tLayout = tList[Math.floor(Math.random() * tList.length)];
         let allColors = ['yellow', 'blue', 'red', 'green', 'pink'];
@@ -1009,13 +1013,30 @@ const Game2Manager = {
         };
 
         this.nextGridData = [];
+        this.nextGridDataFull = [];
+
         for (let i = 0; i < 9; i++) {
             let key = tLayout[i];
-            let c = key.startsWith('c') ? colorMap[key] : (key === 'FREE' ? 'purple' : 'sp');
-            this.nextGridData.push({ color: c });
+            if (key === 'FREE') {
+                this.nextGridData.push({ color: 'purple' });
+                this.nextGridDataFull.push({
+                    id: i, type: 'free', color: 'purple', spText: 'FREE', hit: true
+                });
+            } else if (key === 'SP') {
+                this.nextGridData.push({ color: 'sp' });
+                this.nextGridDataFull.push({
+                    id: i, type: 'sp', color: 'sp', spText: 'SP', hit: false
+                });
+            } else {
+                let assignedColor = colorMap[key];
+                this.nextGridData.push({ color: assignedColor });
+                this.nextGridDataFull.push({
+                    id: i, type: 'color', color: assignedColor, spText: key, hit: false
+                });
+            }
         }
         const nextLvlEl = document.getElementById('g2-next-level');
-        if (nextLvlEl) nextLvlEl.textContent = (level >= 9 ? 'MAX' : level);
+        if (nextLvlEl) nextLvlEl.textContent = (this.nextLevel >= 9 ? 'MAX' : this.nextLevel);
         this.renderNextGrid();
     },
 
@@ -1071,7 +1092,7 @@ const Game2Manager = {
         });
     },
 
-    processBall(logicalColor) {
+    processBall(logicalColor, isBatchMode = false) {
         if (!this.gridData || this.gridData.length === 0) return;
 
         let hitMade = false;
@@ -1092,12 +1113,16 @@ const Game2Manager = {
         });
 
         if (hitMade) {
-            this.checkLines();
             this.renderUI();
+        }
+
+        // 如果不是 3球批次模式，單球進洞時直接進行連線與銷毀檢定
+        if (!isBatchMode) {
+            this.evaluateLineCheck();
         }
     },
 
-    checkLines() {
+    evaluateLineCheck() {
         const linePatterns = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
             [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -1111,13 +1136,13 @@ const Game2Manager = {
             }
         });
 
-        if (completedLines > game2LineCount) {
-            let newLines = completedLines - game2LineCount;
+        if (completedLines > 0) {
+            // 完成 1 條或以上連線
             game2LineCount = completedLines;
 
             if (game2Bet > 0) {
                 let linePayout = Math.floor(game2Bet * 0.4 * game2LineCount);
-                game2Win = linePayout;
+                game2Win += linePayout;
                 updateGame2WinDisplay();
                 recalculateTotalWin();
             }
@@ -1125,20 +1150,34 @@ const Game2Manager = {
             if (game2LineCount >= 3 && game2Bet > 0) {
                 collectApple(game2LineCount >= 4 ? 'red' : 'green', game2Bet);
             }
-        }
 
-        if (this.gridData.every(t => t.hit)) {
-            setTimeout(() => this.nextCardAnimation(), 800);
+            // 觸發主體銷毀與備用棋盤補充
+            this.triggerCardDestructionAndNextDrop();
         }
     },
 
-    nextCardAnimation() {
-        game2CardNum++;
-        game2Level = (game2Level % 9) + 1; // 升級 LV1~LV8 -> LV MAX (9)
-        this.generateCard(game2Level);
-        this.generateNextCard((game2Level % 9) + 1);
-        game2LineCount = 0;
-        this.renderUI();
+    triggerCardDestructionAndNextDrop() {
+        const frameEl = document.querySelector('.g2-card-frame');
+        if (frameEl) {
+            frameEl.classList.add('g2-card-destroying');
+        }
+
+        setTimeout(() => {
+            if (frameEl) frameEl.classList.remove('g2-card-destroying');
+
+            // 備用棋盤下降補充成為主體棋盤
+            game2CardNum++;
+            game2Level = this.nextLevel;
+            this.gridData = this.nextGridDataFull;
+
+            // 備用棋盤再從 LV1~LV8 + LV MAX (9種) 中隨機生成補充
+            let newNextLevel = Math.floor(Math.random() * 9) + 1;
+            this.generateNextCard(newNextLevel);
+
+            // 重置連線數並重新渲染
+            game2LineCount = 0;
+            this.renderUI();
+        }, 500);
     }
 };
 
@@ -1667,14 +1706,14 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
     activeBalls = activeBalls.filter(b => b !== ballObj);
 }
 
-async function shootBallAsync(isSafeMode) {
+async function shootBallAsync(isSafeMode, isBatchMode = false) {
     let baseDraw = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
     
     if (baseDraw === 'white') {
         await spawnAndSpinBall('white', false);
         historyTracker.white++;
         addBallToHistoryUI('白色', 'white');
-        Game2Manager.processBall('white'); // Game 2
+        Game2Manager.processBall('white', isBatchMode); // Game 2
         Game3Manager.processBall('white'); // Game 3
         
         if (!isSafeMode) {
@@ -1693,7 +1732,7 @@ async function shootBallAsync(isSafeMode) {
             historyTracker.rainbow++;
             addBallToHistoryUI('彩色', 'rainbow');
             
-            Game2Manager.processBall('rainbow'); // Game 2
+            Game2Manager.processBall('rainbow', isBatchMode); // Game 2
             Game3Manager.processBall(game3TargetColor, true, null); // Game 3 rainbow wildcard
             
             pendingEventsQueue.push({ type: 'laser_strike' });
@@ -1715,8 +1754,8 @@ async function shootBallAsync(isSafeMode) {
             }
             
             // Game 2 and Game 3 processing for dual colors
-            Game2Manager.processBall(pair[0]);
-            Game2Manager.processBall(pair[1]);
+            Game2Manager.processBall(pair[0], isBatchMode);
+            Game2Manager.processBall(pair[1], isBatchMode);
             Game3Manager.processBall(null, false, pair);
             
             pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
@@ -1728,7 +1767,7 @@ async function shootBallAsync(isSafeMode) {
         await spawnAndSpinBall(color, false);
         historyTracker[color]++;
         addBallToHistoryUI(COLOR_ZH[color], color);
-        Game2Manager.processBall(color); // Game 2
+        Game2Manager.processBall(color, isBatchMode); // Game 2
         Game3Manager.processBall(color); // Game 3
         
         if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
@@ -1762,7 +1801,7 @@ async function startLeftEngine() {
                         DOM.ballCountText.textContent = ballCount;
                         let isSafeMode = true; 
                         
-                        let p = shootBallAsync(isSafeMode).then(res => {
+                        let p = shootBallAsync(isSafeMode, true).then(res => {
                             if (res === 'rainbow') {
                                 let expectedTotal = currentShotNumber + (batchCount - 1 - i) + (rainbowTriggeredCount * 3);
                                 if (expectedTotal <= 40) {
@@ -1779,6 +1818,9 @@ async function startLeftEngine() {
                     }
                     
                     await Promise.all(promises);
+
+                    // 批次發球 (初始 3球 / JP 3球) 全部進洞後，統一對 Game 2 進行連線、銷毀與補充檢定！
+                    Game2Manager.evaluateLineCheck();
                     
                     if (rainbowTriggeredCount > 0) {
                         pendingDrawsQueue += (rainbowTriggeredCount * 3);
