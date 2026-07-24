@@ -949,30 +949,39 @@ function updateGame2OddsPanel() {
 
 function updateGame2BonusDisplay() {
     const lineCountHud = document.getElementById('g2-line-count-hud');
-    const leftActivePanel = document.getElementById('g2-left-active-panel');
+    const bonusPanel = document.getElementById('g2-bonus-panel');
+    const oddsPanel = document.getElementById('g2-odds-panel');
     const bonusAmtEl = document.getElementById('g2-bonus-amount');
 
     if (game2Bet === 0) {
         // 沒有壓分的情況 (game2Bet === 0):
-        // 只保留 "現在的 LINE 數" 欄位；ODDS 與 BONUS 欄位完全隱藏！
+        // 左上角顯示 "現在的 LINE 數"；隱藏 BONUS 欄位與 ODDS 欄位！
         if (lineCountHud) {
             lineCountHud.style.display = 'block';
             lineCountHud.classList.remove('hidden');
         }
-        if (leftActivePanel) {
-            leftActivePanel.style.display = 'none';
-            leftActivePanel.classList.add('hidden');
+        if (bonusPanel) {
+            bonusPanel.style.display = 'none';
+            bonusPanel.classList.add('hidden');
+        }
+        if (oddsPanel) {
+            oddsPanel.style.display = 'none';
+            oddsPanel.classList.add('hidden');
         }
     } else {
         // 有壓分的情況 (game2Bet > 0):
-        // "現在的 LINE 數" 欄位隱藏；只保留 ODDS 與 BONUS 欄位！
+        // 隱藏 "現在的 LINE 數"；左上角顯示 BONUS 欄位 (對齊右上蘋果欄位)，主棋盤左側顯示與主棋盤等高的 ODDS 欄位！
         if (lineCountHud) {
             lineCountHud.style.display = 'none';
             lineCountHud.classList.add('hidden');
         }
-        if (leftActivePanel) {
-            leftActivePanel.style.display = 'flex';
-            leftActivePanel.classList.remove('hidden');
+        if (bonusPanel) {
+            bonusPanel.style.display = 'block';
+            bonusPanel.classList.remove('hidden');
+        }
+        if (oddsPanel) {
+            oddsPanel.style.display = 'flex';
+            oddsPanel.classList.remove('hidden');
         }
         if (bonusAmtEl) {
             let bonusAmount = game2Bet * 30; // 30 LINE BONUS = BET * 30
