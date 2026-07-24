@@ -881,6 +881,17 @@ function updateApplesHP(colCounts) {
     }
 }
 
+function calculateGame2TotalPayout(bet, totalLines) {
+    if (bet <= 0 || totalLines <= 0) return 0;
+    let baseLineValue = bet * 0.2; // 壓分 * 1/5
+    let totalWin = 0;
+    for (let i = 1; i <= totalLines; i++) {
+        let tierMultiplier = Math.floor((i - 1) / 10) + 1; // 1~10條: 1倍, 11~20條: 2倍, 21~30條: 3倍...
+        totalWin += baseLineValue * tierMultiplier;
+    }
+    return Math.floor(totalWin);
+}
+
 function updateGame2WinDisplay() {
     const badge = document.getElementById('game2-win-badge');
     const txt = document.getElementById('game2-win-text');
@@ -1135,12 +1146,11 @@ const Game2Manager = {
         });
 
         if (completedLines > 0) {
-            // 完成 1 條或以上連線
-            game2LineCount = completedLines;
+            // 在一局內，連線數累加
+            game2LineCount += completedLines;
 
             if (game2Bet > 0) {
-                let linePayout = Math.floor(game2Bet * 0.4 * game2LineCount);
-                game2Win += linePayout;
+                game2Win = calculateGame2TotalPayout(game2Bet, game2LineCount);
                 updateGame2WinDisplay();
                 recalculateTotalWin();
             }
@@ -1172,8 +1182,7 @@ const Game2Manager = {
             let newNextLevel = Math.floor(Math.random() * 9) + 1;
             this.generateNextCard(newNextLevel);
 
-            // 重置連線數並重新渲染
-            game2LineCount = 0;
+            // 重新渲染UI (保留本局累加連線數與獎金)
             this.renderUI();
         }, 500);
     }
