@@ -963,8 +963,10 @@ const Game2Manager = {
     nextGridData: [],
     nextGridDataFull: [],
     nextLevel: 2,
+    isCardChanging: false,
 
     init() {
+        this.isCardChanging = false;
         game2Level = 1;
         game2CardNum = 1;
         game2Win = 0;
@@ -1180,6 +1182,8 @@ const Game2Manager = {
     },
 
     evaluateLineCheck() {
+        if (this.isCardChanging) return;
+
         const linePatterns = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8],
             [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -1213,6 +1217,9 @@ const Game2Manager = {
     },
 
     triggerCardDestructionAndNextDrop() {
+        if (this.isCardChanging) return;
+        this.isCardChanging = true;
+
         const frameEl = document.querySelector('.g2-card-frame');
         if (frameEl) {
             frameEl.classList.add('g2-card-destroying');
@@ -1229,6 +1236,9 @@ const Game2Manager = {
             // 第二張開始的備用棋盤，依據設定的權重機率抽 LV1 ~ LV MAX
             let newNextLevel = getRandomGame2Level();
             this.generateNextCard(newNextLevel);
+
+            // 重置卡片變更狀態標誌
+            this.isCardChanging = false;
 
             // 重新渲染UI (保留本局累加連線數與獎金)
             this.renderUI();
