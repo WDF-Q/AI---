@@ -944,6 +944,20 @@ const G2_TEMPLATES = {
     ]
 };
 
+// 遊戲 2 權重機率抽卡（第2張備用盤起算）
+function getRandomGame2Level() {
+    let r = Math.random() * 100;
+    if (r < 20) return 1;       // LV1: 20%
+    else if (r < 40) return 2;  // LV2: 20%
+    else if (r < 55) return 3;  // LV3: 15%
+    else if (r < 70) return 4;  // LV4: 15%
+    else if (r < 80) return 5;  // LV5: 10%
+    else if (r < 90) return 6;  // LV6: 10%
+    else if (r < 95) return 7;  // LV7: 5%
+    else if (r < 98) return 8;  // LV8: 3%
+    else return 9;              // LV MAX (LV9): 2%
+}
+
 const Game2Manager = {
     gridData: [],
     nextGridData: [],
@@ -955,9 +969,9 @@ const Game2Manager = {
         game2CardNum = 1;
         game2Win = 0;
         game2LineCount = 0;
-        this.generateCard(1); // 初始固定為 LV1 模板
-        let randomNextLvl = Math.floor(Math.random() * 9) + 1;
-        this.generateNextCard(randomNextLvl); // 備用棋盤隨機生成 LV1~LV9
+        this.generateCard(1); // 初始主體固定為 LV1 模板
+        let firstNextLvl = Math.floor(Math.random() * 3) + 1; // 第一張備用棋盤固定在 LV1~LV3 隨機
+        this.generateNextCard(firstNextLvl);
         this.renderUI();
         updateGame2WinDisplay();
     },
@@ -1178,8 +1192,8 @@ const Game2Manager = {
             game2Level = this.nextLevel;
             this.gridData = this.nextGridDataFull;
 
-            // 備用棋盤再從 LV1~LV8 + LV MAX (9種) 中隨機生成補充
-            let newNextLevel = Math.floor(Math.random() * 9) + 1;
+            // 第二張開始的備用棋盤，依據設定的權重機率抽 LV1 ~ LV MAX
+            let newNextLevel = getRandomGame2Level();
             this.generateNextCard(newNextLevel);
 
             // 重新渲染UI (保留本局累加連線數與獎金)
