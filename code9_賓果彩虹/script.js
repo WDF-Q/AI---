@@ -795,14 +795,20 @@ function renderGame2AppleHUD() {
     let html = '';
     game2AppleThresholds.forEach(item => {
         let isDone = item.collected;
-        let style = isDone 
-            ? 'color: #4ade80; text-decoration: line-through; opacity: 0.55;' 
-            : 'color: #e2e8f0;';
 
-        html += `<div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 1.02rem; font-weight: bold; line-height: 1.15; margin-bottom: 2px; ${style}">
-            <span>${item.lines} LINE</span>
-            <span class="apple-item apple-${item.type}" style="font-size: 1.2rem; margin: 0;">🍎</span>
-        </div>`;
+        if (isDone) {
+            // 已達成：金色字體 "獲得！" (粗體) + 該詞條右邊的蘋果
+            html += `<div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 1.05rem; font-weight: 900; line-height: 1.15; margin-bottom: 2px;">
+                <span style="color: #fde047; text-shadow: 0 0 6px #f59e0b, 1px 1px 0 #78350f, -1px -1px 0 #000; font-weight: 900; letter-spacing: 1px;">獲得！</span>
+                <span class="apple-item apple-${item.type}" style="font-size: 1.2rem; margin: 0; filter: drop-shadow(0 0 5px #fde047);">🍎</span>
+            </div>`;
+        } else {
+            // 未達成：顯示門檻 LINE 數與蘋果
+            html += `<div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 1.02rem; font-weight: bold; line-height: 1.15; margin-bottom: 2px; color: #e2e8f0;">
+                <span>${item.lines} LINE</span>
+                <span class="apple-item apple-${item.type}" style="font-size: 1.2rem; margin: 0;">🍎</span>
+            </div>`;
+        }
     });
 
     hudContainer.innerHTML = html;
