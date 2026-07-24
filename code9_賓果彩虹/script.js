@@ -824,7 +824,7 @@ function spawnApples() {
     topApplesState.fill(null);
     
     let slotsArray = Array.from(DOM.birdMouthSlots);
-    if(slotsArray.length === 0) return;
+    if (slotsArray.length === 0) return;
     
     let beakIndex = Math.floor(Math.random() * slotsArray.length);
     
@@ -835,6 +835,11 @@ function spawnApples() {
     slotsArray[beakIndex].appendChild(beakEl);
     
     DOM.birdMouth = beakEl;
+
+    // 消消樂 (Game 3) 若未壓分 (game3Bet === 0)，上方絕對不產生蘋果！
+    if (game3Bet === 0) {
+        return;
+    }
     
     let availableSlots = [];
     for (let i = 0; i < slotsArray.length; i++) {
@@ -842,8 +847,8 @@ function spawnApples() {
     }
     availableSlots.sort(() => Math.random() - 0.5);
     
-    let applesToSpawn = game1PreApples.length > 0 ? game1PreApples : [];
-    if (applesToSpawn.length === 0) {
+    let applesToSpawn = game3PreApples.length > 0 ? game3PreApples : [];
+    if (applesToSpawn.length === 0 && game3Bet > 0) {
         let count = Math.random() < 0.1 ? 2 : 3;
         for (let i = 0; i < count; i++) {
             applesToSpawn.push({ type: getAppleType(), hp: Math.floor(Math.random() * 10) + 6 });
@@ -2052,7 +2057,7 @@ async function startRightEngine() {
                             let block = board[ROWS - 1][c];
                             if (block !== null && !block.isMoney && block.color === color) {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
-                                if (block.attachedApple) collectApple(block.attachedApple);
+                                if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
                                 colElims[c]++;
                                 block.el.classList.add('eliminating');
                                 setTimeout((el) => el.remove(), 1000, block.el);
@@ -2070,7 +2075,7 @@ async function startRightEngine() {
                             for (let c = 0; c < COLS; c++) {
                                 let block = board[r][c];
                                 if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                                    if (block.attachedApple) collectApple(block.attachedApple);
+                                    if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
                                     flashColElims[c]++;
                                     block.el.classList.add('eliminating');
                                     setTimeout((el) => el.remove(), 1000, block.el);
@@ -2147,7 +2152,7 @@ async function startRightEngine() {
                                 DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
                             } else {
                                 if (block.isFlash) flashColorsTriggered.add(block.color);
-                                if (block.attachedApple) collectApple(block.attachedApple);
+                                if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
                                 laserColElims[targetCol]++;
                             }
                             block.el.classList.add('eliminating');
@@ -2164,7 +2169,7 @@ async function startRightEngine() {
                             for (let c = 0; c < COLS; c++) {
                                 let block = board[r][c];
                                 if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                                    if (block.attachedApple) collectApple(block.attachedApple);
+                                    if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
                                     flashColElims[c]++;
                                     block.el.classList.add('eliminating');
                                     setTimeout((el) => el.remove(), 500, block.el);
@@ -2347,8 +2352,8 @@ async function checkMatchesAndChain() {
                 
                 let colElims = new Array(COLS).fill(0);
                 for (let block of blocksToEliminate) {
-                    if (block.attachedApple) {
-                        collectApple(block.attachedApple);
+                    if (block.attachedApple && game3Bet > 0) {
+                        collectApple(block.attachedApple, game3Bet);
                     }
                     colElims[block.c]++;
                     block.el.classList.add('eliminating');
@@ -2730,8 +2735,8 @@ async function engineSleep(ms) {
 
 
 function collectApple(type, customBet = null) {
-    let activeBet = customBet || (game1Bet > 0 ? game1Bet : 600);
-    if (game1Bet === 0 && !customBet) return;
+    let activeBet = (customBet !== null && customBet !== undefined) ? customBet : (game1Bet > 0 ? game1Bet : 0);
+    if (activeBet <= 0) return; // 若當前遊戲壓分為 0，絕對不可收集蘋果！
 
     if (currentAppleColors.length === 7) {
         currentAppleColors = []; 
