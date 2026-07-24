@@ -728,7 +728,104 @@ function getAppleType() {
 
 let topApplesState = new Array(COLS).fill(null);
 let game1PreApples = [];
+let game2PreApples = [];
 let game3PreApples = [];
+
+let game2AppleThresholds = [];
+
+const G2_APPLE_THRESHOLDS_2 = [
+    [2, 3],
+    [2, 4],
+    [3, 5]
+];
+
+const G2_APPLE_THRESHOLDS_3 = [
+    [2, 3, 4],
+    [2, 3, 5],
+    [3, 4, 5],
+    [3, 4, 6],
+    [4, 5, 8]
+];
+
+function generateGame2AppleThresholds() {
+    if (game2Bet === 0 || !game2PreApples || game2PreApples.length === 0) {
+        game2AppleThresholds = [];
+        renderGame2AppleHUD();
+        return;
+    }
+
+    let count = game2PreApples.length; // 2 或 3
+    let pool = count === 2 ? G2_APPLE_THRESHOLDS_2 : G2_APPLE_THRESHOLDS_3;
+    let chosenCombo = pool[Math.floor(Math.random() * pool.length)];
+
+    let shuffledLines = [...chosenCombo].sort(() => Math.random() - 0.5);
+    let apples = [...game2PreApples];
+
+    let items = [];
+    for (let i = 0; i < count; i++) {
+        items.push({
+            lines: shuffledLines[i],
+            type: apples[i].type,
+            collected: false
+        });
+    }
+
+    items.sort((a, b) => b.lines - a.lines);
+    game2AppleThresholds = items;
+
+    renderGame2AppleHUD();
+}
+
+function renderGame2AppleHUD() {
+    const hudContainer = document.getElementById('g2-apple-hud');
+    if (!hudContainer) return;
+
+    if (game2Bet === 0 || game2AppleThresholds.length === 0) {
+        hudContainer.innerHTML = `
+            <div style="font-size: 1.02rem; color: #94a3b8; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">5 LINE <span style="font-size: 1.2rem; filter: grayscale(1) opacity(0.5);">🍏</span></div>
+            <div style="font-size: 1.02rem; color: #94a3b8; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">4 LINE <span style="font-size: 1.2rem; filter: grayscale(1) opacity(0.5);">🍎</span></div>
+            <div style="font-size: 1.02rem; color: #94a3b8; font-weight: bold; line-height: 1.15;">3 LINE <span style="font-size: 1.2rem; filter: grayscale(1) opacity(0.5);">🍏</span></div>
+        `;
+        return;
+    }
+
+    let html = '';
+    game2AppleThresholds.forEach(item => {
+        let emoji = '🍏';
+        if (item.type === 'red') emoji = '🍎';
+        else if (item.type === 'gold') emoji = '🌟🍎';
+        else if (item.type === 'bronze') emoji = '🥉🍎';
+        else if (item.type === 'silver') emoji = '🥈🍎';
+
+        let isDone = item.collected;
+        let style = isDone 
+            ? 'color: #4ade80; text-decoration: line-through; opacity: 0.55;' 
+            : 'color: #e2e8f0;';
+
+        html += `<div style="font-size: 1.02rem; font-weight: bold; line-height: 1.15; margin-bottom: 1px; ${style}">
+            ${item.lines} LINE <span style="font-size: 1.2rem;">${emoji}</span>
+        </div>`;
+    });
+
+    hudContainer.innerHTML = html;
+}
+
+function checkGame2AppleReward(currentLines) {
+    if (game2Bet <= 0 || game2AppleThresholds.length === 0) return;
+
+    let updated = false;
+    game2AppleThresholds.forEach(item => {
+        if (!item.collected && currentLines >= item.lines) {
+            item.collected = true;
+            updated = true;
+            collectApple(item.type, game2Bet);
+        }
+    });
+
+    if (updated) {
+        renderGame2AppleHUD();
+    }
+}
 
 function getUpgradeProb(bet) {
     if (bet <= 650) return 0.10;
@@ -759,17 +856,19 @@ function generateBetApples(gameId) {
     let container = document.querySelector(`.bet-apple-slots[data-game="${gameId}"]`);
     if (!container) return;
     
-    let currentBet = gameId === 1 ? game1Bet : game3Bet;
-    let preGenerated = gameId === 1 ? game1PreApples : game3PreApples;
+    let currentBet = gameId === 1 ? game1Bet : (gameId === 2 ? game2Bet : game3Bet);
+    let preGenerated = gameId === 1 ? game1PreApples : (gameId === 2 ? game2PreApples : game3PreApples);
 
     if (currentBet === 0) {
         if (gameId === 1) game1PreApples = [];
+        else if (gameId === 2) game2PreApples = [];
         else game3PreApples = [];
         
         let slots = container.querySelectorAll('.apple-slot');
         slots.forEach(slot => {
             slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
         });
+        if (gameId === 2) generateGame2AppleThresholds();
         return;
     }
 
@@ -817,6 +916,10 @@ function generateBetApples(gameId) {
             slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
         }
     });
+
+    if (gameId === 2) {
+        generateGame2AppleThresholds();
+    }
 }
 
 function spawnApples() {
@@ -1073,6 +1176,7 @@ const Game2Manager = {
         this.generateCard(1); // 初始主體固定為 LV1 模板
         let firstNextLvl = Math.floor(Math.random() * 3) + 1; // 第一張備用棋盤固定在 LV1~LV3 隨機
         this.generateNextCard(firstNextLvl);
+        generateGame2AppleThresholds();
         this.renderUI();
         updateGame2WinDisplay();
     },
@@ -1377,8 +1481,8 @@ const Game2Manager = {
                 recalculateTotalWin();
             }
 
-            if (game2LineCount >= 3 && game2Bet > 0) {
-                collectApple(game2LineCount >= 4 ? 'red' : 'green', game2Bet);
+            if (game2Bet > 0) {
+                checkGame2AppleReward(game2LineCount);
             }
 
             // 1. 在對應格子上繪製黃金雷射連線光條與方塊脈衝動畫
