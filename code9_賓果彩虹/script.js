@@ -1010,7 +1010,38 @@ function calculateGame2TotalPayout(bet, totalLines) {
         let mult = getGame2LineMultiplier(i);
         totalWin += baseLineValue * mult;
     }
+
+    // BONUS 30 LINE 規則：當累計的 LINE 數量達到了 30 LINE，會再 "額外" 獲得該 BONUS 的金額 (BET * 30)
+    if (totalLines >= 30) {
+        totalWin += bet * 30;
+    }
+
     return Math.floor(totalWin);
+}
+
+function getGame2OddsTiers(currentLines) {
+    // 第 1 層（最下面那格）：固定顯示當前已獲得的總 LINE 數（若為 0 或 1 則顯示 1 LINE）
+    let tier1 = Math.max(1, currentLines);
+    let tier2 = tier1 + 1;
+    let tier3 = tier1 + 2;
+    let tier4 = tier1 + 3;
+    let tier5 = tier1 + 4;
+
+    // 第 6 層：依據第 5 層來評估：[(第 5 層 LINE 數 / 5) 取整數 + 1] * 5
+    let tier6 = (Math.floor(tier5 / 5) + 1) * 5;
+    let tier7 = tier6 + 5;
+    let tier8 = tier7 + 5;
+
+    return {
+        8: tier8,
+        7: tier7,
+        6: tier6,
+        5: tier5,
+        4: tier4,
+        3: tier3,
+        2: tier2,
+        1: tier1
+    };
 }
 
 function updateGame2WinDisplay() {
@@ -1029,24 +1060,33 @@ function updateGame2WinDisplay() {
 
 function updateGame2OddsPanel() {
     let bet = game2Bet > 0 ? game2Bet : 600;
-    const lineTiers = [20, 15, 10, 5, 4, 3, 2, 1];
+    let tiers = getGame2OddsTiers(game2LineCount);
 
-    lineTiers.forEach(lines => {
-        let valEl = document.getElementById(`g2-odds-val-${lines}`);
+    for (let tier = 1; tier <= 8; tier++) {
+        let lines = tiers[tier];
+
+        let lineEl = document.getElementById(`g2-odds-line-${tier}`);
+        if (lineEl) {
+            lineEl.textContent = lines;
+        }
+
+        let valEl = document.getElementById(`g2-odds-val-${tier}`);
         if (valEl) {
             let winAmount = calculateGame2TotalPayout(bet, lines);
             valEl.textContent = winAmount;
         }
 
-        let rowEl = document.querySelector(`.g2-odds-row[data-lines="${lines}"]`);
+        let rowEl = document.querySelector(`.g2-odds-row[data-tier="${tier}"]`);
         if (rowEl) {
-            if (game2LineCount >= lines) {
+            // 第 1 層代表當前已累積的 LINE 數，有連線 (game2LineCount > 0) 時第 1 層亮起
+            // 第 2~8 層，當累積 LINE 數達標 (game2LineCount >= lines) 時高亮亮起
+            if (game2LineCount > 0 && game2LineCount >= lines) {
                 rowEl.classList.add('active');
             } else {
                 rowEl.classList.remove('active');
             }
         }
-    });
+    }
 
     updateGame2BonusDisplay();
 }
