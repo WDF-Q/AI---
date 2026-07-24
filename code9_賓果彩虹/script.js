@@ -1147,14 +1147,10 @@ const Game2Manager = {
         let nextCardLevelBoost = 0;
 
         if (logicalColor === 'rainbow') {
-            // 彩色洞：
-            // 1) 檢查主棋盤 SP 格子是否【已經處於 HIT 狀態】
-            let spAlreadyHit = this.gridData.some(tile => (tile.type === 'sp' || tile.color === 'sp') && tile.hit);
-            if (spAlreadyHit) {
-                nextCardLevelBoost += 2; // SP 已是 HIT 狀態，備用棋盤等級 +2！
-            }
+            // 彩色洞：只要主棋盤未銷毀，觸發彩色球即提升備用棋盤等級 +2！
+            nextCardLevelBoost += 2;
 
-            // 2) 命中尚未 HIT 的 SP 格子
+            // 命中尚未 HIT 的 SP 格子
             this.gridData.forEach(tile => {
                 if (!tile.hit && (tile.type === 'sp' || tile.color === 'sp')) {
                     tile.hit = true;
@@ -1162,14 +1158,10 @@ const Game2Manager = {
                 }
             });
         } else if (logicalColor && logicalColor !== 'white') {
-            // 標準單色洞（黃、藍、紅、綠、粉）：
-            // 1) 檢查主棋盤該顏色的格子是否【已經處於 HIT 狀態】
-            let colorAlreadyHit = this.gridData.some(tile => tile.color === logicalColor && tile.hit);
-            if (colorAlreadyHit) {
-                nextCardLevelBoost += 1; // 該顏色已是 HIT 狀態，備用棋盤等級 +1！
-            }
+            // 標準單色洞（黃、藍、紅、綠、粉）：只要主棋盤未銷毀，觸發顏色球即提升備用棋盤等級 +1！
+            nextCardLevelBoost += 1;
 
-            // 2) 命中尚未 HIT 的對應顏色格子
+            // 命中尚未 HIT 的對應顏色格子
             this.gridData.forEach(tile => {
                 if (!tile.hit && tile.color === logicalColor) {
                     tile.hit = true;
@@ -1178,8 +1170,8 @@ const Game2Manager = {
             });
         }
 
-        // 若觸發備用棋盤升級或 LV MAX 變色切換
-        if (nextCardLevelBoost > 0) {
+        // 若觸發備用棋盤升級或 LV MAX 變色切換 (僅在主棋盤未銷毀切換期間升級)
+        if (nextCardLevelBoost > 0 && !this.isCardChanging) {
             this.upgradeNextCardLevel(nextCardLevelBoost);
         }
 
