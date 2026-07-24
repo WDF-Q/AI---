@@ -1467,34 +1467,37 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2px 6px;
-    border-radius: 5px;
+    padding: 4.5px 6px;
+    border-radius: 6px;
     background: rgba(15, 23, 42, 0.7);
-    border: 1px solid #475569;
+    border: 1.5px solid #475569;
     transition: all 0.25s ease;
 }
 
 .g2-odds-label {
     display: flex;
     align-items: baseline;
-    gap: 2px;
-    font-size: 0.9rem;
+    gap: 1.5px;
+    font-size: 1.05rem;
     font-weight: 900;
     color: #cbd5e1;
+    line-height: 1;
 }
 
 .g2-odds-label small {
-    font-size: 0.58rem;
+    font-size: 0.62rem;
     color: #94a3b8;
     font-weight: bold;
 }
 
 .g2-odds-val {
-    font-size: 0.92rem;
+    font-size: 1.08rem;
     font-weight: 900;
     color: #fde047;
-    text-shadow: 1px 1px 0 #78350f, 0 0 4px rgba(250, 204, 21, 0.5);
-    font-family: 'Courier New', Courier, monospace;
+    text-shadow: 1px 1px 0 #78350f, 0 0 5px rgba(250, 204, 21, 0.6);
+    font-family: 'Trebuchet MS', 'Arial Black', sans-serif;
+    letter-spacing: -0.5px;
+    line-height: 1;
 }
 
 /* 達成 / 當前連線高亮光圈 (亮金黃 / 橘紅動態背景) */
