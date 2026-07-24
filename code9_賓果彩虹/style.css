@@ -1308,7 +1308,15 @@ body {
 .g2-tile.green { background: linear-gradient(135deg, #86efac, #22c55e); border-color: #4ade80; }
 .g2-tile.pink { background: linear-gradient(135deg, #fbcfe8, #ec4899); border-color: #f472b6; }
 .g2-tile.purple { background: linear-gradient(135deg, #e9d5ff, #a855f7); border-color: #c084fc; }
-.g2-tile.sp { background: linear-gradient(135deg, #a855f7, #ec4899, #3b82f6); border-color: #fde047; }
+.g2-tile.sp { 
+    background: linear-gradient(135deg, #a855f7, #ec4899, #3b82f6); 
+    border: 3.5px solid transparent !important;
+    background-image: linear-gradient(135deg, #a855f7, #ec4899, #3b82f6), 
+                      linear-gradient(135deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.7), inset 0 0 10px rgba(255,255,255,0.4) !important;
+}
 .g2-tile.white { background: linear-gradient(135deg, #ffffff, #cbd5e1); border-color: #ffffff; }
 
 .g2-tile .g2-paw-icon {
@@ -1318,16 +1326,13 @@ body {
 }
 
 .g2-tile .g2-sp-badge {
-    font-size: 1.5rem;
+    font-size: 2.25rem;
     font-weight: 900;
     color: #fde047;
-    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000;
-    line-height: 1.1;
+    text-shadow: 0 0 8px #000, 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    line-height: 1;
     text-align: center;
-    background: linear-gradient(135deg, #a855f7, #ec4899, #3b82f6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    letter-spacing: 1px;
 }
 
 .g2-tile .g2-free-text {

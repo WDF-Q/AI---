@@ -1053,12 +1053,16 @@ const Game2Manager = {
                 div.className = `g2-tile hit ${isRainbowBorder ? 'rainbow-border' : tile.color}`;
                 if (!isRainbowBorder) {
                     div.style.borderColor = `var(--color-${tile.color}, #facc15)`;
+                } else {
+                    div.style.borderColor = 'transparent';
                 }
                 div.innerHTML = `<span class="g2-hit-text" style="font-size: 1.6rem; font-weight: 900; color: #facc15; text-shadow: 0 0 8px #facc15, 2px 2px 0 #000;">HIT</span>`;
             } else {
                 div.className = `g2-tile ${tile.color}`;
                 if (tile.type === 'sp') {
                     div.innerHTML = `<div class="g2-sp-badge">SP</div>`;
+                } else if (tile.type === 'free') {
+                    div.innerHTML = `<span class="g2-free-text">FREE</span>`;
                 } else {
                     div.innerHTML = `<div class="g2-paw-icon">🐾</div>`;
                 }
