@@ -791,15 +791,14 @@ function renderGame2AppleHUD() {
 
     let html = '';
     game2AppleThresholds.forEach(item => {
-        let emoji = (item.type === 'green') ? '🍏' : '🍎';
-
         let isDone = item.collected;
         let style = isDone 
             ? 'color: #4ade80; text-decoration: line-through; opacity: 0.55;' 
             : 'color: #e2e8f0;';
 
-        html += `<div style="font-size: 1.02rem; font-weight: bold; line-height: 1.15; margin-bottom: 1px; ${style}">
-            ${item.lines} LINE <span style="font-size: 1.2rem;">${emoji}</span>
+        html += `<div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 1.02rem; font-weight: bold; line-height: 1.15; margin-bottom: 2px; ${style}">
+            <span>${item.lines} LINE</span>
+            <span class="apple-item apple-${item.type}" style="font-size: 1.2rem; margin: 0;">🍎</span>
         </div>`;
     });
 
