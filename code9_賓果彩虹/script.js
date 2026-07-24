@@ -886,13 +886,23 @@ function updateApplesHP(colCounts) {
     }
 }
 
+function getGame2LineMultiplier(line) {
+    if (line <= 10) return 1.0;
+    if (line <= 20) return 1.5;
+    if (line <= 30) return 2.0;
+    if (line <= 40) return 3.0;
+    if (line <= 50) return 4.0;
+    if (line <= 60) return 4.0;
+    return 5.0;
+}
+
 function calculateGame2TotalPayout(bet, totalLines) {
     if (bet <= 0 || totalLines <= 0) return 0;
     let baseLineValue = bet * 0.2; // 壓分 * 1/5
     let totalWin = 0;
     for (let i = 1; i <= totalLines; i++) {
-        let tierMultiplier = Math.floor((i - 1) / 10) + 1; // 1~10條: 1倍, 11~20條: 2倍, 21~30條: 3倍...
-        totalWin += baseLineValue * tierMultiplier;
+        let mult = getGame2LineMultiplier(i);
+        totalWin += baseLineValue * mult;
     }
     return Math.floor(totalWin);
 }
