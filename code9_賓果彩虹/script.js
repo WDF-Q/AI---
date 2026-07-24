@@ -261,6 +261,7 @@ function handleAddBet(gameId) {
         else { game2Bet += inc; if(game2Bet > 3000) game2Bet = 3000; }
         document.querySelectorAll('.bet-value[data-game="2"]').forEach(el => el.textContent = game2Bet);
         generateBetApples(2);
+        updateGame2OddsPanel();
     } else if (gameId === 3) {
         if (game3Bet === 0) game3Bet = 600;
         else { game3Bet += inc; if(game3Bet > 3000) game3Bet = 3000; }
@@ -282,6 +283,7 @@ document.getElementById('btn-repeat-bet').addEventListener('click', () => {
             game2Bet = previousGame2Bet;
             document.querySelectorAll('.bet-value[data-game="2"]').forEach(el => el.textContent = game2Bet);
             generateBetApples(2);
+            updateGame2OddsPanel();
         }
         if (previousGame3Bet > 0) {
             game3Bet = previousGame3Bet;
@@ -953,13 +955,25 @@ function updateGame2BonusDisplay() {
     if (game2Bet === 0) {
         // 沒有壓分的情況 (game2Bet === 0):
         // 只保留 "現在的 LINE 數" 欄位；ODDS 與 BONUS 欄位完全隱藏！
-        if (lineCountHud) lineCountHud.classList.remove('hidden');
-        if (leftActivePanel) leftActivePanel.classList.add('hidden');
+        if (lineCountHud) {
+            lineCountHud.style.display = 'block';
+            lineCountHud.classList.remove('hidden');
+        }
+        if (leftActivePanel) {
+            leftActivePanel.style.display = 'none';
+            leftActivePanel.classList.add('hidden');
+        }
     } else {
         // 有壓分的情況 (game2Bet > 0):
         // "現在的 LINE 數" 欄位隱藏；只保留 ODDS 與 BONUS 欄位！
-        if (lineCountHud) lineCountHud.classList.add('hidden');
-        if (leftActivePanel) leftActivePanel.classList.remove('hidden');
+        if (lineCountHud) {
+            lineCountHud.style.display = 'none';
+            lineCountHud.classList.add('hidden');
+        }
+        if (leftActivePanel) {
+            leftActivePanel.style.display = 'flex';
+            leftActivePanel.classList.remove('hidden');
+        }
         if (bonusAmtEl) {
             let bonusAmount = game2Bet * 30; // 30 LINE BONUS = BET * 30
             bonusAmtEl.textContent = bonusAmount;
@@ -2766,6 +2780,7 @@ async function finishGameOverSequence() {
     game1Bet = 0;
     game2Bet = 0;
     game3Bet = 0;
+    updateGame2OddsPanel();
     game3TotalTargetBalls = 0;
     game3MaxMultiplier = 0;
     game3TrailingRainbows = 0;
