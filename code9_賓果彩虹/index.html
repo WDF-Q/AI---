@@ -243,10 +243,10 @@
 
                 <!-- 遊戲 2：連連樂 / 賓果連線 / 九宮格 -->
                 <div class="game-module mini" id="game2-container" onclick="switchActiveGame('game2')">
-                    <div id="game2-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); border: 4px solid #8b5cf6; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); padding: 8px 12px 5px 12px; box-sizing: border-box; justify-content: space-between; overflow: hidden;">
+                    <div id="game2-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); border: 4px solid #8b5cf6; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); padding: 18px 12px 5px 12px; box-sizing: border-box; justify-content: space-between; overflow: hidden;">
                         
-                        <!-- 頂部與 HUD 區 (固定高度 150px，頂部留空確保 NEXT CARD 標題 100% 露出) -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; position: relative; width: 100%; height: 150px; z-index: 10; margin-top: 4px;">
+                        <!-- 頂部與 HUD 區 (頂部保留 18px Padding，確保 NEXT CARD 拱門文字 100% 完整露出) -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; position: relative; width: 100%; height: 135px; z-index: 10; margin-top: 10px;">
                             <!-- 左上 HUD 區 (往下貼齊備用棋盤底邊) -->
                             <div style="min-width: 125px; height: 100%; display: flex; align-items: flex-end; justify-content: flex-start;">
                                 <!-- 1) 無壓分時 (game2Bet === 0)：現在的 LINE 數 -->
@@ -273,8 +273,8 @@
                                 </div>
                             </div>
 
-                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (完整 32px 巨型尺寸，往下調整露出 NEXT CARD 字樣) -->
-                            <div class="g2-next-card-wrapper" style="position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 12; margin-top: 8px;">
+                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (完整 32px 巨型尺寸，100% 完整露出文字) -->
+                            <div class="g2-next-card-wrapper" style="position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 12;">
                                 <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.95rem; font-weight: 900; padding: 3px 20px; border-radius: 8px 8px 0 0; border: 1.5px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEXT CARD</div>
                                 <div style="background: #0f172a; border: 2px solid #fde047; padding: 6px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
                                     <div style="font-size: 0.88rem; color: #fde047; font-weight: 900; margin-bottom: 3px;">LV. <span id="g2-next-level">4</span></div>
