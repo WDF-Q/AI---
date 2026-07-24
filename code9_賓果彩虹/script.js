@@ -814,16 +814,12 @@ function checkGame2AppleReward(cardCompletedLines) {
     if (game2Bet <= 0 || !game2AppleThresholds || game2AppleThresholds.length === 0 || cardCompletedLines <= 0) return;
 
     // 依據「這一張棋盤一次性獲得的最大連線數 (cardCompletedLines)」做判定
-    // 篩選出：尚未收集 且 門檻數值 <= 這一張棋盤連線數 的項目
-    let eligibleItems = game2AppleThresholds.filter(item => !item.collected && item.lines <= cardCompletedLines);
+    // 必須「完全等於 (===)」詞條上面標示的 LINE 數，才能獲得該蘋果！
+    let targetItem = game2AppleThresholds.find(item => !item.collected && item.lines === cardCompletedLines);
 
-    if (eligibleItems.length > 0) {
-        // 取門檻 LINE 數最大的那一個 (以最大連線數的門檻判定，一張棋盤只會獲得 1 顆蘋果！)
-        eligibleItems.sort((a, b) => b.lines - a.lines);
-        let bestItem = eligibleItems[0];
-
-        bestItem.collected = true;
-        collectApple(bestItem.type, game2Bet);
+    if (targetItem) {
+        targetItem.collected = true;
+        collectApple(targetItem.type, game2Bet);
         renderGame2AppleHUD();
     }
 }
