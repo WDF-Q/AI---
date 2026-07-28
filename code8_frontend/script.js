@@ -212,6 +212,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
+            // --- MERGE REALTIME DATA (Chart) ---
+            if (data.realtime) {
+                let latestHistDate = data.labels[data.labels.length - 1];
+                if (data.realtime.date > latestHistDate) {
+                    data.labels.push(data.realtime.date);
+                    data.prices.push(data.realtime.close);
+                } else if (data.realtime.date === latestHistDate) {
+                    data.prices[data.prices.length - 1] = data.realtime.close;
+                }
+            }
+
             renderChart(data.labels, data.prices, data.range);
             
         } catch (error) {
@@ -246,6 +257,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         </span>
                     `;
                     
+                    if (data.realtime) {
+                        let latestHistDate = labels[labels.length - 1];
+                        if (data.realtime.date > latestHistDate) {
+                            labels.push(data.realtime.date);
+                            prices.push(data.realtime.close);
+                        } else if (data.realtime.date === latestHistDate) {
+                            prices[prices.length - 1] = data.realtime.close;
+                        }
+                    }
+
                     renderChart(labels, prices, "1Y");
                     return; // Rescued successfully!
                 }
@@ -554,6 +575,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } catch (e) {
                         console.error("Frontend FinMind rescue failed for", stock.symbol, e);
+                    }
+                }
+                
+                // --- MERGE REALTIME DATA ---
+                if (stock.realtime && stock.data && stock.data.length > 0) {
+                    let latestHistDate = stock.data[0].date;
+                    if (stock.realtime.date > latestHistDate) {
+                        // Prepend real-time day (newer dates at front)
+                        stock.data.unshift(stock.realtime);
+                        // Also update display title if it was waiting for 3 PM
+                        if (stock.display_title) {
+                            stock.display_title = stock.display_title.replace(': 今日資料約下午3點後更新', ': 即時資料補齊');
+                        }
+                    } else if (stock.realtime.date === latestHistDate) {
+                        // Overwrite with more accurate realtime close
+                        stock.data[0] = { ...stock.data[0], ...stock.realtime };
                     }
                 }
             }

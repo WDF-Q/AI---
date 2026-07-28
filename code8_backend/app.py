@@ -28,20 +28,20 @@ def get_yahoo_symbol(code):
 def resolve_symbol(input_str):
     input_str = input_str.strip()
     if not input_str:
-        return None, None, None
+        return None, None, None, None
         
     # Check if input is a known name
     if input_str in name_to_code:
         code = name_to_code[input_str]
-        return get_yahoo_symbol(code), input_str, "name" # user input name
+        return get_yahoo_symbol(code), input_str, "name", code # user input name
         
     # Check if input is a code
     if input_str.isdigit():
         name = code_to_name.get(input_str, input_str)
-        return get_yahoo_symbol(input_str), name, "code" # user input code
+        return get_yahoo_symbol(input_str), name, "code", input_str # user input code
         
     # Fallback for arbitrary symbols (like AAPL)
-    return input_str, input_str, "unknown"
+    return input_str, input_str, "unknown", None
 
 @app.route('/')
 def index():
@@ -68,9 +68,31 @@ def get_stocks():
     today = datetime.now()
 
     for raw_input in unique_raw:
-        symbol, company_name, input_type = resolve_symbol(raw_input)
+        symbol, company_name, input_type, numeric_code = resolve_symbol(raw_input)
         if not symbol:
             continue
+
+        # --- FETCH REALTIME DATA FIRST ---
+        rt_data = None
+        if numeric_code and numeric_code.isdigit():
+            try:
+                rt_resp = twstock.realtime.get(numeric_code)
+                if rt_resp and rt_resp.get('success'):
+                    rt_info = rt_resp.get('realtime', {})
+                    time_str = rt_resp.get('info', {}).get('time', '')
+                    date_str = time_str.split(' ')[0] if time_str else today.strftime('%Y-%m-%d')
+                    
+                    if rt_info.get('latest_trade_price') != '-':
+                        rt_data = {
+                            'date': date_str,
+                            'open': float(rt_info.get('open', 0) or 0),
+                            'high': float(rt_info.get('high', 0) or 0),
+                            'low': float(rt_info.get('low', 0) or 0),
+                            'close': float(rt_info.get('latest_trade_price', 0) or 0)
+                        }
+            except Exception as e:
+                print(f"DEBUG: realtime fetch error {e}")
+        # ---------------------------------
 
         try:
             import requests
@@ -88,13 +110,13 @@ def get_stocks():
             if mode == 'last_30':
                 hist = ticker.history(period="3mo", auto_adjust=False) 
                 print(f"DEBUG: {symbol} hist empty? {hist.empty}")
-                if hist.empty:
                     results.append({
                         'symbol': symbol.replace('.TW', ''),
                         'name': company_name,
                         'display_title': f"{company_name} / {symbol.replace('.TW', '')}",
                         'error': '無法取得股價資料 (雲端伺服器 IP 可能暫時被阻擋，或代號無效)',
-                        'data': []
+                        'data': [],
+                        'realtime': rt_data
                     })
                     continue
                 hist = hist.tail(31)
@@ -147,7 +169,8 @@ def get_stocks():
                 'symbol': clean_symbol,
                 'name': company_name,
                 'display_title': display_title,
-                'data': stock_data
+                'data': stock_data,
+                'realtime': rt_data
             })
 
         except Exception as e:
@@ -190,7 +213,8 @@ def get_stocks():
                         'symbol': clean_symbol,
                         'name': company_name,
                         'display_title': display_title,
-                        'data': stock_data
+                        'data': stock_data,
+                        'realtime': rt_data
                     })
                     continue
             except Exception as fm_e:
@@ -237,7 +261,8 @@ def get_stocks():
                         'symbol': clean_symbol,
                         'name': company_name,
                         'display_title': display_title,
-                        'data': stock_data
+                        'data': stock_data,
+                        'realtime': rt_data
                     })
                     continue # Successfully used fallback, skip error append
             except Exception as tw_e:
@@ -250,7 +275,8 @@ def get_stocks():
                 'name': company_name,
                 'display_title': f"{company_name} / {clean_sym}",
                 'error': str(e),
-                'data': []
+                'data': [],
+                'realtime': rt_data
             })
 
     return jsonify({"results": results})
@@ -261,9 +287,29 @@ def get_chart_data():
     raw_symbol = data.get('symbol', '')
     range_str = data.get('range', '1M')
     
-    symbol, company_name, _ = resolve_symbol(raw_symbol)
+    symbol, company_name, _, numeric_code = resolve_symbol(raw_symbol)
     if not symbol:
         return jsonify({"error": "Invalid symbol"}), 400
+
+    rt_data = None
+    if numeric_code and numeric_code.isdigit():
+        try:
+            rt_resp = twstock.realtime.get(numeric_code)
+            if rt_resp and rt_resp.get('success'):
+                rt_info = rt_resp.get('realtime', {})
+                time_str = rt_resp.get('info', {}).get('time', '')
+                date_str = time_str.split(' ')[0] if time_str else datetime.now().strftime('%Y-%m-%d')
+                if rt_info.get('latest_trade_price') != '-':
+                    rt_data = {
+                        'date': date_str,
+                        'datetime': time_str,
+                        'open': float(rt_info.get('open', 0) or 0),
+                        'high': float(rt_info.get('high', 0) or 0),
+                        'low': float(rt_info.get('low', 0) or 0),
+                        'close': float(rt_info.get('latest_trade_price', 0) or 0)
+                    }
+        except Exception as e:
+            pass
 
     # Map frontend ranges to yfinance params
     # yfinance valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
@@ -291,7 +337,7 @@ def get_chart_data():
         hist = ticker.history(period=params['period'], interval=params['interval'], auto_adjust=False)
         
         if hist.empty:
-            return jsonify({"error": "No data found", "data": [], "labels": []})
+            return jsonify({"error": "No data found", "data": [], "labels": [], "realtime": rt_data})
             
         hist = hist.reset_index()
         
@@ -312,20 +358,21 @@ def get_chart_data():
             prices.append(round(row['Close'], 2))
             
         clean_symbol = symbol.split('.')[0]
+        display_title = f"{company_name} / {clean_symbol}"
         return jsonify({
             "symbol": clean_symbol,
             "name": company_name,
-            "display_title": f"{company_name} / {clean_symbol}",
             "labels": labels,
             "prices": prices,
-            "range": range_str
+            "display_title": display_title,
+            "range": range_str,
+            "realtime": rt_data
         })
         
     except Exception as e:
         print(f"Chart Error fetching {symbol} via yfinance: {e}. Trying FinMind fallback.")
         clean_symbol = symbol.split('.')[0]
         try:
-            # 抓取過去一年的資料作為線圖備用
             start_date = datetime.now() - timedelta(days=365)
             fm_url = f"https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id={clean_symbol}&start_date={start_date.strftime('%Y-%m-%d')}"
             import requests
