@@ -582,6 +582,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (stock.realtime && stock.data && stock.data.length > 0) {
                     let latestHistDate = stock.data[0].date;
                     if (stock.realtime.date > latestHistDate) {
+                        // Inherit prev_close from the latest historical close
+                        stock.realtime.prev_close = stock.data[0].close;
                         // Prepend real-time day (newer dates at front)
                         stock.data.unshift(stock.realtime);
                         // Also update display title if it was waiting for 3 PM
