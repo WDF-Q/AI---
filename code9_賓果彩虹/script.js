@@ -979,8 +979,13 @@ function generateBetApples(gameId) {
         if (index < preGenerated.length) {
             let a = preGenerated[index];
             let appleEl = document.createElement('div');
-            appleEl.className = `apple-item apple-${a.type}`;
-            appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
+            if (a.type === 'rainbow') {
+                appleEl.className = 'apple-item rainbow-apple';
+                appleEl.innerHTML = `🍎`;
+            } else {
+                appleEl.className = `apple-item apple-${a.type}`;
+                appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
+            }
             appleEl.style.fontSize = '1.8rem';
             appleEl.style.margin = '0';
             slot.appendChild(appleEl);
@@ -2004,67 +2009,26 @@ async function playRainbowAppleCutscene(targetGame) {
 }
 
 function applyRainbowAppleToTargetGame(targetGame) {
-    if (targetGame === 1) {
-        let replaced = false;
-        for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) {
-                let block = board[r][c];
-                if (block && block.attachedApple && !block.isMoney) {
-                    block.attachedApple = 'rainbow';
-                    let appleEl = block.el.querySelector('.apple-item');
-                    if (appleEl) {
-                        appleEl.className = 'apple-item rainbow-apple';
-                        appleEl.innerHTML = '🌈';
-                    }
-                    replaced = true;
-                    break;
-                }
-            }
-            if (replaced) break;
-        }
-        if (!replaced) {
-            for (let c = 0; c < COLS; c++) {
-                if (topApplesState && topApplesState[c]) {
-                    topApplesState[c].type = 'rainbow';
-                    let el = topApplesState[c].el;
-                    if (el) el.innerHTML = '<span class="rainbow-apple" style="font-size:1.8rem;">🌈</span>';
-                    replaced = true;
-                    break;
-                }
-            }
-            if (!replaced && board[0] && board[0][0]) {
-                board[0][0].attachedApple = 'rainbow';
-                let smallApple = document.createElement('div');
-                smallApple.className = 'apple-item rainbow-apple';
-                smallApple.innerHTML = '🌈';
-                smallApple.style.fontSize = '1.8rem';
-                smallApple.style.position = 'absolute';
-                smallApple.style.bottom = '-8px';
-                smallApple.style.right = '-8px';
-                smallApple.style.zIndex = '10';
-                board[0][0].el.appendChild(smallApple);
-            }
-        }
-    } else if (targetGame === 2) {
-        let appleHud = document.getElementById('g2-apple-hud');
-        if (appleHud) {
-            appleHud.innerHTML = `
-                <div style="font-size: 1.02rem; color: #fef08a; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">5 LINE <span class="rainbow-apple" style="font-size: 1.3rem;">🌈</span></div>
-                <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">4 LINE <span style="font-size: 1.2rem;">🍎</span></div>
-                <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15;">3 LINE <span style="font-size: 1.2rem;">🍏</span></div>
-            `;
-        }
+    let preGenerated = targetGame === 1 ? game1PreApples : (targetGame === 2 ? game2PreApples : game3PreApples);
+    
+    if (!preGenerated || preGenerated.length === 0) {
+        generateBetApples(targetGame);
+        preGenerated = targetGame === 1 ? game1PreApples : (targetGame === 2 ? game2PreApples : game3PreApples);
+    }
+    
+    if (preGenerated && preGenerated.length > 0) {
+        preGenerated[0].type = 'rainbow';
+        generateBetApples(targetGame);
+    }
+
+    if (targetGame === 2) {
         window.g2RainbowAppleActive = true;
     } else if (targetGame === 3) {
-        let slotsContainer = document.querySelector('.bet-apple-slots[data-game="3"]');
-        if (slotsContainer) {
-            let firstSlot = slotsContainer.querySelector('.apple-slot');
-            if (firstSlot) {
-                firstSlot.innerHTML = '<span class="rainbow-apple" style="font-size: 2.2rem;">🌈</span>';
-                firstSlot.setAttribute('data-type', 'rainbow');
-            }
-        }
         window.g3RainbowAppleActive = true;
+        if (typeof game3ApplesInPlay !== 'undefined' && game3ApplesInPlay.length > 0) {
+            game3ApplesInPlay[0].type = 'rainbow';
+            Game3Manager.updateHitTable();
+        }
     }
 }
 
