@@ -936,9 +936,9 @@ function getRainbowAppleSVGHtml(sizeRem = '1.8rem') {
       <stop offset="100%" stop-color="#ec4899" />
     </linearGradient>
   </defs>
-  <path d="M16,6 C13,-1 6,2 6,10 C6,18 12,28 16,28 C20,28 26,18 26,10 C26,2 19,-1 16,6 Z" fill="url(#rainbowAppleGrad)"/>
-  <path d="M16,6 C18,3 22,2 23,4 C24,6 21,8 16,6 Z" fill="#4ade80"/>
-  <path d="M16,6 C15.5,4 16,2.5 17,1" stroke="#fef08a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M16,7.5 C13,4.5 7,6.5 6,13.5 C5,20.5 11,28.5 15.3,29.2 C15.8,29.3 16.2,29.3 16.7,29.2 C21,28.5 27,20.5 26,13.5 C25,6.5 19,4.5 16,7.5 Z" fill="url(#rainbowAppleGrad)"/>
+  <path d="M16.5,6 C19.5,3 24,3.5 24.5,6 C25,8.5 20.5,10 16.5,6 Z" fill="#4ade80"/>
+  <path d="M16,7.5 C15.2,5 15.5,3 17,1.5" stroke="#fde047" stroke-width="1.8" fill="none" stroke-linecap="round"/>
 </svg>`;
 }
 
