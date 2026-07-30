@@ -1562,7 +1562,8 @@ const Game2Manager = {
             }
 
             if (game2Bet > 0) {
-                let cardWin = calculateGame2TotalPayout(game2Bet, game2LineCount) - calculateGame2TotalPayout(game2Bet, prevLines);
+                game2Win = calculateGame2TotalPayout(game2Bet, game2LineCount);
+                let cardWin = game2Win - calculateGame2TotalPayout(game2Bet, prevLines);
                 updateGame2WinDisplay();
                 recalculateTotalWin();
 
