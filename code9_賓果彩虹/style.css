@@ -1527,12 +1527,17 @@ html, body {
 }
 
 /* ==========================================
-   彩虹蘋果 (Rainbow Apple) 超炫彩發光動態 SVG 特效
+   彩虹蘋果 (Rainbow Apple) 與現有蘋果同款同線條 + 超炫彩發光動態
    ========================================== */
-.rainbow-apple-svg {
-    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.9)) drop-shadow(0 0 12px rgba(59, 130, 246, 0.9)) drop-shadow(0 0 18px rgba(239, 68, 68, 0.9));
-    animation: rainbowHueRotate 2.5s linear infinite;
+.rainbow-apple-emoji {
     display: inline-block;
+    font-size: inherit;
+    line-height: 1;
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 20%, #eab308 40%, #22c55e 60%, #3b82f6 80%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 12px #eab308) drop-shadow(0 0 18px #3b82f6);
+    animation: rainbowHueRotate 2.5s linear infinite;
     vertical-align: middle;
 }
 

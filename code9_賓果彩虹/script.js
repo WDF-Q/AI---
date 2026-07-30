@@ -925,21 +925,7 @@ function upgradeApple(type) {
 }
 
 function getRainbowAppleSVGHtml(sizeRem = '1.8rem') {
-    return `<svg class="rainbow-apple-svg" viewBox="0 0 32 32" style="width: ${sizeRem}; height: ${sizeRem}; vertical-align: middle;">
-  <defs>
-    <linearGradient id="rainbowAppleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ef4444" />
-      <stop offset="20%" stop-color="#f97316" />
-      <stop offset="40%" stop-color="#eab308" />
-      <stop offset="60%" stop-color="#22c55e" />
-      <stop offset="80%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#ec4899" />
-    </linearGradient>
-  </defs>
-  <path d="M16,7.5 C13,4.5 7,6.5 6,13.5 C5,20.5 11,28.5 15.3,29.2 C15.8,29.3 16.2,29.3 16.7,29.2 C21,28.5 27,20.5 26,13.5 C25,6.5 19,4.5 16,7.5 Z" fill="url(#rainbowAppleGrad)"/>
-  <path d="M16.5,6 C19.5,3 24,3.5 24.5,6 C25,8.5 20.5,10 16.5,6 Z" fill="#4ade80"/>
-  <path d="M16,7.5 C15.2,5 15.5,3 17,1.5" stroke="#fde047" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-</svg>`;
+    return `<span class="rainbow-apple-emoji" style="font-size: ${sizeRem};">🍎</span>`;
 }
 
 function generateBetApples(gameId) {
