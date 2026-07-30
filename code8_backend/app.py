@@ -84,6 +84,10 @@ def get_stocks():
         rt_data = None
         if numeric_code and numeric_code.isdigit():
             try:
+                # Monkey-patch twstock for new ETFs (like 00940) that aren't in the old library's dict
+                if symbol.endswith('.TW') and numeric_code not in twstock.twse:
+                    twstock.twse[numeric_code] = True
+                    
                 rt_resp = twstock.realtime.get(numeric_code)
                 if rt_resp and rt_resp.get('success'):
                     rt_info = rt_resp.get('realtime', {})
@@ -324,6 +328,9 @@ def get_chart_data():
     rt_data = None
     if numeric_code and numeric_code.isdigit():
         try:
+            if symbol.endswith('.TW') and numeric_code not in twstock.twse:
+                twstock.twse[numeric_code] = True
+                
             rt_resp = twstock.realtime.get(numeric_code)
             if rt_resp and rt_resp.get('success'):
                 rt_info = rt_resp.get('realtime', {})
