@@ -72,6 +72,14 @@ def get_stocks():
         if not symbol:
             continue
 
+        # Helper to parse floats safely
+        def safe_float(val, fallback=0.0):
+            try:
+                if val == '-' or val == '': return fallback
+                return float(val)
+            except:
+                return fallback
+
         # --- FETCH REALTIME DATA FIRST ---
         rt_data = None
         if numeric_code and numeric_code.isdigit():
@@ -82,13 +90,27 @@ def get_stocks():
                     time_str = rt_resp.get('info', {}).get('time', '')
                     date_str = time_str.split(' ')[0] if time_str else today.strftime('%Y-%m-%d')
                     
-                    if rt_info.get('latest_trade_price') != '-':
+                    latest = rt_info.get('latest_trade_price', '-')
+                    if latest == '-':
+                        bids = rt_info.get('best_bid_price', [])
+                        asks = rt_info.get('best_ask_price', [])
+                        bid1 = safe_float(bids[0] if bids else '-')
+                        ask1 = safe_float(asks[0] if asks else '-')
+                        if bid1 > 0 and ask1 > 0:
+                            latest = (bid1 + ask1) / 2
+                        elif bid1 > 0:
+                            latest = bid1
+                        elif ask1 > 0:
+                            latest = ask1
+                        
+                    latest_val = safe_float(latest)
+                    if latest_val > 0:
                         rt_data = {
                             'date': date_str,
-                            'open': float(rt_info.get('open', 0) or 0),
-                            'high': float(rt_info.get('high', 0) or 0),
-                            'low': float(rt_info.get('low', 0) or 0),
-                            'close': float(rt_info.get('latest_trade_price', 0) or 0)
+                            'open': safe_float(rt_info.get('open'), latest_val),
+                            'high': safe_float(rt_info.get('high'), latest_val),
+                            'low': safe_float(rt_info.get('low'), latest_val),
+                            'close': latest_val
                         }
             except Exception as e:
                 print(f"DEBUG: realtime fetch error {e}")
@@ -292,6 +314,13 @@ def get_chart_data():
     if not symbol:
         return jsonify({"error": "Invalid symbol"}), 400
 
+    def safe_float(val, fallback=0.0):
+        try:
+            if val == '-' or val == '': return fallback
+            return float(val)
+        except:
+            return fallback
+
     rt_data = None
     if numeric_code and numeric_code.isdigit():
         try:
@@ -300,14 +329,29 @@ def get_chart_data():
                 rt_info = rt_resp.get('realtime', {})
                 time_str = rt_resp.get('info', {}).get('time', '')
                 date_str = time_str.split(' ')[0] if time_str else datetime.now().strftime('%Y-%m-%d')
-                if rt_info.get('latest_trade_price') != '-':
+                
+                latest = rt_info.get('latest_trade_price', '-')
+                if latest == '-':
+                    bids = rt_info.get('best_bid_price', [])
+                    asks = rt_info.get('best_ask_price', [])
+                    bid1 = safe_float(bids[0] if bids else '-')
+                    ask1 = safe_float(asks[0] if asks else '-')
+                    if bid1 > 0 and ask1 > 0:
+                        latest = (bid1 + ask1) / 2
+                    elif bid1 > 0:
+                        latest = bid1
+                    elif ask1 > 0:
+                        latest = ask1
+                        
+                latest_val = safe_float(latest)
+                if latest_val > 0:
                     rt_data = {
                         'date': date_str,
                         'datetime': time_str,
-                        'open': float(rt_info.get('open', 0) or 0),
-                        'high': float(rt_info.get('high', 0) or 0),
-                        'low': float(rt_info.get('low', 0) or 0),
-                        'close': float(rt_info.get('latest_trade_price', 0) or 0)
+                        'open': safe_float(rt_info.get('open'), latest_val),
+                        'high': safe_float(rt_info.get('high'), latest_val),
+                        'low': safe_float(rt_info.get('low'), latest_val),
+                        'close': latest_val
                     }
         except Exception as e:
             pass
