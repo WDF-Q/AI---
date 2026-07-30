@@ -924,6 +924,24 @@ function upgradeApple(type) {
     }
 }
 
+function getRainbowAppleSVGHtml(sizeRem = '1.8rem') {
+    return `<svg class="rainbow-apple-svg" viewBox="0 0 32 32" style="width: ${sizeRem}; height: ${sizeRem}; vertical-align: middle;">
+  <defs>
+    <linearGradient id="rainbowAppleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="20%" stop-color="#f97316" />
+      <stop offset="40%" stop-color="#eab308" />
+      <stop offset="60%" stop-color="#22c55e" />
+      <stop offset="80%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+  </defs>
+  <path d="M16,6 C13,-1 6,2 6,10 C6,18 12,28 16,28 C20,28 26,18 26,10 C26,2 19,-1 16,6 Z" fill="url(#rainbowAppleGrad)"/>
+  <path d="M16,6 C18,3 22,2 23,4 C24,6 21,8 16,6 Z" fill="#4ade80"/>
+  <path d="M16,6 C15.5,4 16,2.5 17,1" stroke="#fef08a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+
 function generateBetApples(gameId) {
     let container = document.querySelector(`.bet-apple-slots[data-game="${gameId}"]`);
     if (!container) return;
@@ -978,17 +996,16 @@ function generateBetApples(gameId) {
         slot.innerHTML = '';
         if (index < preGenerated.length) {
             let a = preGenerated[index];
-            let appleEl = document.createElement('div');
             if (a.type === 'rainbow') {
-                appleEl.className = 'apple-item rainbow-apple';
-                appleEl.innerHTML = `🍎`;
+                slot.innerHTML = getRainbowAppleSVGHtml('1.8rem');
             } else {
+                let appleEl = document.createElement('div');
                 appleEl.className = `apple-item apple-${a.type}`;
                 appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${a.hp}</span>`;
+                appleEl.style.fontSize = '1.8rem';
+                appleEl.style.margin = '0';
+                slot.appendChild(appleEl);
             }
-            appleEl.style.fontSize = '1.8rem';
-            appleEl.style.margin = '0';
-            slot.appendChild(appleEl);
         } else {
             slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
         }
@@ -1994,6 +2011,8 @@ const Game3Manager = {
 async function playRainbowAppleCutscene(targetGame) {
     const cutscene = document.getElementById('rainbow-apple-cutscene');
     const subText = document.getElementById('rainbow-cutscene-sub');
+    const bigAppleContainer = document.getElementById('rainbow-big-apple-container');
+    if (bigAppleContainer) bigAppleContainer.innerHTML = getRainbowAppleSVGHtml('9.5rem');
     const gameNames = { 1: '消消樂 (遊戲 1)', 2: '九宮格 (遊戲 2)', 3: '夾夾樂 (遊戲 3)' };
     if (subText) subText.textContent = `即將降臨至 ${gameNames[targetGame]}！`;
     if (cutscene) cutscene.classList.add('show');
