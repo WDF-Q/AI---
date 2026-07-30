@@ -631,6 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const favoritesDropdown = document.getElementById('favorites-dropdown');
     const saveFavBtn = document.getElementById('save-favorite-btn');
     const deleteFavBtn = document.getElementById('delete-favorite-btn');
+    const renameFavBtn = document.getElementById('rename-favorite-btn');
     const recentFavContainer = document.getElementById('recent-favorites-container');
 
     const updateRecentFavorites = (name) => {
@@ -697,6 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadFavorites();
         favoritesDropdown.value = name.trim();
         deleteFavBtn.style.display = 'inline-block';
+        renameFavBtn.style.display = 'inline-block';
         updateRecentFavorites(name.trim());
         alert('儲存成功！');
     });
@@ -705,9 +707,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = e.target.value;
         if (!name) {
             deleteFavBtn.style.display = 'none';
+            renameFavBtn.style.display = 'none';
             return;
         }
         deleteFavBtn.style.display = 'inline-block';
+        renameFavBtn.style.display = 'inline-block';
         
         const saved = JSON.parse(localStorage.getItem('stockFavorites') || '{}');
         const symbols = saved[name];
@@ -734,7 +738,39 @@ document.addEventListener('DOMContentLoaded', () => {
             loadFavorites();
             favoritesDropdown.value = '';
             deleteFavBtn.style.display = 'none';
+            renameFavBtn.style.display = 'none';
         }
+    });
+
+    renameFavBtn.addEventListener('click', () => {
+        const oldName = favoritesDropdown.value;
+        if (!oldName) return;
+        
+        const newName = prompt(`請輸入「${oldName}」的新名稱:`, oldName);
+        if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+        
+        const saved = JSON.parse(localStorage.getItem('stockFavorites') || '{}');
+        if (saved[newName.trim()]) {
+            alert('此名稱已存在，請使用其他名稱！');
+            return;
+        }
+        
+        // Transfer data to new key
+        saved[newName.trim()] = saved[oldName];
+        delete saved[oldName];
+        localStorage.setItem('stockFavorites', JSON.stringify(saved));
+        
+        // Update recent favorites if exists
+        let recents = JSON.parse(localStorage.getItem('recentFavorites') || '[]');
+        if (recents.includes(oldName)) {
+            recents = recents.map(r => r === oldName ? newName.trim() : r);
+            localStorage.setItem('recentFavorites', JSON.stringify(recents));
+        }
+        
+        loadFavorites();
+        favoritesDropdown.value = newName.trim();
+        updateRecentFavorites(newName.trim());
+        alert('名稱變更成功！');
     });
 
     loadFavorites();
