@@ -110,6 +110,7 @@ def get_stocks():
             if mode == 'last_30':
                 hist = ticker.history(period="3mo", auto_adjust=False) 
                 print(f"DEBUG: {symbol} hist empty? {hist.empty}")
+                if hist.empty:
                     results.append({
                         'symbol': symbol.replace('.TW', ''),
                         'name': company_name,
