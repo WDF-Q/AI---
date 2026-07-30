@@ -250,6 +250,7 @@ document.querySelectorAll('.btn-add-bet').forEach(btn => {
 
 function handleAddBet(gameId) {
     if (isPlaying) return;
+    checkAndResetWinsBeforeNewBet();
     let inc = BET_INCREMENTS[currentIncrementIndex];
     if (gameId === 1) {
         if (game1Bet === 0) game1Bet = 600;
@@ -273,6 +274,7 @@ function handleAddBet(gameId) {
 
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
+    checkAndResetWinsBeforeNewBet();
     if (previousGame1Bet > 0 || previousGame2Bet > 0 || previousGame3Bet > 0) {
         if (previousGame1Bet > 0) {
             game1Bet = previousGame1Bet;
@@ -648,7 +650,7 @@ function updateGame1WinDisplay() {
     const badge = document.getElementById('game1-win-badge');
     const text = document.getElementById('game1-win-text');
     if (badge && text) {
-        if (game1Bet > 0 && isPlaying) {
+        if (game1Win > 0) {
             badge.classList.remove('hidden');
             text.textContent = game1Win;
         } else {
@@ -661,12 +663,70 @@ function updateGame3WinDisplay() {
     const badge = document.getElementById('game3-win-badge');
     const text = document.getElementById('game3-win-text');
     if (badge && text) {
-        if (game3Bet > 0 && isPlaying) {
+        if (game3TotalWin > 0) {
             badge.classList.remove('hidden');
             text.textContent = game3TotalWin;
         } else {
             badge.classList.add('hidden');
         }
+    }
+}
+
+function showRoundEndOutOverlays() {
+    let b1 = previousGame1Bet > 0 ? previousGame1Bet : game1Bet;
+    let b2 = previousGame2Bet > 0 ? previousGame2Bet : game2Bet;
+    let b3 = previousGame3Bet > 0 ? previousGame3Bet : game3Bet;
+
+    if (b1 > 0) {
+        const out1 = document.getElementById('out-overlay');
+        if (out1) {
+            out1.textContent = 'OUT';
+            out1.classList.add('show');
+        }
+    }
+    if (b2 > 0) {
+        const out2 = document.getElementById('g2-out-overlay');
+        if (out2) {
+            out2.textContent = 'OUT';
+            out2.classList.add('show');
+        }
+    }
+    if (b3 > 0) {
+        const out3 = document.getElementById('g3-out-overlay');
+        if (out3) {
+            out3.textContent = 'OUT';
+            out3.classList.add('show');
+        }
+    }
+}
+
+function hideAllOutOverlays() {
+    const out1 = document.getElementById('out-overlay');
+    const out2 = document.getElementById('g2-out-overlay');
+    const out3 = document.getElementById('g3-out-overlay');
+    if (out1) {
+        out1.classList.remove('show');
+        out1.style.fontSize = '';
+        out1.style.textShadow = '';
+        out1.style.color = '';
+        out1.textContent = 'OUT';
+    }
+    if (out2) out2.classList.remove('show');
+    if (out3) out3.classList.remove('show');
+}
+
+function checkAndResetWinsBeforeNewBet() {
+    if (!isPlaying && (game1Win > 0 || game2Win > 0 || game3TotalWin > 0 || totalWin > 0)) {
+        game1Win = 0;
+        game2Win = 0;
+        game3TotalWin = 0;
+        totalWin = 0;
+        bonusWin = 0;
+        updateWinDisplay();
+        updateGame1WinDisplay();
+        updateGame2WinDisplay();
+        updateGame3WinDisplay();
+        hideAllOutOverlays();
     }
 }
 
@@ -1966,6 +2026,7 @@ async function startGame() {
     isPlaying = true;
     game1Win = 0;
     game2Win = 0;
+    game3TotalWin = 0;
     bonusWin = 0;
     ballCount = 0;
     currentCombo = 0;
@@ -1993,7 +2054,7 @@ async function startGame() {
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = true);
     document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'none'); // 禁用選色
     DOM.ballHistory.innerHTML = '';
-    DOM.outOverlay.classList.remove('show');
+    hideAllOutOverlays();
     
     DOM.safeIndicator.textContent = '前 3 球安全保障！';
     DOM.safeIndicator.className = 'safe-indicator';
@@ -2932,8 +2993,7 @@ async function finishGameOverSequence() {
         DOM.outOverlay.style.textShadow = '';
         DOM.outOverlay.style.color = '';
     } else {
-        DOM.outOverlay.textContent = 'OUT';
-        DOM.outOverlay.classList.add('show');
+        showRoundEndOutOverlays();
         await sleep(2000);
     }
     
@@ -2993,6 +3053,7 @@ async function finishGameOverSequence() {
     updateGame1WinDisplay();
     updateGame2WinDisplay();
     updateGame3WinDisplay();
+    showRoundEndOutOverlays();
     DOM.btnStart.disabled = false;
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
     document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'auto');
