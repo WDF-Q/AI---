@@ -86,6 +86,12 @@ let activeJPAmount = 0;
 let currentAppleColors = [];
 let totalCollectedApples = 0;
 
+// ** 彩虹蘋果 (Rainbow Apple) 全域狀態 **
+let isRainbowAppleThisRound = false;
+let rainbowAppleTargetGame = 0;
+let rainbowAppleDirectJPTriggered = false;
+let forceRainbowAppleDebug = false;
+
 // ** Game 3 (夾夾樂) 狀態 **
 let game3TargetColor = 'red'; 
 let game3MultiplierArray = []; 
@@ -876,10 +882,14 @@ function renderGame2AppleHUD() {
 }
 
 function checkGame2AppleReward(cardCompletedLines) {
-    if (game2Bet <= 0 || !game2AppleThresholds || game2AppleThresholds.length === 0 || cardCompletedLines <= 0) return;
+    if (game2Bet <= 0 || cardCompletedLines <= 0) return;
 
-    // 依據「這一張棋盤一次性獲得的最大連線數 (cardCompletedLines)」做判定
-    // 必須「完全等於 (===)」詞條上面標示的 LINE 數，才能獲得該蘋果！
+    if (window.g2RainbowAppleActive && cardCompletedLines >= 3) {
+        window.g2RainbowAppleActive = false;
+        collectApple('rainbow', game2Bet);
+    }
+
+    if (!game2AppleThresholds || game2AppleThresholds.length === 0) return;
     let targetItem = game2AppleThresholds.find(item => !item.collected && item.lines === cardCompletedLines);
 
     if (targetItem) {
@@ -1870,6 +1880,11 @@ const Game3Manager = {
             game3TotalTargetBalls++;
             triggerClawDropAnimation();
             
+            if (window.g3RainbowAppleActive && game3Bet > 0) {
+                window.g3RainbowAppleActive = false;
+                collectApple('rainbow', game3Bet);
+            }
+
             let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
             if (collectedIndex !== -1 && game3Bet > 0) {
                 let collectedApple = game3ApplesInPlay.splice(collectedIndex, 1)[0];
@@ -1971,6 +1986,88 @@ const Game3Manager = {
     }
 };
 
+async function playRainbowAppleCutscene(targetGame) {
+    const cutscene = document.getElementById('rainbow-apple-cutscene');
+    const subText = document.getElementById('rainbow-cutscene-sub');
+    const gameNames = { 1: '消消樂 (遊戲 1)', 2: '九宮格 (遊戲 2)', 3: '夾夾樂 (遊戲 3)' };
+    if (subText) subText.textContent = `即將降臨至 ${gameNames[targetGame]}！`;
+    if (cutscene) cutscene.classList.add('show');
+    
+    await sleep(3500); // 3.5秒全螢幕集氣動畫
+    
+    switchActiveGame('game' + targetGame);
+    await sleep(500);
+    
+    if (cutscene) cutscene.classList.remove('show');
+    
+    applyRainbowAppleToTargetGame(targetGame);
+}
+
+function applyRainbowAppleToTargetGame(targetGame) {
+    if (targetGame === 1) {
+        let replaced = false;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                let block = board[r][c];
+                if (block && block.attachedApple && !block.isMoney) {
+                    block.attachedApple = 'rainbow';
+                    let appleEl = block.el.querySelector('.apple-item');
+                    if (appleEl) {
+                        appleEl.className = 'apple-item rainbow-apple';
+                        appleEl.innerHTML = '🌈';
+                    }
+                    replaced = true;
+                    break;
+                }
+            }
+            if (replaced) break;
+        }
+        if (!replaced) {
+            for (let c = 0; c < COLS; c++) {
+                if (topApplesState && topApplesState[c]) {
+                    topApplesState[c].type = 'rainbow';
+                    let el = topApplesState[c].el;
+                    if (el) el.innerHTML = '<span class="rainbow-apple" style="font-size:1.8rem;">🌈</span>';
+                    replaced = true;
+                    break;
+                }
+            }
+            if (!replaced && board[0] && board[0][0]) {
+                board[0][0].attachedApple = 'rainbow';
+                let smallApple = document.createElement('div');
+                smallApple.className = 'apple-item rainbow-apple';
+                smallApple.innerHTML = '🌈';
+                smallApple.style.fontSize = '1.8rem';
+                smallApple.style.position = 'absolute';
+                smallApple.style.bottom = '-8px';
+                smallApple.style.right = '-8px';
+                smallApple.style.zIndex = '10';
+                board[0][0].el.appendChild(smallApple);
+            }
+        }
+    } else if (targetGame === 2) {
+        let appleHud = document.getElementById('g2-apple-hud');
+        if (appleHud) {
+            appleHud.innerHTML = `
+                <div style="font-size: 1.02rem; color: #fef08a; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">5 LINE <span class="rainbow-apple" style="font-size: 1.3rem;">🌈</span></div>
+                <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">4 LINE <span style="font-size: 1.2rem;">🍎</span></div>
+                <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15;">3 LINE <span style="font-size: 1.2rem;">🍏</span></div>
+            `;
+        }
+        window.g2RainbowAppleActive = true;
+    } else if (targetGame === 3) {
+        let slotsContainer = document.querySelector('.bet-apple-slots[data-game="3"]');
+        if (slotsContainer) {
+            let firstSlot = slotsContainer.querySelector('.apple-slot');
+            if (firstSlot) {
+                firstSlot.innerHTML = '<span class="rainbow-apple" style="font-size: 2.2rem;">🌈</span>';
+                firstSlot.setAttribute('data-type', 'rainbow');
+            }
+        }
+        window.g3RainbowAppleActive = true;
+    }
+}
+
 async function startGame() {
     if (leftEngineActive || boardState !== 'IDLE') return;
     
@@ -2062,6 +2159,25 @@ async function startGame() {
     initBoard();
     spawnApples();
     
+    // ** 彩虹蘋果 (Rainbow Apple) 1% 機率登場機制 **
+    isRainbowAppleThisRound = false;
+    rainbowAppleTargetGame = 0;
+    rainbowAppleDirectJPTriggered = false;
+
+    let betGames = [];
+    if (game1Bet > 0) betGames.push(1);
+    if (game2Bet > 0) betGames.push(2);
+    if (game3Bet > 0) betGames.push(3);
+
+    let isRainbowTriggered = forceRainbowAppleDebug || (Math.random() < 0.01);
+    forceRainbowAppleDebug = false;
+
+    if (isRainbowTriggered && betGames.length > 0) {
+        isRainbowAppleThisRound = true;
+        rainbowAppleTargetGame = betGames[Math.floor(Math.random() * betGames.length)];
+        await playRainbowAppleCutscene(rainbowAppleTargetGame);
+    }
+
     pendingDrawsQueue = 3;
     pendingInitialBatch = 3;
     
@@ -3036,6 +3152,17 @@ async function finishGameOverSequence() {
         }
     }
     
+    if (rainbowAppleDirectJPTriggered) {
+        rainbowAppleDirectJPTriggered = false;
+        let notice = document.getElementById('jp-roulette-notice');
+        if (notice) notice.classList.remove('hidden');
+        DOM.drawStatus.textContent = `🎯 彩虹蘋果直通！準備進入 JP 轉盤遊戲... 🎯`;
+        await sleep(3500);
+        if (notice) notice.classList.add('hidden');
+        await sleep(500);
+        await runJPRouletteGame();
+    }
+
     if (game2Bet > 0 && game2Win > 0) {
         DOM.drawStatus.textContent = `連連樂結算！獲得 ${game2Win}`;
         await sleep(1500);
@@ -3091,6 +3218,33 @@ async function engineSleep(ms) {
 
 
 function collectApple(type, customBet = null) {
+    if (type === 'rainbow') {
+        let totalBet = (game1Bet > 0 ? game1Bet : 0) + (game2Bet > 0 ? game2Bet : 0) + (game3Bet > 0 ? game3Bet : 0);
+        let jpScore = Math.floor((totalBet / 600) * 10000);
+        activeJPAmount = jpScore;
+        rainbowAppleDirectJPTriggered = true;
+        
+        let div = document.createElement('div');
+        div.style.position = 'fixed';
+        div.style.top = '30%';
+        div.style.left = '50%';
+        div.style.transform = 'translate(-50%, -50%)';
+        div.style.background = 'radial-gradient(circle, rgba(15,23,42,0.96), rgba(0,0,0,0.98))';
+        div.style.color = '#fde047';
+        div.style.padding = '25px 45px';
+        div.style.borderRadius = '24px';
+        div.style.fontSize = '2.2rem';
+        div.style.fontWeight = '900';
+        div.style.zIndex = '99999';
+        div.style.border = '3px solid #facc15';
+        div.style.boxShadow = '0 0 35px #facc15, 0 0 70px #3b82f6';
+        div.style.textAlign = 'center';
+        div.innerHTML = `🌈 獲得彩虹蘋果！ 🌈<br><span style="font-size:1.5rem; color:#6ee7b7;">直通 JP 轉盤！JP 獎金估算: ${jpScore}</span>`;
+        document.body.appendChild(div);
+        setTimeout(() => { div.remove(); }, 3500);
+        return;
+    }
+
     let activeBet = (customBet !== null && customBet !== undefined) ? customBet : (game1Bet > 0 ? game1Bet : 0);
     if (activeBet <= 0) return; // 若當前遊戲壓分為 0，絕對不可收集蘋果！
 
@@ -3276,4 +3430,12 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(resizeApp, 50);
     setTimeout(resizeApp, 200);
     setTimeout(resizeApp, 600);
+
+    const btnDebugRainbow = document.getElementById('btn-debug-rainbow');
+    if (btnDebugRainbow) {
+        btnDebugRainbow.addEventListener('click', () => {
+            forceRainbowAppleDebug = true;
+            alert("🌈 下一局將 100% 觸發彩虹蘋果登場！請設定押分並點擊 [開始遊戲]！");
+        });
+    }
 });
