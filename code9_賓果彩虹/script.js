@@ -3437,9 +3437,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // ** 開分 & 洗分 密碼驗證與連擊授權邏輯 **
-    const ADMIN_PASSWORD = '8888';
-    let depositAuthExpiryTimestamp = 0; // 10秒內免密碼連擊 (開分)
-    let clearAuthExpiryTimestamp = 0;   // 5秒內免密碼 (洗分)
+    const ADMIN_PASSWORD = '787878';
+    let depositAuthExpiryTimestamp = 0; // 10秒內免密碼 (從輸入正確密碼起算，點擊不刷新)
+    let clearAuthExpiryTimestamp = 0;   // 5秒內免密碼 (從輸入正確密碼起算，點擊不刷新)
     let pendingAdminAction = null;       // 'deposit' 或 'clear'
 
     function handleDepositCredit() {
@@ -3465,14 +3465,12 @@ window.addEventListener('DOMContentLoaded', () => {
     function executeDepositCredit() {
         credit += 10000;
         updateCreditDisplay();
-        depositAuthExpiryTimestamp = Date.now() + 10000; // 10秒授權
         DOM.drawStatus.textContent = '💳 開分成功 (+10000)';
     }
 
     function executeClearCredit() {
         credit = 0;
         updateCreditDisplay();
-        clearAuthExpiryTimestamp = Date.now() + 5000; // 5秒授權
         DOM.drawStatus.textContent = '🧹 洗分成功 (總分歸零)';
     }
 
@@ -3503,9 +3501,12 @@ window.addEventListener('DOMContentLoaded', () => {
         if (val === ADMIN_PASSWORD) {
             let action = pendingAdminAction;
             hidePasswordModal();
+            let now = Date.now();
             if (action === 'deposit') {
+                depositAuthExpiryTimestamp = now + 10000; // 從輸入正確密碼當刻起固定計算 10 秒，過後需重新輸入
                 executeDepositCredit();
             } else if (action === 'clear') {
+                clearAuthExpiryTimestamp = now + 5000; // 從輸入正確密碼當刻起固定計算 5 秒，過後需重新輸入
                 executeClearCredit();
             }
         } else {
