@@ -669,7 +669,7 @@ function updateGame3WinDisplay() {
     const badge = document.getElementById('game3-win-badge');
     const text = document.getElementById('game3-win-text');
     if (badge && text) {
-        if (game3TotalWin > 0) {
+        if (game3TotalWin > 0 && game3Bet > 0) {
             badge.classList.remove('hidden');
             text.textContent = game3TotalWin;
         } else {
@@ -1889,7 +1889,7 @@ const Game3Manager = {
             game3MaxMultiplier = currentM;
         }
 
-        if (!isRainbow && (logicalColor === (game3Bet === 0 ? 'red' : game3TargetColor) || (dualPair && dualPair.includes(game3Bet === 0 ? 'red' : game3TargetColor)))) {
+        if (!isRainbow && (logicalColor === game3TargetColor || (dualPair && dualPair.includes(game3TargetColor)))) {
             game3TotalTargetBalls++;
             triggerClawDropAnimation();
 
@@ -1902,11 +1902,13 @@ const Game3Manager = {
             }
         }
 
-        let effTarget = game3Bet === 0 ? 'red' : game3TargetColor;
-        let effBet = game3Bet === 0 ? 600 : game3Bet;
-        let baseRate = (effTarget === 'white') ? 1.0 : 0.5;
-        let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
-        game3TotalWin = Math.floor((effBet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
+        if (game3Bet > 0) {
+            let baseRate = (game3TargetColor === 'white') ? 1.0 : 0.5;
+            let maxM = game3MaxMultiplier > 0 ? game3MaxMultiplier : 1.0;
+            game3TotalWin = Math.floor((game3Bet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
+        } else {
+            game3TotalWin = 0;
+        }
         updateGame3WinDisplay();
         recalculateTotalWin();
 
