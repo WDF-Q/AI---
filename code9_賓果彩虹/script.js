@@ -997,7 +997,9 @@ function generateBetApples(gameId) {
         }
     });
 
-    if (gameId === 2) {
+    if (gameId === 1) {
+        spawnApples();
+    } else if (gameId === 2) {
         generateGame2AppleThresholds();
     }
 }
