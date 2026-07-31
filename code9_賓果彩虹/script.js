@@ -2074,10 +2074,7 @@ function applyRainbowAppleToTargetGame(targetGame) {
             }
         }
     } else if (targetGame === 2) {
-        if (game2AppleThresholds && game2AppleThresholds.length > 0) {
-            game2AppleThresholds[0].type = 'rainbow';
-            renderGame2AppleHUD();
-        }
+        generateGame2AppleThresholds();
         window.g2RainbowAppleActive = true;
     } else if (targetGame === 3) {
         if (game3ApplesInPlay && game3ApplesInPlay.length > 0) {
