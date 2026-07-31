@@ -2026,14 +2026,61 @@ function applyRainbowAppleToTargetGame(targetGame) {
         generateBetApples(targetGame);
     }
 
-    if (targetGame === 2) {
+    if (targetGame === 1) {
+        let replaced = false;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                let block = board[r][c];
+                if (block && block.attachedApple && !block.isMoney) {
+                    block.attachedApple = 'rainbow';
+                    let appleEl = block.el.querySelector('.apple-item');
+                    if (appleEl) {
+                        appleEl.className = 'apple-item apple-rainbow';
+                    }
+                    replaced = true;
+                    break;
+                }
+            }
+            if (replaced) break;
+        }
+        if (!replaced) {
+            for (let c = 0; c < COLS; c++) {
+                if (topApplesState && topApplesState[c]) {
+                    topApplesState[c].type = 'rainbow';
+                    let el = topApplesState[c].el;
+                    if (el) el.innerHTML = `<div class="apple-item apple-rainbow" style="font-size:1.8rem; margin:0;">🍎</div>`;
+                    replaced = true;
+                    break;
+                }
+            }
+            if (!replaced && board && board[0] && board[0][0]) {
+                board[0][0].attachedApple = 'rainbow';
+                let smallApple = document.createElement('div');
+                smallApple.className = 'apple-item apple-rainbow';
+                smallApple.innerHTML = '🍎';
+                smallApple.style.fontSize = '1.8rem';
+                smallApple.style.position = 'absolute';
+                smallApple.style.bottom = '-8px';
+                smallApple.style.right = '-8px';
+                smallApple.style.zIndex = '10';
+                board[0][0].el.appendChild(smallApple);
+            }
+        }
+    } else if (targetGame === 2) {
+        if (game2AppleThresholds && game2AppleThresholds.length > 0) {
+            game2AppleThresholds[0].type = 'rainbow';
+            renderGame2AppleHUD();
+        }
         window.g2RainbowAppleActive = true;
     } else if (targetGame === 3) {
-        window.g3RainbowAppleActive = true;
-        if (typeof game3ApplesInPlay !== 'undefined' && game3ApplesInPlay.length > 0) {
+        if (game3ApplesInPlay && game3ApplesInPlay.length > 0) {
             game3ApplesInPlay[0].type = 'rainbow';
             Game3Manager.updateHitTable();
+        } else {
+            game3ApplesInPlay = [{ hit: 3, type: 'rainbow' }];
+            Game3Manager.updateHitTable();
         }
+        window.g3RainbowAppleActive = true;
     }
 }
 
