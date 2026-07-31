@@ -3083,8 +3083,10 @@ async function refillBoard(finalCombo = 0) {
                 smallApple.style.right = '-8px';
                 smallApple.style.zIndex = '10';
                 
-                // 清除附著蘋果本身的動畫，避免一直跳動
-                smallApple.style.animation = 'none';
+                // 清除普通附著蘋果本身的動畫，避免一直跳動（彩虹蘋果保留動畫）
+                if (topApplesState[c].type !== 'rainbow') {
+                    smallApple.style.animation = 'none';
+                }
                 
                 block.el.appendChild(smallApple);
                 
