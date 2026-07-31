@@ -1045,13 +1045,8 @@ function spawnApples() {
     for (let i = 0; i < applesToSpawn.length && i < availableSlots.length; i++) {
         let appleData = applesToSpawn[i];
         let appleEl = document.createElement('div');
-        if (appleData.type === 'rainbow') {
-            appleEl.className = 'apple-item apple-rainbow';
-            appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${appleData.hp}</span>`;
-        } else {
-            appleEl.className = `apple-item apple-${appleData.type}`;
-            appleEl.innerHTML = `🍎<span class="apple-num">${appleData.hp}</span>`;
-        }
+        appleEl.className = `apple-item apple-${appleData.type}`;
+        appleEl.innerHTML = `🍎<span class="apple-num">${appleData.hp}</span>`;
         availableSlots[i].appendChild(appleEl);
         
         let colIndex = slotsArray.indexOf(availableSlots[i]);
