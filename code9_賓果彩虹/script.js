@@ -1892,11 +1892,6 @@ const Game3Manager = {
         if (!isRainbow && (logicalColor === (game3Bet === 0 ? 'red' : game3TargetColor) || (dualPair && dualPair.includes(game3Bet === 0 ? 'red' : game3TargetColor)))) {
             game3TotalTargetBalls++;
             triggerClawDropAnimation();
-            
-            if (window.g3RainbowAppleActive && game3Bet > 0) {
-                window.g3RainbowAppleActive = false;
-                collectApple('rainbow', game3Bet);
-            }
 
             let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
             if (collectedIndex !== -1 && game3Bet > 0) {
@@ -2150,6 +2145,17 @@ async function startGame() {
     isRainbowAppleThisRound = false;
     rainbowAppleTargetGame = 0;
     rainbowAppleDirectJPTriggered = false;
+    window.g2RainbowAppleActive = false;
+    window.g3RainbowAppleActive = false;
+
+    // 清除上一局遺留的彩虹蘋果狀態，確保全場最多只會有 1 顆彩虹蘋果降臨
+    [game1PreApples, game2PreApples, game3PreApples].forEach(arr => {
+        if (arr) {
+            arr.forEach(a => {
+                if (a.type === 'rainbow') a.type = getAppleType();
+            });
+        }
+    });
 
     let betGames = [];
     if (game1Bet > 0) betGames.push(1);
