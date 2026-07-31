@@ -131,6 +131,8 @@ let pendingEventsQueue = [];
 let isGameOverTriggered = false; 
 let pendingInitialBatch = 0; 
 let pendingDrawsQueue = 0;
+let shopTriggeredForBall = {};
+window.game3ExtraClawBallPending = false;
 
 // Roulette animation tracking
 let outerWheelRotation = 0;
@@ -1893,6 +1895,12 @@ const Game3Manager = {
             game3TotalTargetBalls++;
             triggerClawDropAnimation();
 
+            if (window.game3ExtraClawBallPending) {
+                window.game3ExtraClawBallPending = false;
+                game3TotalTargetBalls++; // 商店特惠：額外多獲得 1 球與金額，不增加連續連鎖數
+                DOM.drawStatus.textContent = `🎯 商店特惠：夾夾樂額外加獲得 1 球與金額獎勵！ 🎯`;
+            }
+
             let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
             if (collectedIndex !== -1 && game3Bet > 0) {
                 let collectedApple = game3ApplesInPlay.splice(collectedIndex, 1)[0];
@@ -2143,6 +2151,10 @@ async function startGame() {
     initBoard();
     spawnApples();
     
+    // ** 商店 (Shop System) 重置 **
+    shopTriggeredForBall = {};
+    window.game3ExtraClawBallPending = false;
+
     // ** 彩虹蘋果 (Rainbow Apple) 1% 機率登場機制 **
     isRainbowAppleThisRound = false;
     rainbowAppleTargetGame = 0;
@@ -2468,6 +2480,11 @@ async function startLeftEngine() {
                     DOM.ballCountText.textContent = ballCount;
                     let isSafeMode = (ballCount <= 3); 
                     
+                    if ([10, 20, 30].includes(ballCount) && !shopTriggeredForBall[ballCount]) {
+                        shopTriggeredForBall[ballCount] = true;
+                        await triggerShopModalProcess();
+                    }
+
                     if (!isSafeMode) {
                         DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
                         DOM.safeIndicator.className = 'safe-indicator danger';
@@ -3533,4 +3550,146 @@ window.addEventListener('DOMContentLoaded', () => {
             else if (e.key === 'Escape') hidePasswordModal();
         });
     }
+
+    // ** 懸浮商店 (Shop System) 控制邏輯 **
+    let shopTimerInterval = null;
+    let shopSecLeft = 10;
+    let shopResolvePromise = null;
+
+    window.triggerShopModalProcess = function() {
+        return new Promise((resolve) => {
+            shopResolvePromise = resolve;
+            const modal = document.getElementById('shop-modal');
+            const fillEl = document.getElementById('shop-timer-fill');
+            const secEl = document.getElementById('shop-timer-sec');
+            if (!modal) {
+                resolve();
+                return;
+            }
+
+            shopSecLeft = 10;
+            if (secEl) secEl.textContent = '10';
+            if (fillEl) {
+                fillEl.style.transition = 'none';
+                fillEl.style.width = '100%';
+                requestAnimationFrame(() => {
+                    fillEl.style.transition = 'width 1s linear';
+                });
+            }
+
+            modal.classList.remove('hidden');
+            DOM.drawStatus.textContent = '🛒 商店開放中 (停留 10 秒)！請選擇商品...';
+
+            if (shopTimerInterval) clearInterval(shopTimerInterval);
+            shopTimerInterval = setInterval(() => {
+                shopSecLeft--;
+                if (secEl) secEl.textContent = shopSecLeft;
+                if (fillEl) fillEl.style.width = `${(shopSecLeft / 10) * 100}%`;
+
+                if (shopSecLeft <= 0) {
+                    closeShopAndFinish(1); // 10秒到期自動放棄 (不買)
+                }
+            }, 1000);
+        });
+    };
+
+    function closeShopAndFinish(itemIndex) {
+        if (shopTimerInterval) {
+            clearInterval(shopTimerInterval);
+            shopTimerInterval = null;
+        }
+        const modal = document.getElementById('shop-modal');
+        if (modal) modal.classList.add('hidden');
+
+        if (itemIndex > 1) {
+            executeShopPurchase(itemIndex);
+        } else {
+            DOM.drawStatus.textContent = '🛒 放棄購買，大轉盤繼續發球...';
+        }
+
+        if (shopResolvePromise) {
+            let res = shopResolvePromise;
+            shopResolvePromise = null;
+            res();
+        }
+    }
+
+    function executeShopPurchase(itemIndex) {
+        let cost = 600;
+        if (credit < cost) {
+            alert("餘額不足，無法購買！");
+            return;
+        }
+        credit -= cost;
+        updateCreditDisplay();
+
+        if (itemIndex === 2) {
+            // 第二格：消 (遊戲1 消除框內選擇 3 顆色球變為閃爍全消球)
+            let candidateBlocks = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    let block = board[r][c];
+                    if (block !== null && !block.isMoney) {
+                        candidateBlocks.push(block);
+                    }
+                }
+            }
+            candidateBlocks.sort(() => Math.random() - 0.5);
+            let selected = candidateBlocks.slice(0, 3);
+            selected.forEach(b => {
+                b.isFlash = true;
+                b.el.classList.add('block-super-flashing');
+            });
+            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲1 已產生 3 顆全消閃爍球！`;
+        } else if (itemIndex === 3) {
+            // 第三格：升 (遊戲2 備用棋盤等級提升 +3 ~ +6 級)
+            let r = Math.random() * 100;
+            let boost = 3;
+            if (r < 70) boost = 3;        // +3級: 70%
+            else if (r < 85) boost = 4;   // +4級: 15%
+            else if (r < 95) boost = 5;   // +5級: 10%
+            else boost = 6;              // +6級: 5%
+
+            let currentNext = Game2Manager.nextLevel || 1;
+            let newNext = Math.min(9, currentNext + boost);
+            Game2Manager.generateNextCard(newNext);
+            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲2 備用棋盤升級 +${boost} 級 (LV.${newNext >= 9 ? 'MAX' : newNext})！`;
+        } else if (itemIndex === 4) {
+            // 第四格：夾 (遊戲3 下次進目標色多獲得 1 球與金額)
+            window.game3ExtraClawBallPending = true;
+            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲3 下次進目標色將獲得雙倍夾球數與金額！`;
+        }
+    }
+
+    // 綁定商店卡片點擊、雙擊與觸摸往上滑動手勢
+    document.querySelectorAll('.shop-item-card').forEach(card => {
+        let touchStartY = 0;
+
+        // 雙擊確認
+        card.addEventListener('dblclick', (e) => {
+            let itemIndex = parseInt(e.currentTarget.getAttribute('data-item'));
+            closeShopAndFinish(itemIndex);
+        });
+
+        // 觸摸往上滑動確認
+        card.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            card.classList.add('active-touch');
+        }, { passive: true });
+
+        card.addEventListener('touchend', (e) => {
+            card.classList.remove('active-touch');
+            let touchEndY = e.changedTouches[0].clientY;
+            if (touchStartY - touchEndY > 30) { // 往上滑動超過 30px 算作確認
+                let itemIndex = parseInt(e.currentTarget.getAttribute('data-item'));
+                closeShopAndFinish(itemIndex);
+            }
+        }, { passive: true });
+
+        // 單擊點選確認
+        card.addEventListener('click', (e) => {
+            let itemIndex = parseInt(e.currentTarget.getAttribute('data-item'));
+            closeShopAndFinish(itemIndex);
+        });
+    });
 });

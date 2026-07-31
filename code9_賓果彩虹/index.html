@@ -599,6 +599,48 @@
         </div>
     </div>
 
+    <!-- 懸浮商店 Popup (位於 底部控制區 / 切換壓分 正上方) -->
+    <div id="shop-modal" class="shop-modal hidden">
+        <div class="shop-awning">
+            <span>🛒 可以購買自己喜歡的物品</span>
+            <div class="shop-timer-bar"><div id="shop-timer-fill" class="shop-timer-fill"></div></div>
+            <div class="shop-timer-text">⏱️ 懸浮停留: <span id="shop-timer-sec">10</span> 秒 (點選或往上滑動確認)</div>
+        </div>
+        <div class="shop-grid-container">
+            <!-- 1. 不買 -->
+            <div class="shop-item-card card-nobuy" data-item="1">
+                <div class="shop-card-badge">免費</div>
+                <div class="shop-card-icon">✖</div>
+                <div class="shop-card-title">不買</div>
+                <div class="shop-card-desc">放棄本次購買</div>
+            </div>
+
+            <!-- 2. 消 -->
+            <div class="shop-item-card card-clear" data-item="2">
+                <div class="shop-card-badge">600 BET</div>
+                <div class="shop-card-icon">消</div>
+                <div class="shop-card-title">全消閃爍球</div>
+                <div class="shop-card-desc">遊戲1: 3顆球變閃爍<br>消除時該色全清</div>
+            </div>
+
+            <!-- 3. 升 -->
+            <div class="shop-item-card card-upgrade" data-item="3">
+                <div class="shop-card-badge">600 BET</div>
+                <div class="shop-card-icon">升</div>
+                <div class="shop-card-title">預備盤升級</div>
+                <div class="shop-card-desc">遊戲2: 備用棋盤<br>提升 +3 ~ +6 級</div>
+            </div>
+
+            <!-- 4. 夾 -->
+            <div class="shop-item-card card-claw" data-item="4">
+                <div class="shop-card-badge">600 BET</div>
+                <div class="shop-card-icon">夾</div>
+                <div class="shop-card-title">雙倍夾球數</div>
+                <div class="shop-card-desc">遊戲3: 下次進目標色<br>多得1球與金額</div>
+            </div>
+        </div>
+    </div>
+
     <script src="./script.js?v=7"></script>
 </body>
 </html>
