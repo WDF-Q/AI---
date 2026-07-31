@@ -1021,8 +1021,8 @@ function spawnApples() {
     
     DOM.birdMouth = beakEl;
 
-    // 消消樂 (Game 3) 若未壓分 (game3Bet === 0)，上方絕對不產生蘋果！
-    if (game3Bet === 0) {
+    // 消消樂 (Game 1) 若未壓分 (game1Bet === 0)，上方絕對不產生蘋果！
+    if (game1Bet === 0) {
         return;
     }
     
@@ -1032,8 +1032,8 @@ function spawnApples() {
     }
     availableSlots.sort(() => Math.random() - 0.5);
     
-    let applesToSpawn = game3PreApples.length > 0 ? game3PreApples : [];
-    if (applesToSpawn.length === 0 && game3Bet > 0) {
+    let applesToSpawn = game1PreApples.length > 0 ? game1PreApples : [];
+    if (applesToSpawn.length === 0 && game1Bet > 0) {
         let count = Math.random() < 0.1 ? 2 : 3;
         for (let i = 0; i < count; i++) {
             applesToSpawn.push({ type: getAppleType(), hp: Math.floor(Math.random() * 10) + 6 });
@@ -1043,8 +1043,13 @@ function spawnApples() {
     for (let i = 0; i < applesToSpawn.length && i < availableSlots.length; i++) {
         let appleData = applesToSpawn[i];
         let appleEl = document.createElement('div');
-        appleEl.className = `apple-item apple-${appleData.type}`;
-        appleEl.innerHTML = `🍎<span class="apple-num">${appleData.hp}</span>`;
+        if (appleData.type === 'rainbow') {
+            appleEl.className = 'apple-item apple-rainbow';
+            appleEl.innerHTML = `🍎<span class="apple-num" style="display:none;">${appleData.hp}</span>`;
+        } else {
+            appleEl.className = `apple-item apple-${appleData.type}`;
+            appleEl.innerHTML = `🍎<span class="apple-num">${appleData.hp}</span>`;
+        }
         availableSlots[i].appendChild(appleEl);
         
         let colIndex = slotsArray.indexOf(availableSlots[i]);
