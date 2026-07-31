@@ -1684,6 +1684,18 @@ html, body {
     background: linear-gradient(180deg, #f87171, #dc2626);
     box-shadow: 0 0 10px rgba(248, 113, 113, 0.6);
 }
+.btn-debug-item {
+    background: linear-gradient(180deg, #334155, #0f172a);
+    color: #cbd5e1;
+    border: 1.5px solid #64748b;
+    font-size: 0.8rem;
+}
+.btn-debug-item:hover {
+    background: linear-gradient(180deg, #475569, #1e293b);
+    color: #ffffff;
+    border-color: #94a3b8;
+    box-shadow: 0 0 8px rgba(148, 163, 184, 0.5);
+}
 
 /* 密碼彈窗 */
 .password-modal {
