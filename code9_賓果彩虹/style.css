@@ -1559,6 +1559,15 @@ html, body {
     }
 }
 
+.game-module.active.rainbow-landing-flash {
+    animation: targetGameFlash 1.2s ease-out;
+}
+@keyframes targetGameFlash {
+    0% { box-shadow: 0 0 30px #f59e0b, 0 0 60px #3b82f6; border-color: #fde047; }
+    50% { box-shadow: 0 0 50px #ec4899, 0 0 90px #22c55e; border-color: #ec4899; }
+    100% { box-shadow: none; }
+}
+
 /* 全螢幕彩虹蘋果集氣登場 Cutscene */
 .rainbow-apple-cutscene {
     position: fixed;

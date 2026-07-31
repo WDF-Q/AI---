@@ -2005,9 +2005,16 @@ async function playRainbowAppleCutscene(targetGame) {
     
     await sleep(3500); // 3.5秒全螢幕集氣動畫
     
+    // ** 自動將降臨目標遊戲從右側備用區切換至主畫面 **
     switchActiveGame('game' + targetGame);
-    await sleep(500);
     
+    const targetEl = document.getElementById('game' + targetGame + '-container');
+    if (targetEl) {
+        targetEl.classList.add('rainbow-landing-flash');
+        setTimeout(() => targetEl.classList.remove('rainbow-landing-flash'), 1200);
+    }
+    
+    await sleep(500);
     if (cutscene) cutscene.classList.remove('show');
     
     applyRainbowAppleToTargetGame(targetGame);
