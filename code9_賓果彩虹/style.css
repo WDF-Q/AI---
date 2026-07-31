@@ -1527,20 +1527,32 @@ html, body {
 }
 
 /* ==========================================
-   彩虹蘋果 (Rainbow Apple) 100% 完整不缺角動態炫彩 SVG 特效
+   彩虹蘋果 (Rainbow Apple) 100% 同款蘋果輪廓線條 + 超炫彩發光動態
    ========================================== */
-.rainbow-apple-emoji {
-    display: inline-block;
-    vertical-align: middle;
+.apple-rainbow {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.15;
+    padding-bottom: 2px;
     overflow: visible !important;
-    filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 12px #eab308) drop-shadow(0 0 18px #3b82f6);
-    animation: rainbowHueRotate 2.5s linear infinite;
+    animation: rainbowGlowShift 2s linear infinite;
 }
 
-@keyframes rainbowHueRotate {
-    0% { filter: hue-rotate(0deg) drop-shadow(0 0 8px #ef4444) drop-shadow(0 0 14px #eab308); }
-    50% { filter: hue-rotate(180deg) drop-shadow(0 0 14px #3b82f6) drop-shadow(0 0 20px #ec4899); }
-    100% { filter: hue-rotate(360deg) drop-shadow(0 0 8px #ef4444) drop-shadow(0 0 14px #eab308); }
+@keyframes rainbowGlowShift {
+    0% {
+        filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 12px #f59e0b) hue-rotate(0deg) saturate(3) brightness(1.25);
+    }
+    33% {
+        filter: drop-shadow(0 0 8px #22c55e) drop-shadow(0 0 14px #3b82f6) hue-rotate(120deg) saturate(3) brightness(1.25);
+    }
+    66% {
+        filter: drop-shadow(0 0 8px #a855f7) drop-shadow(0 0 14px #ec4899) hue-rotate(240deg) saturate(3) brightness(1.25);
+    }
+    100% {
+        filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 12px #f59e0b) hue-rotate(360deg) saturate(3) brightness(1.25);
+    }
 }
 
 /* 全螢幕彩虹蘋果集氣登場 Cutscene */
