@@ -12,8 +12,13 @@
     <div class="app-wrapper">
         <!-- 頂部資訊列 -->
         <header class="top-bar">
-            <div class="title-section">
+            <div class="title-section" style="display: flex; align-items: center; gap: 14px;">
                 <h1>🌈 <span style="font-size: 0.5em;">賓果彩虹</span></h1>
+                <!-- 開分與洗分按鈕區 (靠左貼齊 Logo) -->
+                <div class="credit-admin-btns">
+                    <button id="btn-deposit-credit" class="admin-btn btn-deposit">💳 開分</button>
+                    <button id="btn-clear-credit" class="admin-btn btn-clear">🧹 洗分</button>
+                </div>
             </div>
             <div class="info-section">
                 <div class="credit-box">
@@ -580,6 +585,19 @@
         <div class="rainbow-big-apple" id="rainbow-big-apple-container"></div>
         <div class="rainbow-cutscene-title">✨ 降臨！特別彩虹蘋果 ✨</div>
         <div id="rainbow-cutscene-sub" class="rainbow-cutscene-sub">即將降臨至 遊戲1...</div>
+    </div>
+
+    <!-- 密碼輸入驗證彈窗 -->
+    <div id="password-modal" class="password-modal hidden">
+        <div class="password-modal-content">
+            <div class="password-modal-title" id="password-modal-title">🔒 請輸入授權密碼</div>
+            <div class="password-modal-sub" id="password-modal-sub">預設密碼：8888</div>
+            <input type="password" id="password-input" class="password-input" placeholder="請輸入密碼" maxlength="10" autocomplete="off" />
+            <div class="password-modal-actions">
+                <button id="btn-password-cancel" class="btn-pass-action btn-pass-cancel">取消</button>
+                <button id="btn-password-confirm" class="btn-pass-action btn-pass-confirm">確認</button>
+            </div>
+        </div>
     </div>
 
     <script src="./script.js?v=7"></script>

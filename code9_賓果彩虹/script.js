@@ -3435,4 +3435,101 @@ window.addEventListener('DOMContentLoaded', () => {
             alert("🌈 下一局將 100% 觸發彩虹蘋果登場！請設定押分並點擊 [開始遊戲]！");
         });
     }
+
+    // ** 開分 & 洗分 密碼驗證與連擊授權邏輯 **
+    const ADMIN_PASSWORD = '8888';
+    let depositAuthExpiryTimestamp = 0; // 10秒內免密碼連擊 (開分)
+    let clearAuthExpiryTimestamp = 0;   // 5秒內免密碼 (洗分)
+    let pendingAdminAction = null;       // 'deposit' 或 'clear'
+
+    function handleDepositCredit() {
+        let now = Date.now();
+        if (now < depositAuthExpiryTimestamp) {
+            executeDepositCredit();
+        } else {
+            pendingAdminAction = 'deposit';
+            showPasswordModal("💳 請輸入開分授權密碼");
+        }
+    }
+
+    function handleClearCredit() {
+        let now = Date.now();
+        if (now < clearAuthExpiryTimestamp) {
+            executeClearCredit();
+        } else {
+            pendingAdminAction = 'clear';
+            showPasswordModal("🧹 請輸入洗分授權密碼");
+        }
+    }
+
+    function executeDepositCredit() {
+        credit += 10000;
+        updateCreditDisplay();
+        depositAuthExpiryTimestamp = Date.now() + 10000; // 10秒授權
+        DOM.drawStatus.textContent = '💳 開分成功 (+10000)';
+    }
+
+    function executeClearCredit() {
+        credit = 0;
+        updateCreditDisplay();
+        clearAuthExpiryTimestamp = Date.now() + 5000; // 5秒授權
+        DOM.drawStatus.textContent = '🧹 洗分成功 (總分歸零)';
+    }
+
+    function showPasswordModal(titleText) {
+        const modal = document.getElementById('password-modal');
+        const title = document.getElementById('password-modal-title');
+        const input = document.getElementById('password-input');
+        if (modal && input) {
+            if (titleText && title) title.textContent = titleText;
+            input.value = '';
+            modal.classList.remove('hidden');
+            setTimeout(() => input.focus(), 100);
+        }
+    }
+
+    function hidePasswordModal() {
+        const modal = document.getElementById('password-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        pendingAdminAction = null;
+    }
+
+    function confirmPasswordModal() {
+        const input = document.getElementById('password-input');
+        if (!input) return;
+        let val = input.value.trim();
+        if (val === ADMIN_PASSWORD) {
+            let action = pendingAdminAction;
+            hidePasswordModal();
+            if (action === 'deposit') {
+                executeDepositCredit();
+            } else if (action === 'clear') {
+                executeClearCredit();
+            }
+        } else {
+            alert("密碼錯誤！請重新輸入。");
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    const btnDeposit = document.getElementById('btn-deposit-credit');
+    const btnClear = document.getElementById('btn-clear-credit');
+    const btnPassCancel = document.getElementById('btn-password-cancel');
+    const btnPassConfirm = document.getElementById('btn-password-confirm');
+    const inputPass = document.getElementById('password-input');
+
+    if (btnDeposit) btnDeposit.addEventListener('click', handleDepositCredit);
+    if (btnClear) btnClear.addEventListener('click', handleClearCredit);
+    if (btnPassCancel) btnPassCancel.addEventListener('click', hidePasswordModal);
+    if (btnPassConfirm) btnPassConfirm.addEventListener('click', confirmPasswordModal);
+
+    if (inputPass) {
+        inputPass.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') confirmPasswordModal();
+            else if (e.key === 'Escape') hidePasswordModal();
+        });
+    }
 });
