@@ -2057,7 +2057,7 @@ function applyRainbowAppleToTargetGame(targetGame) {
                 if (topApplesState && topApplesState[c]) {
                     topApplesState[c].type = 'rainbow';
                     let el = topApplesState[c].el;
-                    if (el) el.innerHTML = `<div class="apple-item apple-rainbow" style="font-size:1.8rem; margin:0;">🍎</div>`;
+                    if (el) el.className = 'apple-item apple-rainbow';
                     replaced = true;
                     break;
                 }
