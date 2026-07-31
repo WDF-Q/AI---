@@ -1335,7 +1335,7 @@ const Game2Manager = {
         game2LineCount = 0;
         this.clearWinningLines();
         this.generateCard(1); // 初始主體固定為 LV1 模板
-        let firstNextLvl = Math.floor(Math.random() * 3) + 1; // 第一張備用棋盤固定在 LV1~LV3 隨機
+        let firstNextLvl = 1; // 第一張備用棋盤固定為 LV1
         this.generateNextCard(firstNextLvl);
         generateGame2AppleThresholds();
         this.renderUI();
