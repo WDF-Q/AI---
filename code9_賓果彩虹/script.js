@@ -2468,8 +2468,6 @@ async function startLeftEngine() {
                         let currentShotNumber = ballCount;
                         DOM.ballCountText.textContent = ballCount;
                         
-                        await checkAndTriggerShop(ballCount);
-
                         let isSafeMode = true; 
                         
                         let p = shootBallAsync(isSafeMode, true).then(res => {
@@ -2488,10 +2486,12 @@ async function startLeftEngine() {
                         }
                     }
                     
+                    // 批次發球 (初始 3球 / 彩色洞 3球) 全部進洞後，統一進行盤面連線檢定！
                     await Promise.all(promises);
-
-                    // 批次發球 (初始 3球 / JP 3球) 全部進洞後，統一對 Game 2 進行連線、銷毀與補充檢定！
                     Game2Manager.evaluateLineCheck();
+                    
+                    // 射出的球均已進洞，此時檢定是否需要彈出商店 (第 10, 20, 30 球門檻)
+                    await checkAndTriggerShop(ballCount);
                     
                     if (rainbowTriggeredCount > 0) {
                         pendingDrawsQueue += (rainbowTriggeredCount * 3);
@@ -2514,8 +2514,6 @@ async function startLeftEngine() {
                     DOM.ballCountText.textContent = ballCount;
                     let isSafeMode = (ballCount <= 3); 
                     
-                    await checkAndTriggerShop(ballCount);
-
                     if (!isSafeMode) {
                         DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
                         DOM.safeIndicator.className = 'safe-indicator danger';
@@ -2523,6 +2521,9 @@ async function startLeftEngine() {
                     
                     let res = await shootBallAsync(isSafeMode);
                     updateHistoryUI();
+                    
+                    // 單發發球進洞後，檢定是否彈出商店
+                    await checkAndTriggerShop(ballCount);
                     
                     pendingDrawsQueue--;
                     if (res === 'rainbow') {
