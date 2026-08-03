@@ -1949,3 +1949,44 @@ html, body {
     0% { filter: brightness(1) drop-shadow(0 0 6px #fde047); transform: scale(1); }
     100% { filter: brightness(1.7) drop-shadow(0 0 18px #ec4899); transform: scale(1.08); }
 }
+
+/* 商店售完/未壓分卡片 */
+.shop-item-card.card-soldout {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+    cursor: not-allowed !important;
+    border-color: #334155 !important;
+    box-shadow: none !important;
+}
+.shop-item-card.card-soldout:hover {
+    transform: none !important;
+}
+.card-soldout .shop-card-icon {
+    background: linear-gradient(135deg, #475569, #1e293b) !important;
+    color: #94a3b8 !important;
+    font-size: 1.2rem !important;
+    border-color: #64748b !important;
+    text-shadow: none !important;
+}
+
+/* 商店蘋果取代卡片 */
+.shop-item-card.card-apple .shop-card-icon {
+    background: linear-gradient(135deg, #f59e0b, #b45309) !important;
+    font-size: 2.2rem !important;
+    box-shadow: 0 0 15px #f59e0b !important;
+    border-color: #fef08a !important;
+}
+
+/* 暫存蘋果圖示 (顏色球累計框左側) */
+.staged-apple-item {
+    font-size: 1.6rem;
+    line-height: 1;
+    position: relative;
+    animation: popInStaged 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    cursor: pointer;
+}
+@keyframes popInStaged {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}

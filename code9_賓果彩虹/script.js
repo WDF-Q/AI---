@@ -133,6 +133,7 @@ let pendingInitialBatch = 0;
 let pendingDrawsQueue = 0;
 let shopTriggeredForBall = {};
 window.game3ExtraClawBallPending = false;
+let stagedShopApples = [];
 
 // Roulette animation tracking
 let outerWheelRotation = 0;
@@ -2174,6 +2175,8 @@ async function startGame() {
     // ** 商店 (Shop System) 重置 **
     shopTriggeredForBall = {};
     window.game3ExtraClawBallPending = false;
+    stagedShopApples = [];
+    updateStagedApplesUI();
 
     // ** 彩虹蘋果 (Rainbow Apple) 1% 機率登場機制 **
     isRainbowAppleThisRound = false;
@@ -3194,8 +3197,15 @@ async function finishGameOverSequence() {
                     DOM.drawStatus.textContent = `🎯 JP結算！未達 20 島，無獎金 🎯`;
                     await sleep(2000);
                 }
-            }
-        }
+    // ** 結算並將商店購買的暫存蘋果存入 7 蘋果進度條 **
+    if (stagedShopApples.length > 0) {
+        DOM.drawStatus.textContent = `🎯 正在將商店購買的 ${stagedShopApples.length} 顆蘋果存入 7 蘋果進度表...`;
+        await sleep(1500);
+        stagedShopApples.forEach(a => {
+            collectApple(a.type, a.bet);
+        });
+        stagedShopApples = [];
+        updateStagedApplesUI();
     }
     
     if (rainbowAppleDirectJPTriggered) {
@@ -3587,6 +3597,31 @@ window.addEventListener('DOMContentLoaded', () => {
     let shopTimerInterval = null;
     let shopSecLeft = 10;
     let shopResolvePromise = null;
+    let shopActiveSlotData = {}; // 紀錄當次商店快照 (如蘋果取代欄位資料)
+
+    function updateStagedApplesUI() {
+        const container = document.getElementById('shop-staged-apples-container');
+        if (!container) return;
+        container.innerHTML = '';
+        stagedShopApples.forEach((a, idx) => {
+            let el = document.createElement('div');
+            el.className = 'staged-apple-item';
+            el.innerHTML = `<span class="apple-item apple-${a.type}" style="font-size:1.6rem; margin:0;">🍎</span>`;
+            el.title = `商店暫存蘋果 #${idx + 1}: ${COLOR_ZH[a.type] || a.type}蘋果 (${a.score}分)`;
+            container.appendChild(el);
+        });
+    }
+
+    function getAppleScore(type, bet) {
+        switch (type) {
+            case 'gold': return Math.floor(bet * 2.5);
+            case 'silver': return Math.floor(bet * 1.5);
+            case 'bronze': return Math.floor(bet * 1.0);
+            case 'red': return Math.floor(bet * 0.5);
+            case 'green': return Math.floor(bet * 0.25);
+            default: return Math.floor(bet * 0.25);
+        }
+    }
 
     window.triggerShopModalProcess = function() {
         return new Promise((resolve) => {
@@ -3598,6 +3633,26 @@ window.addEventListener('DOMContentLoaded', () => {
                 resolve();
                 return;
             }
+
+            // 判斷 10% 蘋果取代機制 (隨機選擇 第 2, 3, 4 格中的一格)
+            let appleReplacedSlot = null;
+            let replacedAppleData = null;
+            if (Math.random() < 0.10) {
+                appleReplacedSlot = Math.floor(Math.random() * 3) + 2;
+                let slotGameBet = appleReplacedSlot === 2 ? game1Bet : (appleReplacedSlot === 3 ? game2Bet : game3Bet);
+                let actualAppleBet = slotGameBet > 0 ? slotGameBet : 600; // 無壓分則以基本分 600 計算
+                let appleType = getAppleType();
+                let appleScore = getAppleScore(appleType, actualAppleBet);
+                replacedAppleData = { type: appleType, bet: actualAppleBet, score: appleScore };
+            }
+
+            shopActiveSlotData = {
+                appleReplacedSlot: appleReplacedSlot,
+                replacedAppleData: replacedAppleData
+            };
+
+            // 渲染 4 個欄位 (根據有無壓分與蘋果替代動態顯示)
+            renderShopModalCards(appleReplacedSlot, replacedAppleData);
 
             shopSecLeft = 10;
             if (secEl) secEl.textContent = '10';
@@ -3625,6 +3680,64 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    function renderShopModalCards(appleReplacedSlot, replacedAppleData) {
+        const cards = document.querySelectorAll('.shop-item-card');
+        cards.forEach(card => {
+            let itemIndex = parseInt(card.getAttribute('data-item'));
+            if (itemIndex === 1) return; // 不買欄位始終保持可用
+
+            card.className = 'shop-item-card'; // 重置 CSS 類別
+            let gameBet = itemIndex === 2 ? game1Bet : (itemIndex === 3 ? game2Bet : game3Bet);
+
+            let badge = card.querySelector('.shop-card-badge');
+            let icon = card.querySelector('.shop-card-icon');
+            let title = card.querySelector('.shop-card-title');
+            let desc = card.querySelector('.shop-card-desc');
+
+            if (itemIndex === appleReplacedSlot && replacedAppleData) {
+                // 蘋果取代該欄位 (不管有無壓分，皆可購買)
+                card.classList.add('card-apple');
+                if (badge) badge.textContent = `${replacedAppleData.bet} BET`;
+                if (icon) {
+                    icon.className = `shop-card-icon apple-item apple-${replacedAppleData.type}`;
+                    icon.innerHTML = '🍎';
+                }
+                if (title) title.textContent = `${COLOR_ZH[replacedAppleData.type] || '特別'}蘋果`;
+                if (desc) desc.innerHTML = `分值: ${replacedAppleData.score} 分<br>局末加入 7 蘋果進度`;
+            } else if (gameBet <= 0) {
+                // 該遊戲未壓分 -> 顯示售完/鎖定，無法購買
+                card.classList.add('card-soldout');
+                if (badge) badge.textContent = '鎖定';
+                if (icon) {
+                    icon.className = 'shop-card-icon';
+                    icon.innerHTML = '售完';
+                }
+                if (title) title.textContent = '售完';
+                if (desc) desc.innerHTML = '未壓分無法購買';
+            } else {
+                // 該遊戲有壓分 -> 恢復預設商品
+                if (badge) badge.textContent = `${gameBet} BET`;
+
+                if (itemIndex === 2) {
+                    card.classList.add('card-clear');
+                    if (icon) { icon.className = 'shop-card-icon'; icon.innerHTML = '消'; }
+                    if (title) title.textContent = '全消閃爍球';
+                    if (desc) desc.innerHTML = '遊戲1: 3顆球變閃爍<br>消除時該色全清';
+                } else if (itemIndex === 3) {
+                    card.classList.add('card-upgrade');
+                    if (icon) { icon.className = 'shop-card-icon'; icon.innerHTML = '升'; }
+                    if (title) title.textContent = '預備盤升級';
+                    if (desc) desc.innerHTML = '遊戲2: 備用棋盤<br>提升 +3 ~ +6 級';
+                } else if (itemIndex === 4) {
+                    card.classList.add('card-claw');
+                    if (icon) { icon.className = 'shop-card-icon'; icon.innerHTML = '夾'; }
+                    if (title) title.textContent = '雙倍夾球數';
+                    if (desc) desc.innerHTML = '遊戲3: 下次進目標色<br>多得1球與金額';
+                }
+            }
+        });
+    }
+
     function closeShopAndFinish(itemIndex) {
         if (shopTimerInterval) {
             clearInterval(shopTimerInterval);
@@ -3647,16 +3760,37 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function executeShopPurchase(itemIndex) {
-        let cost = 600;
-        if (credit < cost) {
+        // 如果點選的是蘋果取代欄位 (不管有無壓分)
+        if (itemIndex === shopActiveSlotData.appleReplacedSlot && shopActiveSlotData.replacedAppleData) {
+            let appleData = shopActiveSlotData.replacedAppleData;
+            if (credit < appleData.bet) {
+                alert("餘額不足，無法購買！");
+                return;
+            }
+            credit -= appleData.bet;
+            updateCreditDisplay();
+
+            stagedShopApples.push(appleData);
+            updateStagedApplesUI();
+            DOM.drawStatus.textContent = `🛒 成功購買商店 ${COLOR_ZH[appleData.type] || ''}蘋果 (價值 ${appleData.score} 分)！局末將存入 7 蘋果進度！`;
+            return;
+        }
+
+        let gameBet = itemIndex === 2 ? game1Bet : (itemIndex === 3 ? game2Bet : game3Bet);
+        if (gameBet <= 0) {
+            alert("該遊戲未壓分，無法購買商品！");
+            return;
+        }
+
+        if (credit < gameBet) {
             alert("餘額不足，無法購買！");
             return;
         }
-        credit -= cost;
+        credit -= gameBet;
         updateCreditDisplay();
 
         if (itemIndex === 2) {
-            // 第二格：消 (遊戲1 消除框內選擇 3 顆色球變為閃爍全消球)
+            // 第二格：消
             let candidateBlocks = [];
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
@@ -3674,7 +3808,7 @@ window.addEventListener('DOMContentLoaded', () => {
             });
             DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲1 已產生 3 顆全消閃爍球！`;
         } else if (itemIndex === 3) {
-            // 第三格：升 (遊戲2 備用棋盤等級提升 +3 ~ +6 級)
+            // 第三格：升
             let r = Math.random() * 100;
             let boost = 3;
             if (r < 70) boost = 3;        // +3級: 70%
@@ -3687,7 +3821,7 @@ window.addEventListener('DOMContentLoaded', () => {
             Game2Manager.generateNextCard(newNext);
             DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲2 備用棋盤升級 +${boost} 級 (LV.${newNext >= 9 ? 'MAX' : newNext})！`;
         } else if (itemIndex === 4) {
-            // 第四格：夾 (遊戲3 下次進目標色多獲得 1 球與金額)
+            // 第四格：夾
             window.game3ExtraClawBallPending = true;
             DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲3 下次進目標色將獲得雙倍夾球數與金額！`;
         }
