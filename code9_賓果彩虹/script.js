@@ -2440,12 +2440,12 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
     }
 }
 
-async function checkAndTriggerShop(currentBall) {
+async function checkAndTriggerShop(currentBall, forceRainbowEvent = false) {
     let thresholds = [10, 20, 30];
     for (let t of thresholds) {
-        if (currentBall >= t && !shopTriggeredForBall[t]) {
+        if (currentBall >= t && !shopTriggeredForBall[t] && t < 40) {
             shopTriggeredForBall[t] = true;
-            await triggerShopModalProcess();
+            await triggerShopModalProcess(forceRainbowEvent);
             break;
         }
     }
@@ -2493,8 +2493,9 @@ async function startLeftEngine() {
                     await Promise.all(promises);
                     Game2Manager.evaluateLineCheck();
                     
-                    // 射出的球均已進洞，此時檢定是否需要彈出商店 (第 10, 20, 30 球門檻)
-                    await checkAndTriggerShop(ballCount);
+                    // 備註1: 檢定是否在批次期間連續觸發彩色洞，若有觸發，先彈出商店 (價格+20%) 再續發3球
+                    let isRainbowEvent = (rainbowTriggeredCount > 0);
+                    await checkAndTriggerShop(ballCount, isRainbowEvent);
                     
                     if (rainbowTriggeredCount > 0) {
                         pendingDrawsQueue += (rainbowTriggeredCount * 3);
@@ -2525,8 +2526,9 @@ async function startLeftEngine() {
                     let res = await shootBallAsync(isSafeMode);
                     updateHistoryUI();
                     
-                    // 單發發球進洞後，檢定是否彈出商店
-                    await checkAndTriggerShop(ballCount);
+                    // 備註2: 若剛好在第 10, 20, 30 球進彩色洞，商店先出來 (價格+20%)，之後才加入並發射3球
+                    let isRainbowHitOnThreshold = (res === 'rainbow' && [10, 20, 30].includes(ballCount));
+                    await checkAndTriggerShop(ballCount, isRainbowHitOnThreshold);
                     
                     pendingDrawsQueue--;
                     if (res === 'rainbow') {
@@ -2539,7 +2541,7 @@ async function startLeftEngine() {
                     } else {
                         pendingEventsQueue.push({ type: 'trigger_chains' });
                     }
-                    
+
                     if (pendingInitialBatch === 0 && ballCount >= 40) {
                         isGameOverTriggered = true;
                         pendingEventsQueue.push({ type: 'game_over' });
@@ -3645,6 +3647,32 @@ window.addEventListener('DOMContentLoaded', () => {
 
             purchasedSlotsInCurrentShop.clear();
 
+    window.triggerShopModalProcess = function(isRainbowEventShop = false) {
+        return new Promise((resolve) => {
+            shopResolvePromise = resolve;
+            const modal = document.getElementById('shop-modal');
+            const fillEl = document.getElementById('shop-timer-fill');
+            const secEl = document.getElementById('shop-timer-sec');
+            if (!modal) {
+                resolve();
+                return;
+            }
+
+            purchasedSlotsInCurrentShop.clear();
+
+            // 遊戲2 (九宮格) 商品價格與升級等級隨機浮動計算
+            let g2Random = Math.random() * 100;
+            let g2Boost = 3;
+            let g2PriceRatio = 1.0;
+            if (g2Random < 30)      { g2Boost = 3; g2PriceRatio = 1.0; } // 30% (+3級, 1.0倍)
+            else if (g2Random < 50) { g2Boost = 4; g2PriceRatio = 1.2; } // 20% (+4級, 1.2倍)
+            else if (g2Random < 70) { g2Boost = 5; g2PriceRatio = 1.4; } // 20% (+5級, 1.4倍)
+            else if (g2Random < 90) { g2Boost = 6; g2PriceRatio = 1.6; } // 20% (+6級, 1.6倍)
+            else                     { g2Boost = 9; g2PriceRatio = 2.0; } // 10% (LV MAX, 2.0倍)
+
+            // 遊戲3 (夾夾樂) 商品價格根據選色計算
+            let g3PriceRatio = (game3TargetColor === 'white') ? 1.8 : 0.6; // 白球 1.8倍，其餘色 0.6倍
+
             // 判斷 10% 蘋果取代機制 (隨機選擇 第 2, 3, 4 格中的一格)
             let appleReplacedSlot = null;
             let replacedAppleData = null;
@@ -3652,18 +3680,34 @@ window.addEventListener('DOMContentLoaded', () => {
                 appleReplacedSlot = Math.floor(Math.random() * 3) + 2;
                 let slotGameBet = appleReplacedSlot === 2 ? game1Bet : (appleReplacedSlot === 3 ? game2Bet : game3Bet);
                 let actualAppleBet = slotGameBet > 0 ? slotGameBet : 600; // 無壓分則一律以基本分 600 計算
+                
+                // 計算蘋果價格 (基本為 1.0倍壓分；若為彩色洞特別商店，額外增加 0.2倍壓分)
+                let appleBasePrice = actualAppleBet;
+                let appleSurcharge = isRainbowEventShop ? Math.floor(actualAppleBet * 0.2) : 0;
+                let appleFinalPrice = appleBasePrice + appleSurcharge;
+
                 let appleType = getAppleType(); // 隨機產生 5 種品質顏色 (金/銀/銅/紅/綠)
                 let appleScore = getAppleScore(appleType, actualAppleBet);
-                replacedAppleData = { type: appleType, bet: actualAppleBet, score: appleScore };
+                replacedAppleData = { type: appleType, bet: actualAppleBet, price: appleFinalPrice, score: appleScore };
             }
+
+            // 計算各遊戲商品最終價格 (含備註1 & 備註2 之 2成加成)
+            let prices = {
+                2: Math.floor(game1Bet * 1.0) + (isRainbowEventShop ? Math.floor(game1Bet * 0.2) : 0),
+                3: Math.floor(game2Bet * g2PriceRatio) + (isRainbowEventShop ? Math.floor(game2Bet * 0.2) : 0),
+                4: Math.floor(game3Bet * g3PriceRatio) + (isRainbowEventShop ? Math.floor(game3Bet * 0.2) : 0)
+            };
 
             shopActiveSlotData = {
                 appleReplacedSlot: appleReplacedSlot,
-                replacedAppleData: replacedAppleData
+                replacedAppleData: replacedAppleData,
+                g2Boost: g2Boost,
+                prices: prices,
+                isRainbowEventShop: isRainbowEventShop
             };
 
-            // 渲染 4 個欄位 (根據有無壓分與蘋果替代動態顯示)
-            renderShopModalCards(appleReplacedSlot, replacedAppleData);
+            // 渲染 4 個欄位 (根據有無壓分、價格與蘋果替代動態顯示)
+            renderShopModalCards(shopActiveSlotData);
 
             shopSecLeft = 10;
             if (secEl) secEl.textContent = '10';
@@ -3676,7 +3720,8 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             modal.classList.remove('hidden');
-            DOM.drawStatus.textContent = '🛒 商店開放中 (停留 10 秒)！點選商品購買 (可多重購買，最左欄取消)...';
+            let statusPrefix = isRainbowEventShop ? '🌈 [彩色洞特別商店 (+20%金額加成)] ' : '🛒 ';
+            DOM.drawStatus.textContent = `${statusPrefix}商店開放中 (停留 10 秒)！請點選商品購買...`;
 
             if (shopTimerInterval) clearInterval(shopTimerInterval);
             shopTimerInterval = setInterval(() => {
@@ -3691,8 +3736,10 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    function renderShopModalCards(appleReplacedSlot, replacedAppleData) {
+    function renderShopModalCards(slotData) {
         const cards = document.querySelectorAll('.shop-item-card');
+        const { appleReplacedSlot, replacedAppleData, g2Boost, prices } = slotData;
+
         cards.forEach(card => {
             let itemIndex = parseInt(card.getAttribute('data-item'));
             if (itemIndex === 1) return; // 不買欄位始終保持可用
@@ -3708,7 +3755,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (itemIndex === appleReplacedSlot && replacedAppleData) {
                 // 蘋果取代該欄位 (不管有無壓分，皆可購買)
                 card.classList.add('card-apple');
-                if (badge) badge.textContent = `${replacedAppleData.bet} BET`;
+                if (badge) badge.textContent = `${replacedAppleData.price} BET`;
                 if (icon) {
                     icon.className = `shop-card-icon apple-item apple-${replacedAppleData.type}`;
                     icon.innerHTML = '🍎';
@@ -3726,8 +3773,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (title) title.textContent = '售完';
                 if (desc) desc.innerHTML = '未壓分無法購買';
             } else {
-                // 該遊戲有壓分 -> 恢復預設商品
-                if (badge) badge.textContent = `${gameBet} BET`;
+                // 該遊戲有壓分 -> 恢復預設商品 (顯示精確結算後的購買金額)
+                let itemPrice = prices[itemIndex] || gameBet;
+                if (badge) badge.textContent = `${itemPrice} BET`;
 
                 if (itemIndex === 2) {
                     card.classList.add('card-clear');
@@ -3737,8 +3785,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 } else if (itemIndex === 3) {
                     card.classList.add('card-upgrade');
                     if (icon) { icon.className = 'shop-card-icon'; icon.innerHTML = '升'; }
-                    if (title) title.textContent = '預備盤升級';
-                    if (desc) desc.innerHTML = '遊戲2: 備用棋盤<br>提升 +3 ~ +6 級';
+                    let boostText = g2Boost >= 9 ? 'LV MAX' : `+${g2Boost}級`;
+                    if (title) title.textContent = `預備盤升級 (${boostText})`;
+                    if (desc) desc.innerHTML = `遊戲2: 備用棋盤<br>提升 ${g2Boost >= 9 ? '至 LV MAX' : '+' + g2Boost + ' 級'}`;
                 } else if (itemIndex === 4) {
                     card.classList.add('card-claw');
                     if (icon) { icon.className = 'shop-card-icon'; icon.innerHTML = '夾'; }
@@ -3807,11 +3856,11 @@ window.addEventListener('DOMContentLoaded', () => {
         // 如果點選的是蘋果取代欄位 (不管有無壓分)
         if (itemIndex === shopActiveSlotData.appleReplacedSlot && shopActiveSlotData.replacedAppleData) {
             let appleData = shopActiveSlotData.replacedAppleData;
-            if (credit < appleData.bet) {
+            if (credit < appleData.price) {
                 alert("餘額不足，無法購買！");
                 return false;
             }
-            credit -= appleData.bet;
+            credit -= appleData.price;
             updateCreditDisplay();
 
             stagedShopApples.push(appleData);
@@ -3826,11 +3875,12 @@ window.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
-        if (credit < gameBet) {
+        let itemPrice = shopActiveSlotData.prices[itemIndex] || gameBet;
+        if (credit < itemPrice) {
             alert("餘額不足，無法購買！");
             return false;
         }
-        credit -= gameBet;
+        credit -= itemPrice;
         updateCreditDisplay();
 
         if (itemIndex === 2) {
@@ -3854,17 +3904,11 @@ window.addEventListener('DOMContentLoaded', () => {
             return true;
         } else if (itemIndex === 3) {
             // 第三格：升
-            let r = Math.random() * 100;
-            let boost = 3;
-            if (r < 70) boost = 3;        // +3級: 70%
-            else if (r < 85) boost = 4;   // +4級: 15%
-            else if (r < 95) boost = 5;   // +5級: 10%
-            else boost = 6;              // +6級: 5%
-
+            let boost = shopActiveSlotData.g2Boost || 3;
             let currentNext = Game2Manager.nextLevel || 1;
             let newNext = Math.min(9, currentNext + boost);
             Game2Manager.generateNextCard(newNext);
-            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲2 備用棋盤升級 +${boost} 級 (LV.${newNext >= 9 ? 'MAX' : newNext})！可繼續購買其他商品！`;
+            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲2 備用棋盤升級 ${boost >= 9 ? '至 LV MAX' : '+' + boost + '級 (LV.' + newNext + ')'}！可繼續購買其他商品！`;
             return true;
         } else if (itemIndex === 4) {
             // 第四格：夾
