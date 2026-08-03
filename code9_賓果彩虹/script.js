@@ -2437,6 +2437,17 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
     }
 }
 
+async function checkAndTriggerShop(currentBall) {
+    let thresholds = [10, 20, 30];
+    for (let t of thresholds) {
+        if (currentBall >= t && !shopTriggeredForBall[t]) {
+            shopTriggeredForBall[t] = true;
+            await triggerShopModalProcess();
+            break;
+        }
+    }
+}
+
 async function startLeftEngine() {
     while (leftEngineActive && !isGameOverTriggered) {
         if (pendingDrawsQueue === 0) pendingDrawsQueue = 1;
@@ -2456,6 +2467,9 @@ async function startLeftEngine() {
                         ballCount++;
                         let currentShotNumber = ballCount;
                         DOM.ballCountText.textContent = ballCount;
+                        
+                        await checkAndTriggerShop(ballCount);
+
                         let isSafeMode = true; 
                         
                         let p = shootBallAsync(isSafeMode, true).then(res => {
@@ -2500,10 +2514,7 @@ async function startLeftEngine() {
                     DOM.ballCountText.textContent = ballCount;
                     let isSafeMode = (ballCount <= 3); 
                     
-                    if ([10, 20, 30].includes(ballCount) && !shopTriggeredForBall[ballCount]) {
-                        shopTriggeredForBall[ballCount] = true;
-                        await triggerShopModalProcess();
-                    }
+                    await checkAndTriggerShop(ballCount);
 
                     if (!isSafeMode) {
                         DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
