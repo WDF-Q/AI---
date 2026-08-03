@@ -3597,7 +3597,14 @@ window.addEventListener('DOMContentLoaded', () => {
     let shopTimerInterval = null;
     let shopSecLeft = 10;
     let shopResolvePromise = null;
-    let shopActiveSlotData = {}; // 紀錄當次商店快照 (如蘋果取代欄位資料)
+    const APPLE_NAMES_MAP = {
+        gold: '金蘋果',
+        silver: '銀蘋果',
+        bronze: '銅蘋果',
+        red: '紅蘋果',
+        green: '綠蘋果',
+        rainbow: '彩虹蘋果'
+    };
 
     function updateStagedApplesUI() {
         const container = document.getElementById('shop-staged-apples-container');
@@ -3607,7 +3614,7 @@ window.addEventListener('DOMContentLoaded', () => {
             let el = document.createElement('div');
             el.className = 'staged-apple-item';
             el.innerHTML = `<span class="apple-item apple-${a.type}" style="font-size:1.6rem; margin:0;">🍎</span>`;
-            el.title = `商店暫存蘋果 #${idx + 1}: ${COLOR_ZH[a.type] || a.type}蘋果 (${a.score}分)`;
+            el.title = `商店暫存蘋果 #${idx + 1}: ${APPLE_NAMES_MAP[a.type] || a.type} (${a.score}分)`;
             container.appendChild(el);
         });
     }
@@ -3640,8 +3647,8 @@ window.addEventListener('DOMContentLoaded', () => {
             if (Math.random() < 0.10) {
                 appleReplacedSlot = Math.floor(Math.random() * 3) + 2;
                 let slotGameBet = appleReplacedSlot === 2 ? game1Bet : (appleReplacedSlot === 3 ? game2Bet : game3Bet);
-                let actualAppleBet = slotGameBet > 0 ? slotGameBet : 600; // 無壓分則以基本分 600 計算
-                let appleType = getAppleType();
+                let actualAppleBet = slotGameBet > 0 ? slotGameBet : 600; // 無壓分則一律以基本分 600 計算
+                let appleType = getAppleType(); // 隨機產生 5 種品質顏色 (金/銀/銅/紅/綠)
                 let appleScore = getAppleScore(appleType, actualAppleBet);
                 replacedAppleData = { type: appleType, bet: actualAppleBet, score: appleScore };
             }
@@ -3702,7 +3709,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     icon.className = `shop-card-icon apple-item apple-${replacedAppleData.type}`;
                     icon.innerHTML = '🍎';
                 }
-                if (title) title.textContent = `${COLOR_ZH[replacedAppleData.type] || '特別'}蘋果`;
+                if (title) title.textContent = APPLE_NAMES_MAP[replacedAppleData.type] || '特別蘋果';
                 if (desc) desc.innerHTML = `分值: ${replacedAppleData.score} 分<br>局末加入 7 蘋果進度`;
             } else if (gameBet <= 0) {
                 // 該遊戲未壓分 -> 顯示售完/鎖定，無法購買
