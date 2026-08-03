@@ -964,6 +964,16 @@ function generateBetApples(gameId) {
             let hp = Math.floor(Math.random() * 10) + 6;
             preGenerated.push({ type, hp });
         }
+        // 根據目前壓分金額 (currentBet)，進行對應步數的品質升級 (高壓分如 3000分會 100% 直接升級為金色蘋果)
+        let upgradeSteps = Math.floor((currentBet - 600) / 50) + 1;
+        for (let step = 0; step < upgradeSteps; step++) {
+            let upgradeProb = getUpgradeProb(currentBet);
+            for (let i = 0; i < preGenerated.length; i++) {
+                if (Math.random() < upgradeProb) {
+                    preGenerated[i].type = upgradeApple(preGenerated[i].type);
+                }
+            }
+        }
     } else {
         let upgradeProb = getUpgradeProb(currentBet);
         for (let i = 0; i < preGenerated.length; i++) {
@@ -976,6 +986,12 @@ function generateBetApples(gameId) {
             let type = getAppleType();
             let hp = Math.floor(Math.random() * 10) + 6;
             preGenerated.push({ type, hp });
+            let upgradeSteps = Math.floor((currentBet - 600) / 50) + 1;
+            for (let step = 0; step < upgradeSteps; step++) {
+                if (Math.random() < upgradeProb) {
+                    preGenerated[preGenerated.length - 1].type = upgradeApple(preGenerated[preGenerated.length - 1].type);
+                }
+            }
         }
     }
     
@@ -1003,6 +1019,10 @@ function generateBetApples(gameId) {
         spawnApples();
     } else if (gameId === 2) {
         generateGame2AppleThresholds();
+    } else if (gameId === 3) {
+        if (typeof Game3Manager !== 'undefined') {
+            Game3Manager.updateHitTable();
+        }
     }
 }
 
