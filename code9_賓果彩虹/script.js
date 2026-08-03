@@ -3597,6 +3597,8 @@ window.addEventListener('DOMContentLoaded', () => {
     let shopTimerInterval = null;
     let shopSecLeft = 10;
     let shopResolvePromise = null;
+    let shopActiveSlotData = {}; // 紀錄當次商店快照 (如蘋果取代欄位資料)
+    let purchasedSlotsInCurrentShop = new Set(); // 紀錄當次商店已購買的欄位
     const APPLE_NAMES_MAP = {
         gold: '金蘋果',
         silver: '銀蘋果',
@@ -3641,6 +3643,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            purchasedSlotsInCurrentShop.clear();
+
             // 判斷 10% 蘋果取代機制 (隨機選擇 第 2, 3, 4 格中的一格)
             let appleReplacedSlot = null;
             let replacedAppleData = null;
@@ -3672,7 +3676,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             modal.classList.remove('hidden');
-            DOM.drawStatus.textContent = '🛒 商店開放中 (停留 10 秒)！請選擇商品...';
+            DOM.drawStatus.textContent = '🛒 商店開放中 (停留 10 秒)！點選商品購買 (可多重購買，最左欄取消)...';
 
             if (shopTimerInterval) clearInterval(shopTimerInterval);
             shopTimerInterval = setInterval(() => {
@@ -3681,7 +3685,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (fillEl) fillEl.style.width = `${(shopSecLeft / 10) * 100}%`;
 
                 if (shopSecLeft <= 0) {
-                    closeShopAndFinish(1); // 10秒到期自動放棄 (不買)
+                    closeShopAndFinish(); // 10秒到期自動關閉商店
                 }
             }, 1000);
         });
@@ -3745,7 +3749,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function closeShopAndFinish(itemIndex) {
+    function closeShopAndFinish() {
         if (shopTimerInterval) {
             clearInterval(shopTimerInterval);
             shopTimerInterval = null;
@@ -3753,11 +3757,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('shop-modal');
         if (modal) modal.classList.add('hidden');
 
-        if (itemIndex > 1) {
-            executeShopPurchase(itemIndex);
-        } else {
-            DOM.drawStatus.textContent = '🛒 放棄購買，大轉盤繼續發球...';
-        }
+        DOM.drawStatus.textContent = '🛒 商店關閉，大轉盤繼續發球...';
 
         if (shopResolvePromise) {
             let res = shopResolvePromise;
@@ -3766,32 +3766,69 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function handleShopCardClick(itemIndex) {
+        if (itemIndex === 1) {
+            // 最左欄 "不買" / 取消 -> 立即關閉商店
+            closeShopAndFinish();
+            return;
+        }
+
+        if (purchasedSlotsInCurrentShop.has(itemIndex)) {
+            DOM.drawStatus.textContent = `🛒 該商品在此次商店已購買過！`;
+            return;
+        }
+
+        let success = executeShopPurchase(itemIndex);
+        if (success) {
+            purchasedSlotsInCurrentShop.add(itemIndex);
+            markCardAsPurchased(itemIndex);
+        }
+    }
+
+    function markCardAsPurchased(itemIndex) {
+        const card = document.querySelector(`.shop-item-card[data-item="${itemIndex}"]`);
+        if (!card) return;
+        card.classList.add('card-purchased');
+        let badge = card.querySelector('.shop-card-badge');
+        let icon = card.querySelector('.shop-card-icon');
+        let title = card.querySelector('.shop-card-title');
+        let desc = card.querySelector('.shop-card-desc');
+
+        if (badge) badge.textContent = '已購買';
+        if (icon) {
+            icon.className = 'shop-card-icon';
+            icon.innerHTML = '✓';
+        }
+        if (title) title.textContent = '已購買';
+        if (desc) desc.textContent = '已成功購買此商品';
+    }
+
     function executeShopPurchase(itemIndex) {
         // 如果點選的是蘋果取代欄位 (不管有無壓分)
         if (itemIndex === shopActiveSlotData.appleReplacedSlot && shopActiveSlotData.replacedAppleData) {
             let appleData = shopActiveSlotData.replacedAppleData;
             if (credit < appleData.bet) {
                 alert("餘額不足，無法購買！");
-                return;
+                return false;
             }
             credit -= appleData.bet;
             updateCreditDisplay();
 
             stagedShopApples.push(appleData);
             updateStagedApplesUI();
-            DOM.drawStatus.textContent = `🛒 成功購買商店 ${COLOR_ZH[appleData.type] || ''}蘋果 (價值 ${appleData.score} 分)！局末將存入 7 蘋果進度！`;
-            return;
+            DOM.drawStatus.textContent = `🛒 成功購買商店 ${APPLE_NAMES_MAP[appleData.type] || ''} (價值 ${appleData.score} 分)！可繼續購買其他商品！`;
+            return true;
         }
 
         let gameBet = itemIndex === 2 ? game1Bet : (itemIndex === 3 ? game2Bet : game3Bet);
         if (gameBet <= 0) {
             alert("該遊戲未壓分，無法購買商品！");
-            return;
+            return false;
         }
 
         if (credit < gameBet) {
             alert("餘額不足，無法購買！");
-            return;
+            return false;
         }
         credit -= gameBet;
         updateCreditDisplay();
@@ -3813,7 +3850,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 b.isFlash = true;
                 b.el.classList.add('block-super-flashing');
             });
-            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲1 已產生 3 顆全消閃爍球！`;
+            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲1 已產生 3 顆全消閃爍球！可繼續購買其他商品！`;
+            return true;
         } else if (itemIndex === 3) {
             // 第三格：升
             let r = Math.random() * 100;
@@ -3826,12 +3864,15 @@ window.addEventListener('DOMContentLoaded', () => {
             let currentNext = Game2Manager.nextLevel || 1;
             let newNext = Math.min(9, currentNext + boost);
             Game2Manager.generateNextCard(newNext);
-            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲2 備用棋盤升級 +${boost} 級 (LV.${newNext >= 9 ? 'MAX' : newNext})！`;
+            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲2 備用棋盤升級 +${boost} 級 (LV.${newNext >= 9 ? 'MAX' : newNext})！可繼續購買其他商品！`;
+            return true;
         } else if (itemIndex === 4) {
             // 第四格：夾
             window.game3ExtraClawBallPending = true;
-            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲3 下次進目標色將獲得雙倍夾球數與金額！`;
+            DOM.drawStatus.textContent = `🛒 商店購買成功！遊戲3 下次進目標色將獲得雙倍夾球數與金額！可繼續購買其他商品！`;
+            return true;
         }
+        return false;
     }
 
     // 綁定商店卡片點擊、雙擊與觸摸往上滑動手勢
@@ -3841,7 +3882,7 @@ window.addEventListener('DOMContentLoaded', () => {
         // 雙擊確認
         card.addEventListener('dblclick', (e) => {
             let itemIndex = parseInt(e.currentTarget.getAttribute('data-item'));
-            closeShopAndFinish(itemIndex);
+            handleShopCardClick(itemIndex);
         });
 
         // 觸摸往上滑動確認
@@ -3855,14 +3896,14 @@ window.addEventListener('DOMContentLoaded', () => {
             let touchEndY = e.changedTouches[0].clientY;
             if (touchStartY - touchEndY > 30) { // 往上滑動超過 30px 算作確認
                 let itemIndex = parseInt(e.currentTarget.getAttribute('data-item'));
-                closeShopAndFinish(itemIndex);
+                handleShopCardClick(itemIndex);
             }
         }, { passive: true });
 
         // 單擊點選確認
         card.addEventListener('click', (e) => {
             let itemIndex = parseInt(e.currentTarget.getAttribute('data-item'));
-            closeShopAndFinish(itemIndex);
+            handleShopCardClick(itemIndex);
         });
     });
 });

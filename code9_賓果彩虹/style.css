@@ -1990,3 +1990,26 @@ html, body {
     0% { transform: scale(0); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
+
+/* 商店已購買卡片 */
+.shop-item-card.card-purchased {
+    opacity: 0.7;
+    border-color: #22c55e !important;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.4) !important;
+    cursor: default !important;
+}
+.shop-item-card.card-purchased:hover {
+    transform: none !important;
+}
+.card-purchased .shop-card-badge {
+    background: linear-gradient(180deg, #22c55e, #15803d) !important;
+    border-color: #86efac !important;
+    color: #fff !important;
+}
+.card-purchased .shop-card-icon {
+    background: linear-gradient(135deg, #22c55e, #15803d) !important;
+    color: #fff !important;
+    font-size: 2.2rem !important;
+    text-shadow: none !important;
+    border-color: #86efac !important;
+}
