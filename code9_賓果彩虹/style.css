@@ -874,17 +874,40 @@ html, body {
 }
 
 .block.money-ball {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1.2rem;
+    z-index: 2;
+}
+.block.money-ball::after {
+    display: none;
+}
+
+/* 普通/隨機補充金錢球 (銀灰色背景 + 銀白框) */
+.block.money-ball.normal-money-ball,
+.block.money-ball:not(.chain-money-ball) {
     background: radial-gradient(circle at 30% 30%, #f1f5f9, #94a3b8 60%, #334155);
     border: 3px solid #cbd5e1;
     color: #fcd34d;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-    font-family: 'Fredoka', sans-serif;
-    font-size: 1.2rem;
-    z-index: 2;
     box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 0 0 15px rgba(148, 163, 184, 0.8);
 }
-.block.money-ball::after {
-    display: none;
+
+/* 連鎖獎金金錢球 (金黃色背景 + 金黃框 + 金光閃爍) */
+.block.money-ball.chain-money-ball {
+    background: radial-gradient(circle at 30% 30%, #fffbeb, #f59e0b 65%, #78350f);
+    border: 3.5px solid #fde047;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 6px #78350f;
+    font-weight: bold;
+    font-size: 1.25rem;
+    z-index: 3;
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 0 0 22px rgba(245, 158, 11, 0.95), 0 0 8px #fde047;
+    animation: goldChainPulse 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes goldChainPulse {
+    0% { filter: drop-shadow(0 0 2px #fde047); transform: scale(1); }
+    100% { filter: drop-shadow(0 0 8px #fef08a); transform: scale(1.03); }
 }
 
 .block.flash-ball {

@@ -741,11 +741,16 @@ function checkAndResetWinsBeforeNewBet() {
 
 
 
-function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = false) {
+function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = false, isChainReward = false) {
     const el = document.createElement('div');
     el.className = `block`;
     if (isMoney) {
         el.classList.add('money-ball');
+        if (isChainReward) {
+            el.classList.add('chain-money-ball');
+        } else {
+            el.classList.add('normal-money-ball');
+        }
         el.textContent = moneyValue;
     } else {
         el.classList.add(`color-${color}`);
@@ -754,7 +759,7 @@ function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = fal
     el.style.left = `${OFFSET + c * (BLOCK_SIZE + GAP)}px`;
     el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
     DOM.board.appendChild(el);
-    return { r, c, color, isMoney, moneyValue, isFlash, el };
+    return { r, c, color, isMoney, moneyValue, isFlash, isChainReward, el };
 }
 
 function initBoard() {
@@ -3043,7 +3048,8 @@ async function refillBoard(finalCombo = 0) {
     
     let randomMoneySpots = new Set();
     let spawnMoneyBallsChance = Math.random() * 100;
-    if (spawnMoneyBallsChance < 10 && emptySpots.length > 0) {
+    // 提高機率至 35%：消除補充色球時，有 35% 機率補充 1~3 顆普通銀色金錢球
+    if (spawnMoneyBallsChance < 35 && emptySpots.length > 0) {
         let count = Math.floor(Math.random() * 3) + 1; // 1 to 3 balls
         count = Math.min(count, emptySpots.length - (rewardSpotIndex !== -1 ? 1 : 0)); // Ensure enough empty spots
         
@@ -3080,10 +3086,12 @@ async function refillBoard(finalCombo = 0) {
         let block;
         
         if (i === rewardSpotIndex) {
-            block = createBlock(-1, c, null, true, guaranteedRewardValue);
+            // 連鎖發生的金錢球：金色背景 + 金色框 (isChainReward = true)
+            block = createBlock(-1, c, null, true, guaranteedRewardValue, false, true);
         } else if (randomMoneySpots.has(i)) {
+            // 消除補充機率產生的金錢球：保持普通銀色背景 + 銀色框 (isChainReward = false)
             let randomValue = getRandomMoneyBallValue();
-            block = createBlock(-1, c, null, true, randomValue);
+            block = createBlock(-1, c, null, true, randomValue, false, false);
         } else {
             let color = getSafeColorForRefill(r, c);
             let isFlash = false;
