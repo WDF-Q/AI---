@@ -101,6 +101,9 @@ let game3TotalWin = 0;
 let game3TotalTargetBalls = 0;
 let game3SlotStyles = [];
 let game3MaxComboReached = 0;
+let game3ApplesInPlay = [];
+let game3CurrentComboColor = null;
+let game3TrailingRainbows = 0;
 let game1Win = 0;
 let game2Win = 0;
 
@@ -900,11 +903,13 @@ function checkGame2AppleReward(cardCompletedLines) {
     }
 
     if (!game2AppleThresholds || game2AppleThresholds.length === 0) return;
-    let targetItem = game2AppleThresholds.find(item => !item.collected && item.lines === cardCompletedLines);
+    let uncollectedItems = game2AppleThresholds.filter(item => !item.collected && item.lines <= cardCompletedLines);
 
-    if (targetItem) {
-        targetItem.collected = true;
-        collectApple(targetItem.type, game2Bet);
+    if (uncollectedItems.length > 0) {
+        uncollectedItems.forEach(item => {
+            item.collected = true;
+            collectApple(item.type, game2Bet);
+        });
         renderGame2AppleHUD();
     }
 }
@@ -1929,11 +1934,16 @@ const Game3Manager = {
                 DOM.drawStatus.textContent = `🎯 商店特惠：夾夾樂額外加獲得 1 球與金額獎勵！ 🎯`;
             }
 
-            let collectedIndex = game3ApplesInPlay.findIndex(a => a.hit === game3TotalTargetBalls);
-            if (collectedIndex !== -1 && game3Bet > 0) {
-                let collectedApple = game3ApplesInPlay.splice(collectedIndex, 1)[0];
-                collectApple(collectedApple.type, game3Bet);
-                DOM.drawStatus.textContent = `🎯 夾中蘋果！已存入蘋果進度表！ 🎯`;
+            // 凡是 HIT 門檻 <= 目前累積球數 (game3TotalTargetBalls) 的蘋果 (含彩虹蘋果)，全數收集！避免因商店多加1球跳過HIT門檻而漏抓！
+            let collectedApples = game3ApplesInPlay.filter(a => a.hit <= game3TotalTargetBalls);
+            if (collectedApples.length > 0) {
+                game3ApplesInPlay = game3ApplesInPlay.filter(a => a.hit > game3TotalTargetBalls);
+                if (game3Bet > 0) {
+                    collectedApples.forEach(collectedApple => {
+                        collectApple(collectedApple.type, game3Bet);
+                    });
+                    DOM.drawStatus.textContent = `🎯 夾中蘋果！已存入蘋果進度表！ 🎯`;
+                }
                 this.updateHitTable();
             }
         }
