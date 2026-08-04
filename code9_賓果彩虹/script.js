@@ -903,13 +903,11 @@ function checkGame2AppleReward(cardCompletedLines) {
     }
 
     if (!game2AppleThresholds || game2AppleThresholds.length === 0) return;
-    let uncollectedItems = game2AppleThresholds.filter(item => !item.collected && item.lines <= cardCompletedLines);
+    let targetItem = game2AppleThresholds.find(item => !item.collected && item.lines === cardCompletedLines);
 
-    if (uncollectedItems.length > 0) {
-        uncollectedItems.forEach(item => {
-            item.collected = true;
-            collectApple(item.type, game2Bet);
-        });
+    if (targetItem) {
+        targetItem.collected = true;
+        collectApple(targetItem.type, game2Bet);
         renderGame2AppleHUD();
     }
 }
