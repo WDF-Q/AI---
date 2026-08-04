@@ -2253,9 +2253,9 @@ function getSmallRoulettePair() {
 }
 
 function addBallToHistoryUI(typeText, colorClass, gradient = null) {
+    if (!DOM.ballHistory) return;
     const ballEl = document.createElement('div');
     ballEl.className = 'ball';
-    
     
     if (gradient) {
         ballEl.style.background = gradient;
@@ -2274,6 +2274,7 @@ function addBallToHistoryUI(typeText, colorClass, gradient = null) {
 }
 
 function updateResultText(resultText, colorClass) {
+    if (!DOM.rouletteResultText) return;
     DOM.rouletteResultText.textContent = resultText;
     if (colorClass === 'red') DOM.rouletteResultText.style.color = '#ef4444';
     else if (colorClass === 'pink') DOM.rouletteResultText.style.color = '#ec4899';
@@ -2285,19 +2286,24 @@ function updateResultText(resultText, colorClass) {
 }
 
 async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = null, innerTargetColor = null, innerTargetPair = null) {
+    let wrapper = document.querySelector('.roulette-wheel-wrapper');
+    if (!wrapper) return;
+
     let orbitEl = document.createElement('div');
     orbitEl.className = 'roulette-ball-orbit';
     let ballEl = document.createElement('div');
     ballEl.className = 'roulette-ball visible';
     orbitEl.appendChild(ballEl);
     
-    document.querySelector('.roulette-wheel-wrapper').appendChild(orbitEl);
+    wrapper.appendChild(orbitEl);
     
     let ballObj = { orbitEl, ballEl, state: 'spinning_outer', offsetAngle: 0 };
     activeBalls.push(ballObj);
     
-    DOM.fireBox.classList.add('active');
-    DOM.fireBox.textContent = '發球！';
+    if (DOM.fireBox) {
+        DOM.fireBox.classList.add('active');
+        DOM.fireBox.textContent = '發球！';
+    }
     
     orbitEl.style.transition = 'none';
     orbitEl.style.transform = `rotate(0deg)`;
@@ -2309,6 +2315,7 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
     for (let i = 0; i < OUTER_WHEEL_SLOTS.length; i++) {
         if (OUTER_WHEEL_SLOTS[i] === targetMain) possibleIndices.push(i);
     }
+    if (possibleIndices.length === 0) possibleIndices = [0];
     let targetIndexOuter = possibleIndices[Math.floor(Math.random() * possibleIndices.length)];
     let anglePerSlotOuter = 360 / 21;
     let slotCenterOuter = (targetIndexOuter * anglePerSlotOuter) + (anglePerSlotOuter / 2);
@@ -2328,16 +2335,20 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
     orbitEl.style.transition = 'none';
     
     if (!isInner) {
-        DOM.fireBox.classList.remove('active');
-        DOM.fireBox.textContent = 'WAIT';
+        if (DOM.fireBox) {
+            DOM.fireBox.classList.remove('active');
+            DOM.fireBox.textContent = 'WAIT';
+        }
         ballEl.classList.remove('visible');
         updateResultText(targetMain.toUpperCase(), targetMain);
         await sleep(500);
     } else {
         await sleep(500);
         
-        DOM.rouletteResultText.textContent = '進入內圈小轉盤！';
-        DOM.rouletteResultText.style.color = '#a855f7';
+        if (DOM.rouletteResultText) {
+            DOM.rouletteResultText.textContent = '進入內圈小轉盤！';
+            DOM.rouletteResultText.style.color = '#a855f7';
+        }
         ballEl.classList.add('dive-inner');
         
         await sleep(500); 
@@ -2376,8 +2387,10 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
         
         await sleep(500);
         
-        DOM.fireBox.classList.remove('active');
-        DOM.fireBox.textContent = 'WAIT';
+        if (DOM.fireBox) {
+            DOM.fireBox.classList.remove('active');
+            DOM.fireBox.textContent = 'WAIT';
+        }
         ballEl.classList.remove('visible'); 
         updateResultText(innerTargetText, innerTargetColor);
         await sleep(800);
@@ -2388,76 +2401,81 @@ async function spawnAndSpinBall(targetMain, isInner = false, innerTargetText = n
 }
 
 async function shootBallAsync(isSafeMode, isBatchMode = false) {
-    let baseDraw = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
-    
-    if (baseDraw === 'white') {
-        await spawnAndSpinBall('white', false);
-        historyTracker.white++;
-        addBallToHistoryUI('白色', 'white');
-        Game2Manager.processBall('white', isBatchMode); // Game 2
-        Game3Manager.processBall('white'); // Game 3
+    try {
+        let baseDraw = ALL_DRAW_OPTIONS[Math.floor(Math.random() * ALL_DRAW_OPTIONS.length)];
         
-        if (!isSafeMode) {
-            isGameOverTriggered = true;
-            pendingEventsQueue.push({ type: 'game_over' });
-            DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
-            return 'game_over';
+        if (baseDraw === 'white') {
+            await spawnAndSpinBall('white', false);
+            historyTracker.white++;
+            addBallToHistoryUI('白色', 'white');
+            Game2Manager.processBall('white', isBatchMode); // Game 2
+            Game3Manager.processBall('white'); // Game 3
+            
+            if (!isSafeMode) {
+                isGameOverTriggered = true;
+                pendingEventsQueue.push({ type: 'game_over' });
+                if (DOM.drawStatus) DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
+                return 'game_over';
+            } else {
+                if (DOM.drawStatus) DOM.drawStatus.textContent = '安全期！抽中白球不結束。';
+                return 'safe_white';
+            }
+        } else if (baseDraw === 'roulette') {
+            let r = Math.random();
+            if (r < 1/6) {
+                await spawnAndSpinBall('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
+                historyTracker.rainbow++;
+                addBallToHistoryUI('彩色', 'rainbow');
+                
+                Game2Manager.processBall('rainbow', isBatchMode); // Game 2
+                Game3Manager.processBall(game3TargetColor, true, null); // Game 3 rainbow wildcard
+                
+                pendingEventsQueue.push({ type: 'laser_strike' });
+                if (DOM.drawStatus) DOM.drawStatus.textContent = '彩色球！獲得雷射！';
+                return 'rainbow';
+            } else {
+                let pair = getSmallRoulettePair();
+                await spawnAndSpinBall('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
+                historyTracker[pair[0]]++;
+                historyTracker[pair[1]]++;
+                let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
+                addBallToHistoryUI('雙色', null, gradient);
+                
+                if (appleBonusRoundsLeft > 0) {
+                    let s1 = currentStepMapping[pair[0]] || 0;
+                    if (s1) await applyMiniGameSteps(s1);
+                    let s2 = currentStepMapping[pair[1]] || 0;
+                    if (s2) await applyMiniGameSteps(s2);
+                }
+                
+                // Game 2 and Game 3 processing for dual colors
+                Game2Manager.processBall(pair[0], isBatchMode);
+                Game2Manager.processBall(pair[1], isBatchMode);
+                Game3Manager.processBall(null, false, pair);
+                
+                pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
+                if (DOM.drawStatus) DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
+                return 'sp';
+            }
         } else {
-            DOM.drawStatus.textContent = '安全期！抽中白球不結束。';
-            return 'safe_white';
-        }
-    } else if (baseDraw === 'roulette') {
-        let r = Math.random();
-        if (r < 1/6) {
-            await spawnAndSpinBall('sp', true, '🌈 彩色球', 'sp', ['rainbow', 'rainbow']);
-            historyTracker.rainbow++;
-            addBallToHistoryUI('彩色', 'rainbow');
+            let color = baseDraw;
+            await spawnAndSpinBall(color, false);
+            historyTracker[color]++;
+            addBallToHistoryUI(COLOR_ZH[color], color);
+            Game2Manager.processBall(color, isBatchMode); // Game 2
+            Game3Manager.processBall(color); // Game 3
             
-            Game2Manager.processBall('rainbow', isBatchMode); // Game 2
-            Game3Manager.processBall(game3TargetColor, true, null); // Game 3 rainbow wildcard
-            
-            pendingEventsQueue.push({ type: 'laser_strike' });
-            DOM.drawStatus.textContent = '彩色球！獲得雷射！';
-            return 'rainbow';
-        } else {
-            let pair = getSmallRoulettePair();
-            await spawnAndSpinBall('sp', true, `SP ${pair[0]}+${pair[1]}`, 'sp', pair);
-            historyTracker[pair[0]]++;
-            historyTracker[pair[1]]++;
-            let gradient = `linear-gradient(45deg, var(--color-${pair[0]}) 50%, var(--color-${pair[1]}) 50%)`;
-            addBallToHistoryUI('雙色', null, gradient);
-            
-            if (appleBonusRoundsLeft > 0) {
-                let s1 = currentStepMapping[pair[0]] || 0;
-                if (s1) await applyMiniGameSteps(s1);
-                let s2 = currentStepMapping[pair[1]] || 0;
-                if (s2) await applyMiniGameSteps(s2);
+            if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
+                await applyMiniGameSteps(currentStepMapping[color]);
             }
             
-            // Game 2 and Game 3 processing for dual colors
-            Game2Manager.processBall(pair[0], isBatchMode);
-            Game2Manager.processBall(pair[1], isBatchMode);
-            Game3Manager.processBall(null, false, pair);
-            
-            pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
-            DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
-            return 'sp';
+            pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
+            if (DOM.drawStatus) DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
+            return 'color';
         }
-    } else {
-        let color = baseDraw;
-        await spawnAndSpinBall(color, false);
-        historyTracker[color]++;
-        addBallToHistoryUI(COLOR_ZH[color], color);
-        Game2Manager.processBall(color, isBatchMode); // Game 2
-        Game3Manager.processBall(color); // Game 3
-        
-        if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
-            await applyMiniGameSteps(currentStepMapping[color]);
-        }
-        
-        pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
-        DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
-        return 'color';
+    } catch (e) {
+        console.error("Error in shootBallAsync:", e);
+        return 'error';
     }
 }
 
