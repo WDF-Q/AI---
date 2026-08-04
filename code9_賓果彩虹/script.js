@@ -2188,7 +2188,7 @@ async function startGame() {
         shopTriggeredForBall = {};
         window.game3ExtraClawBallPending = false;
         stagedShopApples = [];
-        updateStagedApplesUI();
+        if (window.updateStagedApplesUI) window.updateStagedApplesUI();
 
         // ** 彩虹蘋果 (Rainbow Apple) 1% 機率登場機制 **
         isRainbowAppleThisRound = false;
@@ -3656,7 +3656,7 @@ window.addEventListener('DOMContentLoaded', () => {
         rainbow: '彩虹蘋果'
     };
 
-    function updateStagedApplesUI() {
+    window.updateStagedApplesUI = function updateStagedApplesUI() {
         const container = document.getElementById('shop-staged-apples-container');
         if (!container) return;
         container.innerHTML = '';
@@ -3667,7 +3667,8 @@ window.addEventListener('DOMContentLoaded', () => {
             el.title = `商店暫存蘋果 #${idx + 1}: ${APPLE_NAMES_MAP[a.type] || a.type} (${a.score}分)`;
             container.appendChild(el);
         });
-    }
+    };
+    const updateStagedApplesUI = window.updateStagedApplesUI;
 
     function getAppleScore(type, bet) {
         switch (type) {
