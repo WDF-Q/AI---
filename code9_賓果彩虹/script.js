@@ -141,39 +141,39 @@ let innerWheelRotation = 0;
 let activeBalls = [];
 
 const DOM = {
-    board: document.getElementById('game-board'),
-    credit: document.getElementById('credit-display'),
-    btnCycleBet: document.getElementById('btn-cycle-bet'),
-    btnStart: document.getElementById('btn-start'),
-    betInputs: document.querySelectorAll('.bet-value'),
-    betAppleSlots: document.querySelectorAll('.bet-apple-slots'),
-    win: document.getElementById('win-display'),
-    safeIndicator: document.getElementById('safe-indicator'),
-    ballCountText: document.getElementById('ball-count-text'),
-    appleIcons: document.querySelectorAll('.apple-icon'),
-    btnDebugApple: document.getElementById('btn-debug-apple'),
-    miniGamePanel: document.getElementById('mini-game-panel'),
-    mgRoundsLeft: document.getElementById('mg-rounds-left'),
-    mgColorRules: document.getElementById('mg-color-rules'),
-    mgProgressFill: document.getElementById('mg-progress-fill'),
-    mgDogContainer: document.getElementById('mg-dog-container'),
-    mgDogCounter: document.getElementById('mg-dog-counter'),
-    mgDog: document.getElementById('mg-dog'),
-    mgStationEls: document.querySelectorAll('.mg-station'),
-    birdMouthSlots: document.querySelectorAll('.bird-mouth-slot'),
-    birdMouth: document.getElementById('bird-mouth'),
-    drawStatus: document.getElementById('draw-status'),
-    comboOverlay: document.getElementById('combo-overlay'),
-    outOverlay: document.getElementById('out-overlay'),
+    get board() { return document.getElementById('game-board'); },
+    get credit() { return document.getElementById('credit-display'); },
+    get btnCycleBet() { return document.getElementById('btn-cycle-bet'); },
+    get btnStart() { return document.getElementById('btn-start'); },
+    get betInputs() { return document.querySelectorAll('.bet-value'); },
+    get betAppleSlots() { return document.querySelectorAll('.bet-apple-slots'); },
+    get win() { return document.getElementById('win-display'); },
+    get safeIndicator() { return document.getElementById('safe-indicator'); },
+    get ballCountText() { return document.getElementById('ball-count-text'); },
+    get appleIcons() { return document.querySelectorAll('.apple-icon'); },
+    get btnDebugApple() { return document.getElementById('btn-debug-apple'); },
+    get miniGamePanel() { return document.getElementById('mini-game-panel'); },
+    get mgRoundsLeft() { return document.getElementById('mg-rounds-left'); },
+    get mgColorRules() { return document.getElementById('mg-color-rules'); },
+    get mgProgressFill() { return document.getElementById('mg-progress-fill'); },
+    get mgDogContainer() { return document.getElementById('mg-dog-container'); },
+    get mgDogCounter() { return document.getElementById('mg-dog-counter'); },
+    get mgDog() { return document.getElementById('mg-dog'); },
+    get mgStationEls() { return document.querySelectorAll('.mg-station'); },
+    get birdMouthSlots() { return document.querySelectorAll('.bird-mouth-slot'); },
+    get birdMouth() { return document.getElementById('bird-mouth'); },
+    get drawStatus() { return document.getElementById('draw-status'); },
+    get comboOverlay() { return document.getElementById('combo-overlay'); },
+    get outOverlay() { return document.getElementById('out-overlay'); },
     
-    rouletteOuter: document.getElementById('roulette-wheel-outer'),
-    rouletteInner: document.getElementById('roulette-wheel-inner'),
-    rouletteBallOrbit: document.getElementById('roulette-ball-orbit'),
-    rouletteBall: document.getElementById('roulette-ball'),
-    rouletteResultText: document.getElementById('roulette-result-text'),
+    get rouletteOuter() { return document.getElementById('roulette-wheel-outer'); },
+    get rouletteInner() { return document.getElementById('roulette-wheel-inner'); },
+    get rouletteBallOrbit() { return document.getElementById('roulette-ball-orbit'); },
+    get rouletteBall() { return document.getElementById('roulette-ball'); },
+    get rouletteResultText() { return document.getElementById('roulette-result-text'); },
     
-    fireBox: document.getElementById('fire-box'),
-    ballHistory: document.getElementById('ball-history')
+    get fireBox() { return document.getElementById('fire-box'); },
+    get ballHistory() { return document.getElementById('ball-history'); }
 };
 
 function startWheelRotations() {
@@ -181,13 +181,15 @@ function startWheelRotations() {
         outerWheelRotation = (outerWheelRotation + 0.5) % 360; 
         innerWheelRotation = (innerWheelRotation + 1.5) % 360; 
         
-        DOM.rouletteOuter.style.transform = `rotate(${outerWheelRotation}deg)`;
-        DOM.rouletteInner.style.transform = `translate(-50%, -50%) rotate(${innerWheelRotation}deg)`;
+        let outerEl = DOM.rouletteOuter;
+        let innerEl = DOM.rouletteInner;
+        if (outerEl) outerEl.style.transform = `rotate(${outerWheelRotation}deg)`;
+        if (innerEl) innerEl.style.transform = `translate(-50%, -50%) rotate(${innerWheelRotation}deg)`;
         
         for (let ball of activeBalls) {
-            if (ball.state === 'landed_outer') {
+            if (ball.state === 'landed_outer' && ball.orbitEl) {
                 ball.orbitEl.style.transform = `rotate(${outerWheelRotation + ball.offsetAngle}deg)`;
-            } else if (ball.state === 'landed_inner') {
+            } else if (ball.state === 'landed_inner' && ball.orbitEl) {
                 ball.orbitEl.style.transform = `rotate(${innerWheelRotation + ball.offsetAngle}deg)`;
             }
         }
@@ -2087,141 +2089,155 @@ function applyRainbowAppleToTargetGame(targetGame) {
 }
 
 async function startGame() {
-    if (leftEngineActive || boardState !== 'IDLE') return;
-    
-    if (queuedJPPackages.length > 0 && appleBonusRoundsLeft === 0) {
-        appleBonusRoundsLeft = 3;
-        activeJPAmount = queuedJPPackages.shift();
+    try {
+        if (leftEngineActive || boardState !== 'IDLE') return;
         
-        if (currentAppleColors.length === 7) {
-            currentAppleColors = [];
-            currentAppleScores = [];
-            updateAppleUI();
+        if (queuedJPPackages.length > 0 && appleBonusRoundsLeft === 0) {
+            appleBonusRoundsLeft = 3;
+            activeJPAmount = queuedJPPackages.shift();
+            
+            if (currentAppleColors.length === 7) {
+                currentAppleColors = [];
+                currentAppleScores = [];
+                updateAppleUI();
+            }
+            
+            miniGameSteps = 0;
+            passedStations = [];
+            resetMiniGamePhase1UI();
+            
+            // 鎖定本次 JP 遊戲三局的顏色與步數
+            const colors = ['red', 'pink', 'blue', 'green', 'yellow'];
+            colors.sort(() => Math.random() - 0.5);
+            const selected = colors.slice(0, 3);
+            const steps = [1, 3, 5];
+            steps.sort(() => Math.random() - 0.5);
+            
+            currentStepMapping = {};
+            if (DOM.mgColorRules) DOM.mgColorRules.innerHTML = '';
+            for (let i=0; i<3; i++) {
+                currentStepMapping[selected[i]] = steps[i];
+                if (DOM.mgColorRules) {
+                    DOM.mgColorRules.innerHTML += `
+                        <div class="track-square" style="background: var(--color-${selected[i]}); margin: 0 10px; font-size: 1.1rem; color: #fff; font-weight: bold; width: 25px; height: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">${steps[i]}</div>
+                    `;
+                }
+            }
         }
         
-        miniGameSteps = 0;
-        passedStations = [];
-        resetMiniGamePhase1UI();
-        
-        // 鎖定本次 JP 遊戲三局的顏色與步數
-        const colors = ['red', 'pink', 'blue', 'green', 'yellow'];
-        colors.sort(() => Math.random() - 0.5);
-        const selected = colors.slice(0, 3);
-        const steps = [1, 3, 5];
-        steps.sort(() => Math.random() - 0.5);
-        
-        currentStepMapping = {};
-        DOM.mgColorRules.innerHTML = '';
-        for (let i=0; i<3; i++) {
-            currentStepMapping[selected[i]] = steps[i];
-            DOM.mgColorRules.innerHTML += `
-                <div class="track-square" style="background: var(--color-${selected[i]}); margin: 0 10px; font-size: 1.1rem; color: #fff; font-weight: bold; width: 25px; height: 25px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">${steps[i]}</div>
-            `;
+        if (appleBonusRoundsLeft > 0) {
+            updateMiniGameUI();
         }
-    }
-    
-    if (appleBonusRoundsLeft > 0) {
-        updateMiniGameUI();
-    }
-    
-    if (game1Bet === 0 && game2Bet === 0 && game3Bet === 0) {
-        alert("請先押分！");
-        return;
-    }
-    if (credit < (game1Bet + game2Bet + game3Bet)) {
-        alert("餘額不足！");
-        return;
-    }
-    previousGame1Bet = game1Bet;
-    previousGame2Bet = game2Bet;
-    previousGame3Bet = game3Bet;
-    credit -= (game1Bet + game2Bet + game3Bet);
-    updateCreditDisplay();
-    
-    isPlaying = true;
-    game1Win = 0;
-    game2Win = 0;
-    game3TotalWin = 0;
-    bonusWin = 0;
-    ballCount = 0;
-    currentCombo = 0;
-    allClearBonusCount = 0;
-    batchEliminatedAny = false;
-    DOM.ballCountText.textContent = ballCount;
-    isGameOverTriggered = false;
-    pendingEventsQueue = [];
-    boardState = 'IDLE';
-    
-    // 初始化 Game 2 (連連樂) 與 Game 3 (夾夾樂)
-    Game2Manager.init();
-    Game3Manager.initNewGame();
-    
-    historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
-    recalculateTotalWin();
-    updateGame1WinDisplay();
-    updateGame2WinDisplay();
-    updateGame3WinDisplay();
-    updateLadderRewards(game1Bet === 0 ? 600 : game1Bet);
-    updateLadderActive(0);
-    updateHistoryUI();
-    
-    DOM.btnStart.disabled = true;
-    document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = true);
-    document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'none'); // 禁用選色
-    DOM.ballHistory.innerHTML = '';
-    hideAllOutOverlays();
-    
-    DOM.safeIndicator.textContent = '前 3 球安全保障！';
-    DOM.safeIndicator.className = 'safe-indicator';
-    
-    initBoard();
-    spawnApples();
-    
-    // ** 商店 (Shop System) 重置 **
-    shopTriggeredForBall = {};
-    window.game3ExtraClawBallPending = false;
-    stagedShopApples = [];
-    updateStagedApplesUI();
-
-    // ** 彩虹蘋果 (Rainbow Apple) 1% 機率登場機制 **
-    isRainbowAppleThisRound = false;
-    rainbowAppleTargetGame = 0;
-    rainbowAppleDirectJPTriggered = false;
-    window.g2RainbowAppleActive = false;
-    window.g3RainbowAppleActive = false;
-
-    // 清除上一局遺留的彩虹蘋果狀態，確保全場最多只會有 1 顆彩虹蘋果降臨
-    [game1PreApples, game2PreApples, game3PreApples].forEach(arr => {
-        if (arr) {
-            arr.forEach(a => {
-                if (a.type === 'rainbow') a.type = getAppleType();
-            });
+        
+        if (game1Bet === 0 && game2Bet === 0 && game3Bet === 0) {
+            alert("請先押分！");
+            return;
         }
-    });
+        if (credit < (game1Bet + game2Bet + game3Bet)) {
+            alert("餘額不足！");
+            return;
+        }
+        previousGame1Bet = game1Bet;
+        previousGame2Bet = game2Bet;
+        previousGame3Bet = game3Bet;
+        credit -= (game1Bet + game2Bet + game3Bet);
+        updateCreditDisplay();
+        
+        isPlaying = true;
+        game1Win = 0;
+        game2Win = 0;
+        game3TotalWin = 0;
+        bonusWin = 0;
+        ballCount = 0;
+        currentCombo = 0;
+        allClearBonusCount = 0;
+        batchEliminatedAny = false;
+        if (DOM.ballCountText) DOM.ballCountText.textContent = ballCount;
+        isGameOverTriggered = false;
+        pendingEventsQueue = [];
+        boardState = 'IDLE';
+        
+        // 初始化 Game 2 (連連樂) 與 Game 3 (夾夾樂)
+        Game2Manager.init();
+        Game3Manager.initNewGame();
+        
+        historyTracker = { red: 0, pink: 0, blue: 0, green: 0, yellow: 0, white: 0, rainbow: 0 };
+        recalculateTotalWin();
+        updateGame1WinDisplay();
+        updateGame2WinDisplay();
+        updateGame3WinDisplay();
+        updateLadderRewards(game1Bet === 0 ? 600 : game1Bet);
+        updateLadderActive(0);
+        updateHistoryUI();
+        
+        if (DOM.btnStart) DOM.btnStart.disabled = true;
+        document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = true);
+        document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'none'); // 禁用選色
+        if (DOM.ballHistory) DOM.ballHistory.innerHTML = '';
+        hideAllOutOverlays();
+        
+        if (DOM.safeIndicator) {
+            DOM.safeIndicator.textContent = '前 3 球安全保障！';
+            DOM.safeIndicator.className = 'safe-indicator';
+        }
+        
+        initBoard();
+        spawnApples();
+        
+        // ** 商店 (Shop System) 重置 **
+        shopTriggeredForBall = {};
+        window.game3ExtraClawBallPending = false;
+        stagedShopApples = [];
+        updateStagedApplesUI();
 
-    let betGames = [];
-    if (game1Bet > 0) betGames.push(1);
-    if (game2Bet > 0) betGames.push(2);
-    if (game3Bet > 0) betGames.push(3);
+        // ** 彩虹蘋果 (Rainbow Apple) 1% 機率登場機制 **
+        isRainbowAppleThisRound = false;
+        rainbowAppleTargetGame = 0;
+        rainbowAppleDirectJPTriggered = false;
+        window.g2RainbowAppleActive = false;
+        window.g3RainbowAppleActive = false;
 
-    let isRainbowTriggered = forceRainbowAppleDebug || (Math.random() < 0.01);
-    forceRainbowAppleDebug = false;
+        // 清除上一局遺留的彩虹蘋果狀態，確保全場最多只會有 1 顆彩虹蘋果降臨
+        [game1PreApples, game2PreApples, game3PreApples].forEach(arr => {
+            if (arr) {
+                arr.forEach(a => {
+                    if (a.type === 'rainbow') a.type = getAppleType();
+                });
+            }
+        });
 
-    if (isRainbowTriggered && betGames.length > 0) {
-        isRainbowAppleThisRound = true;
-        rainbowAppleTargetGame = betGames[Math.floor(Math.random() * betGames.length)];
-        await playRainbowAppleCutscene(rainbowAppleTargetGame);
+        let betGames = [];
+        if (game1Bet > 0) betGames.push(1);
+        if (game2Bet > 0) betGames.push(2);
+        if (game3Bet > 0) betGames.push(3);
+
+        let isRainbowTriggered = forceRainbowAppleDebug || (Math.random() < 0.01);
+        forceRainbowAppleDebug = false;
+
+        if (isRainbowTriggered && betGames.length > 0) {
+            isRainbowAppleThisRound = true;
+            rainbowAppleTargetGame = betGames[Math.floor(Math.random() * betGames.length)];
+            await playRainbowAppleCutscene(rainbowAppleTargetGame);
+        }
+
+        pendingDrawsQueue = 3;
+        pendingInitialBatch = 3;
+        
+        if (DOM.drawStatus) DOM.drawStatus.textContent = '遊戲開始！';
+        await sleep(1000);
+        
+        leftEngineActive = true;
+        startLeftEngine();
+        startRightEngine();
+    } catch (err) {
+        console.error("Error in startGame:", err);
+        isPlaying = false;
+        leftEngineActive = false;
+        boardState = 'IDLE';
+        if (DOM.btnStart) DOM.btnStart.disabled = false;
+        document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
+        document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'auto');
     }
-
-    pendingDrawsQueue = 3;
-    pendingInitialBatch = 3;
-    
-    DOM.drawStatus.textContent = '遊戲開始！';
-    await sleep(1000);
-    
-    leftEngineActive = true;
-    startLeftEngine();
-    startRightEngine();
 }
 
 function updateLadderActive(combo) {
