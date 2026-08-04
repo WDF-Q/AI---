@@ -1354,11 +1354,14 @@ const Game2Manager = {
     nextGridDataFull: [],
     nextLevel: 2,
     isCardChanging: false,
+    isLvMaxComboChain: false,
+    isLvMaxRefreshedCard: false,
     winningMatchedPatterns: [],
 
     init() {
         this.isCardChanging = false;
         this.isLvMaxComboChain = false;
+        this.isLvMaxRefreshedCard = false;
         game2LvMaxCombo = 0;
         updateGame2ComboBadge();
         this.winningMatchedPatterns = [];
@@ -1699,6 +1702,16 @@ const Game2Manager = {
             setTimeout(() => {
                 this.triggerCardDestructionAndNextDrop();
             }, 1000);
+        } else {
+            // 若未達成連線，但當前主棋盤是「LV MAX 刷新的 combo 延續卡」（生命週期僅限下一球/下一批發球）：
+            if (this.isLvMaxRefreshedCard) {
+                this.isLvMaxRefreshedCard = false;
+                this.isLvMaxComboChain = false;
+                game2LvMaxCombo = 0;
+                updateGame2ComboBadge();
+                // 該 LV MAX 刷新的主棋盤未能在下一球達成 combo，立即消滅，備用棋盤補充！
+                this.triggerCardDestructionAndNextDrop();
+            }
         }
     },
 
@@ -1723,13 +1736,15 @@ const Game2Manager = {
             // 判斷是否是在 LV MAX 狀態下消除並觸發連擊 combo
             if (this.isLvMaxComboChain) {
                 // 主棋盤在 LV MAX 狀態下消除：下一張棋盤【不會】從上方的備用棋盤補充！
-                // 主棋盤在這張消失後，自動更新一張同樣是 LV MAX 的棋盤，備用棋盤保持凍結保留！
+                // 自動更新一張同樣是 LV MAX 的棋盤，備用棋盤保持凍結保留！
                 game2Level = 9;
                 this.generateCard(9);
                 this.isLvMaxComboChain = false;
+                this.isLvMaxRefreshedCard = true; // 標記此新刷新卡生命週期僅限「下一球/下一批發球」！
             } else {
-                // 若未達成 LV MAX 消除，Combo 中斷，恢復正常從備用棋盤補充
+                // 若未達成 LV MAX 消除或 Combo 中斷，恢復正常從備用棋盤補充
                 game2LvMaxCombo = 0;
+                this.isLvMaxRefreshedCard = false;
                 updateGame2ComboBadge();
 
                 // 備用棋盤下降補充成為主體棋盤
