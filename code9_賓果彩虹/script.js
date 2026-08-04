@@ -107,24 +107,130 @@ let game3TrailingRainbows = 0;
 let game1Win = 0;
 let game2Win = 0;
 
-function switchActiveGame(gameId) {
-    const games = ['game1', 'game2', 'game3'];
-    let miniCount = 0;
-    games.forEach(id => {
-        const el = document.getElementById(id + '-container');
-        if (el) {
-            if (id === gameId) {
-                el.className = 'game-module active';
-                el.style.left = '0px';
-                el.style.top = '0px';
-            } else {
-                el.className = 'game-module mini';
-                el.style.left = '103%';
-                el.style.top = (miniCount * 210) + 'px';
-                miniCount++;
-            }
+// ** Mode State (模式 1 vs 模式 2) **
+let currentGameMode = 'MODE_1'; // 'MODE_1' or 'MODE_2'
+let activeGameSet1 = 'game1';   // 'game1', 'game2', 'game3'
+let activeGameSet2 = 'game1'; // 'game1', 'game2', 'game3' for Set B
+
+function toggleGameMode() {
+    currentGameMode = (currentGameMode === 'MODE_1') ? 'MODE_2' : 'MODE_1';
+    updateModeUI();
+}
+
+function updateModeUI() {
+    const wrapper = document.querySelector('.app-wrapper');
+    const modeBtn = document.getElementById('btn-switch-mode');
+    
+    if (wrapper) {
+        wrapper.classList.remove('mode-1', 'mode-2');
+        if (currentGameMode === 'MODE_1') {
+            wrapper.classList.add('mode-1');
+            if (modeBtn) modeBtn.innerHTML = '🎮 模式：單主頁 (1x3)';
+        } else {
+            wrapper.classList.add('mode-2');
+            if (modeBtn) modeBtn.innerHTML = '🎮 模式：雙主頁 (2x3)';
         }
-    });
+    }
+    renderGameModulesLayout();
+}
+
+function switchActiveGame(targetId, setNum = 1) {
+    let cleanId = targetId.replace('_2', '').replace('_1', '');
+    if (currentGameMode === 'MODE_1') {
+        activeGameSet1 = cleanId;
+    } else {
+        if (setNum === 1) {
+            activeGameSet1 = cleanId;
+        } else {
+            activeGameSet2 = cleanId;
+        }
+    }
+    renderGameModulesLayout();
+}
+
+function renderGameModulesLayout() {
+    const set1Games = ['game1', 'game2', 'game3'];
+    const wrapper = document.querySelector('.app-wrapper');
+    if (!wrapper) return;
+
+    if (currentGameMode === 'MODE_1') {
+        wrapper.className = 'app-wrapper mode-1';
+        let miniCount = 0;
+        set1Games.forEach(id => {
+            const el = document.getElementById(id + '-container');
+            if (el) {
+                el.style.display = 'block';
+                if (id === activeGameSet1) {
+                    el.className = 'game-module active';
+                    el.style.left = '0px';
+                    el.style.top = '0px';
+                    el.style.transform = 'scale(1)';
+                    el.style.zIndex = '10';
+                } else {
+                    el.className = 'game-module mini';
+                    el.style.left = '103%';
+                    el.style.top = (miniCount * 210) + 'px';
+                    el.style.transform = 'scale(0.25)';
+                    el.style.zIndex = '5';
+                    miniCount++;
+                }
+            }
+        });
+        
+        // Hide set 2 modules in Mode 1
+        ['game1', 'game2', 'game3'].forEach(id => {
+            const el = document.getElementById(id + '_2-container');
+            if (el) el.style.display = 'none';
+        });
+    } else {
+        wrapper.className = 'app-wrapper mode-2';
+        
+        // Mode 2: Set 1 Active & Mini
+        let miniCount1 = 0;
+        set1Games.forEach(id => {
+            const el = document.getElementById(id + '-container');
+            if (el) {
+                el.style.display = 'block';
+                if (id === activeGameSet1) {
+                    el.className = 'game-module active-set1';
+                    el.style.left = '0px';
+                    el.style.top = '0px';
+                    el.style.transform = 'scale(0.82)';
+                    el.style.zIndex = '10';
+                } else {
+                    el.className = 'game-module mini-set1';
+                    el.style.left = '840px';
+                    el.style.top = (miniCount1 * 150) + 'px';
+                    el.style.transform = 'scale(0.22)';
+                    el.style.zIndex = '5';
+                    miniCount1++;
+                }
+            }
+        });
+
+        // Mode 2: Set 2 Active & Mini
+        let miniCount2 = 0;
+        ['game1', 'game2', 'game3'].forEach(id => {
+            const el = document.getElementById(id + '_2-container');
+            if (el) {
+                el.style.display = 'block';
+                if (id === activeGameSet2) {
+                    el.className = 'game-module active-set2';
+                    el.style.left = '420px';
+                    el.style.top = '0px';
+                    el.style.transform = 'scale(0.82)';
+                    el.style.zIndex = '10';
+                } else {
+                    el.className = 'game-module mini-set2';
+                    el.style.left = '840px';
+                    el.style.top = (300 + miniCount2 * 150) + 'px';
+                    el.style.transform = 'scale(0.22)';
+                    el.style.zIndex = '5';
+                    miniCount2++;
+                }
+            }
+        });
+    }
 }
 
 // ** Decoupled Engine States **
@@ -3682,12 +3788,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const btnDeposit = document.getElementById('btn-deposit-credit');
     const btnClear = document.getElementById('btn-clear-credit');
+    const btnSwitchMode = document.getElementById('btn-switch-mode');
     const btnPassCancel = document.getElementById('btn-password-cancel');
     const btnPassConfirm = document.getElementById('btn-password-confirm');
     const inputPass = document.getElementById('password-input');
 
     if (btnDeposit) btnDeposit.addEventListener('click', handleDepositCredit);
     if (btnClear) btnClear.addEventListener('click', handleClearCredit);
+    if (btnSwitchMode) btnSwitchMode.addEventListener('click', toggleGameMode);
     if (btnPassCancel) btnPassCancel.addEventListener('click', hidePasswordModal);
     if (btnPassConfirm) btnPassConfirm.addEventListener('click', confirmPasswordModal);
 

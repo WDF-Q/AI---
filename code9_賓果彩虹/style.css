@@ -39,6 +39,7 @@ html, body {
 
 .app-wrapper {
     width: fit-content;
+    max-width: 98vw;
     margin: 0 auto;
     background: rgba(30, 41, 59, 0.75);
     border-radius: 20px;
@@ -46,7 +47,7 @@ html, body {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    transition: transform 0.1s ease-out;
+    transition: width 0.3s ease, transform 0.1s ease-out;
 }
 
 /* 頂部資訊列 */
@@ -387,6 +388,7 @@ html, body {
     position: relative;
     width: 610px;
     height: 645px;
+    transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .game-module {
@@ -400,7 +402,12 @@ html, body {
     height: 100%;
 }
 
-.game-module.active {
+/* --- 模式 1 (1x3 單主頁模式) --- */
+.mode-1 .games-wrapper {
+    width: 610px;
+}
+
+.mode-1 .game-module.active {
     left: 0;
     width: 100%;
     transform: scale(1);
@@ -410,7 +417,7 @@ html, body {
     opacity: 1;
 }
 
-.game-module.mini {
+.mode-1 .game-module.mini {
     left: 103%; /* 放在主畫面右側 */
     width: 100%;
     transform: scale(0.25); /* 縮小成 1/4 */
@@ -420,17 +427,59 @@ html, body {
     opacity: 0.8;
 }
 
-.game-module.mini:hover {
+.mode-1 .game-module.mini:hover {
     transform: scale(0.26);
     opacity: 1;
     box-shadow: 0 0 30px rgba(255,255,255,0.3);
 }
 
-#game2-container.mini {
-    top: 0px;
+.mode-1 .game-module.set-2 {
+    display: none !important;
 }
-#game3-container.mini {
-    top: 210px;
+
+/* --- 模式 2 (2x3 豪華雙主頁模式) --- */
+.mode-2 .games-wrapper {
+    width: 1160px;
+}
+
+.mode-2 .game-module {
+    width: 500px;
+}
+
+/* Set 1 主畫面 */
+.mode-2 .game-module.active-set1 {
+    left: 0px;
+    top: 0px;
+    transform: scale(0.82);
+    z-index: 10;
+    opacity: 1;
+}
+
+/* Set 2 主畫面 (雙主頁並排) */
+.mode-2 .game-module.active-set2 {
+    left: 420px;
+    top: 0px;
+    transform: scale(0.82);
+    z-index: 10;
+    opacity: 1;
+}
+
+/* 4 個預覽模組 (右側欄位) */
+.mode-2 .game-module.mini-set1,
+.mode-2 .game-module.mini-set2 {
+    left: 840px;
+    transform: scale(0.22);
+    z-index: 5;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    opacity: 0.85;
+}
+
+.mode-2 .game-module.mini-set1:hover,
+.mode-2 .game-module.mini-set2:hover {
+    transform: scale(0.23);
+    opacity: 1;
+    box-shadow: 0 0 30px rgba(255,255,255,0.4);
 }
 
 /* 控制區與押分 */
