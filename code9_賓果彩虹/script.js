@@ -3207,6 +3207,10 @@ async function finishGameOverSequence() {
                     DOM.drawStatus.textContent = `🎯 JP結算！未達 20 島，無獎金 🎯`;
                     await sleep(2000);
                 }
+            }
+        }
+    }
+    
     // ** 結算並將商店購買的暫存蘋果存入 7 蘋果進度條 **
     if (stagedShopApples.length > 0) {
         DOM.drawStatus.textContent = `🎯 正在將商店購買的 ${stagedShopApples.length} 顆蘋果存入 7 蘋果進度表...`;
@@ -3641,19 +3645,6 @@ window.addEventListener('DOMContentLoaded', () => {
             default: return Math.floor(bet * 0.25);
         }
     }
-
-    window.triggerShopModalProcess = function() {
-        return new Promise((resolve) => {
-            shopResolvePromise = resolve;
-            const modal = document.getElementById('shop-modal');
-            const fillEl = document.getElementById('shop-timer-fill');
-            const secEl = document.getElementById('shop-timer-sec');
-            if (!modal) {
-                resolve();
-                return;
-            }
-
-            purchasedSlotsInCurrentShop.clear();
 
     window.triggerShopModalProcess = function(isRainbowEventShop = false) {
         return new Promise((resolve) => {
