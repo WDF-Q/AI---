@@ -3233,21 +3233,48 @@ async function finishGameOverSequence() {
                 await runJPRouletteGame();
                 
             } else {
-                let ratio = 0;
-                if (miniGameSteps >= 90) ratio = 0.20;
-                else if (miniGameSteps >= 50) ratio = 0.10;
-                else if (miniGameSteps >= 20) ratio = 0.05;
-                else ratio = 0;
-                
-                let reward = Math.floor(activeJPAmount * ratio);
-                if ((game1Bet > 0 || game2Bet > 0 || game3Bet > 0) && reward > 0) {
-                    bonusWin += reward;
-                    recalculateTotalWin();
-                    DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
+                if (miniGameSteps < 20) {
+                    let compScore = Math.round(activeJPAmount / 3);
+                    DOM.drawStatus.textContent = `🎯 JP結算！未達 20 島，發放補償 3 顆金蘋果 (每顆 ${compScore} 分)！ 🎯`;
+                    
+                    let div = document.createElement('div');
+                    div.style.position = 'fixed';
+                    div.style.top = '25%';
+                    div.style.left = '50%';
+                    div.style.transform = 'translate(-50%, -50%)';
+                    div.style.background = 'radial-gradient(circle, rgba(15,23,42,0.96), rgba(0,0,0,0.98))';
+                    div.style.color = '#fde047';
+                    div.style.padding = '20px 40px';
+                    div.style.borderRadius = '20px';
+                    div.style.fontSize = '2rem';
+                    div.style.fontWeight = '900';
+                    div.style.zIndex = '99999';
+                    div.style.border = '3px solid #facc15';
+                    div.style.boxShadow = '0 0 35px #facc15';
+                    div.style.textAlign = 'center';
+                    div.innerHTML = `🍎 JP未達20島補償 🍎<br><span style="font-size:1.4rem; color:#fff;">繼承原 JP 獎金 (${activeJPAmount} 分)，獲得 3 顆金蘋果！<br>每顆金蘋果分數: ${compScore} 分</span>`;
+                    document.body.appendChild(div);
+
+                    for (let i = 0; i < 3; i++) {
+                        collectApple('gold', null, compScore);
+                        await sleep(400);
+                    }
+
                     await sleep(3000);
+                    div.remove();
                 } else {
-                    DOM.drawStatus.textContent = `🎯 JP結算！未達 20 島，無獎金 🎯`;
-                    await sleep(2000);
+                    let ratio = 0;
+                    if (miniGameSteps >= 90) ratio = 0.20;
+                    else if (miniGameSteps >= 50) ratio = 0.10;
+                    else ratio = 0.05;
+                    
+                    let reward = Math.floor(activeJPAmount * ratio);
+                    if ((game1Bet > 0 || game2Bet > 0 || game3Bet > 0) && reward > 0) {
+                        bonusWin += reward;
+                        recalculateTotalWin();
+                        DOM.drawStatus.textContent = `🎯 JP結算！抵達 ${miniGameSteps} 島，獲得獎金 ${reward} 🎯`;
+                        await sleep(3000);
+                    }
                 }
             }
         }
@@ -3329,7 +3356,7 @@ async function engineSleep(ms) {
 }
 
 
-function collectApple(type, customBet = null) {
+function collectApple(type, customBet = null, customScore = null) {
     if (type === 'rainbow') {
         let totalBet = (game1Bet > 0 ? game1Bet : 0) + (game2Bet > 0 ? game2Bet : 0) + (game3Bet > 0 ? game3Bet : 0);
         let jpScore = Math.floor((totalBet / 600) * 10000);
@@ -3357,8 +3384,10 @@ function collectApple(type, customBet = null) {
         return;
     }
 
-    let activeBet = (customBet !== null && customBet !== undefined) ? customBet : (game1Bet > 0 ? game1Bet : 0);
-    if (activeBet <= 0) return; // 若當前遊戲壓分為 0，絕對不可收集蘋果！
+    if (customScore === null || customScore === undefined) {
+        let activeBet = (customBet !== null && customBet !== undefined) ? customBet : (game1Bet > 0 ? game1Bet : 0);
+        if (activeBet <= 0) return; // 若當前遊戲壓分為 0，絕對不可收集蘋果！
+    }
 
     if (currentAppleColors.length === 7) {
         currentAppleColors = []; 
@@ -3368,12 +3397,17 @@ function collectApple(type, customBet = null) {
     currentAppleColors.push(type);
     
     let score = 0;
-    switch (type) {
-        case 'gold': score = activeBet * 2.5; break;
-        case 'silver': score = activeBet * 1.5; break;
-        case 'bronze': score = activeBet * 1.0; break;
-        case 'red': score = activeBet * 0.5; break;
-        case 'green': score = activeBet * 0.25; break;
+    if (customScore !== null && customScore !== undefined) {
+        score = Math.round(customScore);
+    } else {
+        let activeBet = (customBet !== null && customBet !== undefined) ? customBet : (game1Bet > 0 ? game1Bet : 0);
+        switch (type) {
+            case 'gold': score = activeBet * 2.5; break;
+            case 'silver': score = activeBet * 1.5; break;
+            case 'bronze': score = activeBet * 1.0; break;
+            case 'red': score = activeBet * 0.5; break;
+            case 'green': score = activeBet * 0.25; break;
+        }
     }
     currentAppleScores.push(Math.floor(score));
     
