@@ -38,12 +38,12 @@ html, body {
 }
 
 .app-wrapper {
-    width: min(99vw, 1380px);
-    max-width: 100vw;
+    width: 98vw;
+    max-width: 1420px;
     margin: 0 auto;
     background: rgba(30, 41, 59, 0.75);
     border-radius: 20px;
-    padding: 0.8rem 1.2rem;
+    padding: 0.8rem 1rem;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
@@ -464,47 +464,57 @@ html, body {
     opacity: 0.85;
 }
 
-/* --- 模式 2 (2x3 豪華雙組獨立排版模式: 等比例 0.72x 縮放，100% 完整無切割) --- */
+/* --- 模式 2 (2x3 豪華雙組模式: 放寬 1.8 倍全版，2個主畫面並排，4個備用預覽放在主畫面正下方) --- */
+.mode-2 .games-area-container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
 .mode-2 .set-box {
     position: relative;
-    width: 565px;
-    height: 470px;
+    width: 530px;
+    height: 700px;
     flex-shrink: 0;
     transition: all 0.3s ease;
 }
 
+/* 模式 2：主遊戲卡片 (靠上方，等比例 0.9x 放大展現大氣視覺) */
 .mode-2 .set-box .game-module.active {
     left: 0;
     top: 0;
-    transform: scale(0.72);
+    transform: scale(0.9);
     z-index: 10;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
+/* 模式 2：備用預覽卡片 (放至主畫面正下方，2個水平並排橫放) */
 .mode-2 .set-box .game-module.mini-1 {
-    left: 425px;
-    top: 0px;
-    transform: scale(0.24);
+    left: 10px;
+    top: 585px;
+    transform: scale(0.18);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
-    opacity: 0.85;
+    opacity: 0.9;
 }
 
 .mode-2 .set-box .game-module.mini-2 {
-    left: 425px;
-    top: 165px;
-    transform: scale(0.24);
+    left: 130px;
+    top: 585px;
+    transform: scale(0.18);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
-    opacity: 0.85;
+    opacity: 0.9;
 }
 
-.set-box .game-module.mini-1:hover,
-.set-box .game-module.mini-2:hover {
+.mode-2 .set-box .game-module.mini-1:hover,
+.mode-2 .set-box .game-module.mini-2:hover {
     opacity: 1;
-    box-shadow: 0 0 25px rgba(255,255,255,0.4);
+    box-shadow: 0 0 25px rgba(255,255,255,0.5);
 }
 
 /* Mode 1 vs Mode 2 Display rules */
