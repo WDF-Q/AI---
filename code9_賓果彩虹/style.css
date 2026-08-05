@@ -39,7 +39,7 @@ html, body {
 
 .app-wrapper {
     width: 98vw;
-    max-width: 1420px;
+    max-width: 99vw;
     margin: 0 auto;
     background: rgba(30, 41, 59, 0.75);
     border-radius: 20px;
@@ -393,13 +393,15 @@ html, body {
     gap: 15px;
 }
 
-/* 左側整體直直欄位 (寬度 300px) */
+/* 左側整體直直欄位 (寬度 300px，最上層 z-index 100 絕不被右側遊戲遮擋) */
 .left-column-area {
     display: flex;
     flex-direction: column;
     gap: 12px;
     width: 300px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 100;
 }
 
 /* 左側大轉盤主框架 (獨立深色卡片框) */
@@ -448,6 +450,8 @@ html, body {
     gap: 15px;
     align-items: flex-start;
     flex: 1;
+    position: relative;
+    z-index: 1;
 }
 
 /* 遊戲模組：保持 100% 原始未切割自然尺寸 (580px x 645px) */
@@ -457,7 +461,7 @@ html, body {
     left: 0;
     width: 580px !important;
     height: 645px !important;
-    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: opacity 0.25s ease-in-out; /* 僅使用透明度淡入淡出，防止切換時對角線飛躍跳動與暴增變大遮擋 */
     transform-origin: top left;
     background: var(--bg-main);
     border-radius: 16px;
