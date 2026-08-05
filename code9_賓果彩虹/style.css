@@ -453,6 +453,11 @@ html, body {
     z-index: 1;
 }
 
+.set-box {
+    position: relative;
+    pointer-events: none;
+}
+
 /* 遊戲模組：保持 100% 原始未切割自然尺寸 (580px x 645px) */
 .game-module {
     position: absolute;
@@ -466,6 +471,7 @@ html, body {
     border-radius: 16px;
     overflow: hidden;
     box-sizing: border-box;
+    pointer-events: auto;
 }
 
 /* --- 模式 1 (1x3 單組主頁模式: 100% 原始解析度不失真) --- */
@@ -505,47 +511,90 @@ html, body {
     opacity: 0.85;
 }
 
-/* --- 模式 2 (2x3 豪華雙組全螢幕極致滿版模式: 貼齊平板螢幕最邊緣，大氣展延) --- */
+/* --- 模式 2 (2x3 豪華雙組模式: 主畫面1-1靠左、主畫面1-2靠右、中間置放 4 個備用預覽：Set 1 在上、Set 2 在下) --- */
 .mode-2 .games-area-container {
     display: flex;
     flex-direction: row;
-    gap: 20px;
+    flex-wrap: nowrap;
+    gap: 15px;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: space-between;
+    flex: 1;
+    width: 100%;
 }
 
-.mode-2 .set-box {
+/* 模式 2 主遊戲 Set A (靠左) */
+.mode-2 .set-box.set-a {
     position: relative;
     width: 530px;
-    height: 700px;
+    height: 720px;
     flex-shrink: 0;
     transition: all 0.3s ease;
 }
 
-/* 模式 2：主遊戲卡片 (靠上方，等比例 0.9x 放大展現大氣視覺) */
-.mode-2 .set-box .game-module.active {
+.mode-2 .set-box.set-a .game-module.active {
     left: 0;
     top: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
     z-index: 10;
     box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
-/* 模式 2：備用預覽卡片 (放至主畫面正下方，2個水平並排橫放) */
-.mode-2 .set-box .game-module.mini-1 {
-    left: 10px;
-    top: 585px;
-    transform: scale(0.18);
+/* 模式 2 Set A 的兩個備用遊戲：放在中間空間的上半部 (遊戲1的兩個在上) */
+.mode-2 .set-box.set-a .game-module.mini-1 {
+    left: 540px;
+    top: 0px;
+    transform: scale(0.23);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
     opacity: 0.9;
 }
 
-.mode-2 .set-box .game-module.mini-2 {
-    left: 130px;
-    top: 585px;
-    transform: scale(0.18);
+.mode-2 .set-box.set-a .game-module.mini-2 {
+    left: 540px;
+    top: 155px;
+    transform: scale(0.23);
+    z-index: 5;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8);
+    opacity: 0.9;
+}
+
+/* 模式 2 主遊戲 Set B (靠右，空出 145px 中間置放區) */
+.mode-2 .set-box.set-b {
+    display: block !important;
+    position: relative;
+    width: 530px;
+    height: 720px;
+    flex-shrink: 0;
+    margin-left: 145px;
+    transition: all 0.3s ease;
+}
+
+.mode-2 .set-box.set-b .game-module.active {
+    left: 0;
+    top: 0;
+    transform: scale(0.95);
+    z-index: 10;
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+}
+
+/* 模式 2 Set B 的兩個備用遊戲：放在中間空間的下半部 (遊戲2的兩個在下) */
+.mode-2 .set-box.set-b .game-module.mini-1 {
+    left: -135px;
+    top: 330px;
+    transform: scale(0.23);
+    z-index: 5;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8);
+    opacity: 0.9;
+}
+
+.mode-2 .set-box.set-b .game-module.mini-2 {
+    left: -135px;
+    top: 485px;
+    transform: scale(0.23);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
