@@ -393,13 +393,22 @@ html, body {
     gap: 15px;
 }
 
-/* 左側：輪盤與控制區 */
+/* 左側：輪盤與控制區 (寬度 300px 確保大轉盤 100% 寬敞完整展現，絕不裁切) */
 .left-panel {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    width: 280px;
+    gap: 0.8rem;
+    width: 300px;
     flex-shrink: 0;
+}
+
+.roulette-container {
+    width: 100%;
+    margin: 0 auto;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* 右側：多遊戲切換區 (Set Box 組別獨立式 layout) */
