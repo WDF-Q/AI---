@@ -412,60 +412,89 @@ html, body {
     flex: 1;
 }
 
-.set-box {
-    position: relative;
-    width: 470px;
-    height: 645px;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-}
-
+/* 遊戲模組：保持 100% 原始未切割自然尺寸 (580px x 645px) */
 .game-module {
     position: absolute;
     top: 0;
+    left: 0;
+    width: 580px !important;
+    height: 645px !important;
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     transform-origin: top left;
     background: var(--bg-main);
     border-radius: 16px;
     overflow: hidden;
-    height: 645px;
+    box-sizing: border-box;
 }
 
-/* Active Main Game inside Set Box */
-.set-box .game-module.active {
-    position: absolute;
+/* --- 模式 1 (1x3 單組主頁模式: 100% 原始解析度不失真) --- */
+.mode-1 .set-box {
+    position: relative;
+    width: 735px;
+    height: 645px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.mode-1 .set-box .game-module.active {
     left: 0;
     top: 0;
-    width: 350px;
-    height: 645px;
-    z-index: 10;
     transform: scale(1);
-    transform-origin: top left;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-/* Mini Previews inside Set Box (stacked vertically on right) */
-.set-box .game-module.mini-1 {
-    position: absolute;
-    left: 355px;
+.mode-1 .set-box .game-module.mini-1 {
+    left: 590px;
     top: 0px;
-    width: 350px;
-    height: 645px;
-    transform: scale(0.31);
-    transform-origin: top left;
+    transform: scale(0.25);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
     opacity: 0.85;
 }
 
-.set-box .game-module.mini-2 {
-    position: absolute;
-    left: 355px;
-    top: 210px;
-    width: 350px;
-    height: 645px;
-    transform: scale(0.31);
-    transform-origin: top left;
+.mode-1 .set-box .game-module.mini-2 {
+    left: 590px;
+    top: 175px;
+    transform: scale(0.25);
+    z-index: 5;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8);
+    opacity: 0.85;
+}
+
+/* --- 模式 2 (2x3 豪華雙組獨立排版模式: 等比例 0.72x 縮放，100% 完整無切割) --- */
+.mode-2 .set-box {
+    position: relative;
+    width: 565px;
+    height: 470px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.mode-2 .set-box .game-module.active {
+    left: 0;
+    top: 0;
+    transform: scale(0.72);
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.mode-2 .set-box .game-module.mini-1 {
+    left: 425px;
+    top: 0px;
+    transform: scale(0.24);
+    z-index: 5;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8);
+    opacity: 0.85;
+}
+
+.mode-2 .set-box .game-module.mini-2 {
+    left: 425px;
+    top: 165px;
+    transform: scale(0.24);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
@@ -474,7 +503,6 @@ html, body {
 
 .set-box .game-module.mini-1:hover,
 .set-box .game-module.mini-2:hover {
-    transform: scale(0.34);
     opacity: 1;
     box-shadow: 0 0 25px rgba(255,255,255,0.4);
 }
