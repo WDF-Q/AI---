@@ -392,15 +392,16 @@ html, body {
     gap: 15px;
 }
 
-/* 左側整體直直欄位 (寬度 300px，最上層 z-index 100 絕不被右側遊戲遮擋) */
+/* 左側整體直直欄位 (貼齊最左側，寬度 270px 精準包含大轉盤，零多餘留白) */
 .left-column-area {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 300px;
+    width: 270px;
     flex-shrink: 0;
     position: relative;
     z-index: 100;
+    margin-left: 0 !important;
 }
 
 /* 左側大轉盤主框架 (獨立深色卡片框) */
@@ -410,22 +411,23 @@ html, body {
     gap: 0.8rem;
     width: 100%;
     background: #1e293b;
-    padding: 12px;
+    padding: 10px;
     border-radius: 16px;
     border: 1px solid #334155;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     box-sizing: border-box;
 }
 
-/* 按鈕獨立框架：完全移出大轉盤框架外，獨立位於下方 (獨立卡片框) */
+/* 底部按鈕獨立框架：緊湊靠攏不展延，寬度約等於一個遊戲框，置於顏色球累計框左側 */
 .left-controls-box {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    width: 100%;
-    background: #1e293b;
-    padding: 10px;
+    justify-content: flex-start;
+    gap: 8px;
+    width: auto;
+    max-width: 320px;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 6px 12px;
     border-radius: 12px;
     border: 1px solid #334155;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
@@ -446,7 +448,7 @@ html, body {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: 15px;
+    gap: 10px;
     align-items: flex-start;
     flex: 1;
     position: relative;
@@ -516,9 +518,9 @@ html, body {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: 15px;
+    gap: 10px;
     align-items: flex-start;
-    justify-content: space-between;
+    justify-content: flex-start;
     flex: 1;
     width: 100%;
 }
@@ -526,8 +528,8 @@ html, body {
 /* 模式 2 主遊戲 Set A (靠左) */
 .mode-2 .set-box.set-a {
     position: relative;
-    width: 530px;
-    height: 720px;
+    width: 485px;
+    height: 660px;
     flex-shrink: 0;
     transition: all 0.3s ease;
 }
@@ -535,16 +537,16 @@ html, body {
 .mode-2 .set-box.set-a .game-module.active {
     left: 0;
     top: 0;
-    transform: scale(0.95);
+    transform: scale(0.83);
     z-index: 10;
     box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
 /* 模式 2 Set A 的兩個備用遊戲：放在中間空間的上半部 (遊戲1的兩個在上) */
 .mode-2 .set-box.set-a .game-module.mini-1 {
-    left: 540px;
+    left: 495px;
     top: 0px;
-    transform: scale(0.23);
+    transform: scale(0.20);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
@@ -552,39 +554,39 @@ html, body {
 }
 
 .mode-2 .set-box.set-a .game-module.mini-2 {
-    left: 540px;
-    top: 155px;
-    transform: scale(0.23);
+    left: 495px;
+    top: 135px;
+    transform: scale(0.20);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
     opacity: 0.9;
 }
 
-/* 模式 2 主遊戲 Set B (靠右，空出 145px 中間置放區) */
+/* 模式 2 主遊戲 Set B (靠右，空出 120px 中間備用區，100% 完整容納於畫面內) */
 .mode-2 .set-box.set-b {
     display: block !important;
     position: relative;
-    width: 530px;
-    height: 720px;
+    width: 485px;
+    height: 660px;
     flex-shrink: 0;
-    margin-left: 145px;
+    margin-left: 125px;
     transition: all 0.3s ease;
 }
 
 .mode-2 .set-box.set-b .game-module.active {
     left: 0;
     top: 0;
-    transform: scale(0.95);
+    transform: scale(0.83);
     z-index: 10;
     box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
 /* 模式 2 Set B 的兩個備用遊戲：放在中間空間的下半部 (遊戲2的兩個在下) */
 .mode-2 .set-box.set-b .game-module.mini-1 {
-    left: -135px;
-    top: 330px;
-    transform: scale(0.23);
+    left: -118px;
+    top: 300px;
+    transform: scale(0.20);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
@@ -592,9 +594,9 @@ html, body {
 }
 
 .mode-2 .set-box.set-b .game-module.mini-2 {
-    left: -135px;
-    top: 485px;
-    transform: scale(0.23);
+    left: -118px;
+    top: 435px;
+    transform: scale(0.20);
     z-index: 5;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.8);
