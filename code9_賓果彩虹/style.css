@@ -38,8 +38,8 @@ html, body {
 }
 
 .app-wrapper {
-    width: fit-content;
-    max-width: 98vw;
+    width: min(99vw, 1380px);
+    max-width: 100vw;
     margin: 0 auto;
     background: rgba(30, 41, 59, 0.75);
     border-radius: 20px;
@@ -47,7 +47,16 @@ html, body {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    transition: width 0.3s ease, transform 0.1s ease-out;
+    box-sizing: border-box;
+}
+
+/* 主佈局：上下結構 (頂部遊戲區 + 底部控制區) */
+.game-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    width: 100%;
 }
 
 /* 頂部資訊列 */
@@ -374,112 +383,109 @@ html, body {
 }
 
 
+.top-gameplay-area {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    gap: 15px;
+}
+
 /* 左側：輪盤與控制區 */
 .left-panel {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    width: 320px;
+    gap: 1rem;
+    width: 280px;
     flex-shrink: 0;
 }
 
-/* 右側：多遊戲切換區 */
-.games-wrapper {
+/* 右側：多遊戲切換區 (Set Box 組別獨立式 layout) */
+.games-area-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 15px;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.set-box {
     position: relative;
-    width: 610px;
+    width: 470px;
     height: 645px;
-    transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    flex-shrink: 0;
+    transition: all 0.3s ease;
 }
 
 .game-module {
     position: absolute;
     top: 0;
-    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     transform-origin: top left;
     background: var(--bg-main);
     border-radius: 16px;
     overflow: hidden;
-    height: 100%;
+    height: 645px;
 }
 
-/* --- 模式 1 (1x3 單主頁模式) --- */
-.mode-1 .games-wrapper {
-    width: 610px;
-}
-
-.mode-1 .game-module.active {
+/* Active Main Game inside Set Box */
+.set-box .game-module.active {
+    position: absolute;
     left: 0;
-    width: 100%;
+    top: 0;
+    width: 350px;
+    height: 645px;
+    z-index: 10;
     transform: scale(1);
-    z-index: 10;
-    cursor: default;
-    box-shadow: none;
-    opacity: 1;
+    transform-origin: top left;
 }
 
-.mode-1 .game-module.mini {
-    left: 103%; /* 放在主畫面右側 */
-    width: 100%;
-    transform: scale(0.25); /* 縮小成 1/4 */
+/* Mini Previews inside Set Box (stacked vertically on right) */
+.set-box .game-module.mini-1 {
+    position: absolute;
+    left: 355px;
+    top: 0px;
+    width: 350px;
+    height: 645px;
+    transform: scale(0.31);
+    transform-origin: top left;
     z-index: 5;
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
-    opacity: 0.8;
-}
-
-.mode-1 .game-module.mini:hover {
-    transform: scale(0.26);
-    opacity: 1;
-    box-shadow: 0 0 30px rgba(255,255,255,0.3);
-}
-
-.mode-1 .game-module.set-2 {
-    display: none !important;
-}
-
-/* --- 模式 2 (2x3 豪華雙主頁模式) --- */
-.mode-2 .games-wrapper {
-    width: 1160px;
-}
-
-.mode-2 .game-module {
-    width: 500px;
-}
-
-/* Set 1 主畫面 */
-.mode-2 .game-module.active-set1 {
-    left: 0px;
-    top: 0px;
-    transform: scale(0.82);
-    z-index: 10;
-    opacity: 1;
-}
-
-/* Set 2 主畫面 (雙主頁並排) */
-.mode-2 .game-module.active-set2 {
-    left: 420px;
-    top: 0px;
-    transform: scale(0.82);
-    z-index: 10;
-    opacity: 1;
-}
-
-/* 4 個預覽模組 (右側欄位) */
-.mode-2 .game-module.mini-set1,
-.mode-2 .game-module.mini-set2 {
-    left: 840px;
-    transform: scale(0.22);
-    z-index: 5;
-    cursor: pointer;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.8);
     opacity: 0.85;
 }
 
-.mode-2 .game-module.mini-set1:hover,
-.mode-2 .game-module.mini-set2:hover {
-    transform: scale(0.23);
+.set-box .game-module.mini-2 {
+    position: absolute;
+    left: 355px;
+    top: 210px;
+    width: 350px;
+    height: 645px;
+    transform: scale(0.31);
+    transform-origin: top left;
+    z-index: 5;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8);
+    opacity: 0.85;
+}
+
+.set-box .game-module.mini-1:hover,
+.set-box .game-module.mini-2:hover {
+    transform: scale(0.34);
     opacity: 1;
-    box-shadow: 0 0 30px rgba(255,255,255,0.4);
+    box-shadow: 0 0 25px rgba(255,255,255,0.4);
+}
+
+/* Mode 1 vs Mode 2 Display rules */
+.mode-1 .set-box.set-b {
+    display: none !important;
+}
+
+.mode-2 .set-box.set-b {
+    display: block !important;
 }
 
 /* 控制區與押分 */

@@ -136,101 +136,55 @@ function updateModeUI() {
 
 function switchActiveGame(targetId, setNum = 1) {
     let cleanId = targetId.replace('_2', '').replace('_1', '');
-    if (currentGameMode === 'MODE_1') {
+    if (setNum === 1) {
         activeGameSet1 = cleanId;
     } else {
-        if (setNum === 1) {
-            activeGameSet1 = cleanId;
-        } else {
-            activeGameSet2 = cleanId;
-        }
+        activeGameSet2 = cleanId;
     }
     renderGameModulesLayout();
 }
 
 function renderGameModulesLayout() {
-    const set1Games = ['game1', 'game2', 'game3'];
     const wrapper = document.querySelector('.app-wrapper');
     if (!wrapper) return;
 
     if (currentGameMode === 'MODE_1') {
         wrapper.className = 'app-wrapper mode-1';
-        let miniCount = 0;
-        set1Games.forEach(id => {
-            const el = document.getElementById(id + '-container');
-            if (el) {
-                el.style.display = 'block';
-                if (id === activeGameSet1) {
-                    el.className = 'game-module active';
-                    el.style.left = '0px';
-                    el.style.top = '0px';
-                    el.style.transform = 'scale(1)';
-                    el.style.zIndex = '10';
-                } else {
-                    el.className = 'game-module mini';
-                    el.style.left = '103%';
-                    el.style.top = (miniCount * 210) + 'px';
-                    el.style.transform = 'scale(0.25)';
-                    el.style.zIndex = '5';
-                    miniCount++;
-                }
-            }
-        });
-        
-        // Hide set 2 modules in Mode 1
-        ['game1', 'game2', 'game3'].forEach(id => {
-            const el = document.getElementById(id + '_2-container');
-            if (el) el.style.display = 'none';
-        });
     } else {
         wrapper.className = 'app-wrapper mode-2';
-        
-        // Mode 2: Set 1 Active & Mini
-        let miniCount1 = 0;
-        set1Games.forEach(id => {
-            const el = document.getElementById(id + '-container');
-            if (el) {
-                el.style.display = 'block';
-                if (id === activeGameSet1) {
-                    el.className = 'game-module active-set1';
-                    el.style.left = '0px';
-                    el.style.top = '0px';
-                    el.style.transform = 'scale(0.82)';
-                    el.style.zIndex = '10';
-                } else {
-                    el.className = 'game-module mini-set1';
-                    el.style.left = '840px';
-                    el.style.top = (miniCount1 * 150) + 'px';
-                    el.style.transform = 'scale(0.22)';
-                    el.style.zIndex = '5';
-                    miniCount1++;
-                }
-            }
-        });
-
-        // Mode 2: Set 2 Active & Mini
-        let miniCount2 = 0;
-        ['game1', 'game2', 'game3'].forEach(id => {
-            const el = document.getElementById(id + '_2-container');
-            if (el) {
-                el.style.display = 'block';
-                if (id === activeGameSet2) {
-                    el.className = 'game-module active-set2';
-                    el.style.left = '420px';
-                    el.style.top = '0px';
-                    el.style.transform = 'scale(0.82)';
-                    el.style.zIndex = '10';
-                } else {
-                    el.className = 'game-module mini-set2';
-                    el.style.left = '840px';
-                    el.style.top = (300 + miniCount2 * 150) + 'px';
-                    el.style.transform = 'scale(0.22)';
-                    el.style.zIndex = '5';
-                    miniCount2++;
-                }
-            }
-        });
     }
+
+    // Render Set A (Set 1)
+    const set1Games = ['game1', 'game2', 'game3'];
+    let miniIdx1 = 1;
+    set1Games.forEach(id => {
+        const el = document.getElementById(id + '-container');
+        if (el) {
+            el.removeAttribute('style');
+            if (id === activeGameSet1) {
+                el.className = 'game-module active';
+            } else {
+                el.className = `game-module mini-${miniIdx1}`;
+                miniIdx1++;
+            }
+        }
+    });
+
+    // Render Set B (Set 2)
+    const set2Games = ['game1', 'game2', 'game3'];
+    let miniIdx2 = 1;
+    set2Games.forEach(id => {
+        const el = document.getElementById(id + '_2-container');
+        if (el) {
+            el.removeAttribute('style');
+            if (id === activeGameSet2) {
+                el.className = 'game-module active';
+            } else {
+                el.className = `game-module mini-${miniIdx2}`;
+                miniIdx2++;
+            }
+        }
+    });
 }
 
 // ** Decoupled Engine States **
