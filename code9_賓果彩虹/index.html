@@ -86,37 +86,37 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> <!-- 結束 區域 A (.left-panel) 框線 -->
                 
-                <!-- 預先規劃與固定高度之 JP 小遊戲區域 (永遠保留於區域 A 底部，防跑版) -->
-                <div id="mini-game-panel" class="mini-game-panel" style="background: rgba(0,0,0,0.4); padding: 10px 12px; border-radius: 12px; border: 1px solid #334155; min-height: 140px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease;">
-                    <div id="mg-idle-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #64748b;">
-                        <span style="font-size: 0.95rem; font-weight: bold; color: #94a3b8;">✨ JP 遊戲 (預留區) ✨</span>
-                        <span style="font-size: 0.75rem; color: #64748b;">蒐集 7 顆蘋果即可觸發</span>
+                <!-- JP 小遊戲獨立框架 (位在大轉盤框架/區域 A 下面) -->
+                <div id="mini-game-panel" class="mini-game-panel" style="background: #1e293b; padding: 6px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.3); min-height: 115px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease;">
+                    <div id="mg-idle-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #64748b;">
+                        <span style="font-size: 0.85rem; font-weight: bold; color: #94a3b8;">✨ JP 遊戲 (預留區) ✨</span>
+                        <span style="font-size: 0.7rem; color: #64748b;">蒐集 7 顆蘋果即可觸發</span>
                     </div>
 
                     <div id="mg-active-view" class="hidden">
-                        <h3 style="color: #4ade80; text-align: center; margin-bottom: 6px; text-shadow: 0 0 5px #4ade80; font-size: 1rem;">✨ JP 遊戲 (剩 <span id="mg-rounds-left">3</span> 局) ✨<br><span style="font-size: 0.85rem; color: #facc15; text-shadow: none;">JP獎金: <span id="mg-jp-amount">0</span></span></h3>
+                        <h3 style="color: #4ade80; text-align: center; margin-bottom: 4px; text-shadow: 0 0 5px #4ade80; font-size: 0.9rem;">✨ JP 遊戲 (剩 <span id="mg-rounds-left">3</span> 局) ✨<br><span style="font-size: 0.8rem; color: #facc15; text-shadow: none;">JP獎金: <span id="mg-jp-amount">0</span></span></h3>
                         
                         <!-- 顏色步數提示板 -->
-                        <div id="mg-color-rules" style="display: flex; justify-content: space-around; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 6px; margin-bottom: 18px; font-weight: bold; font-size: 0.8rem;">
+                        <div id="mg-color-rules" style="display: flex; justify-content: space-around; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 6px; margin-bottom: 14px; font-weight: bold; font-size: 0.75rem;">
                             <!-- JS 動態填入 -->
                         </div>
                         
                         <!-- 長條圖軌道 -->
-                        <div class="mg-track-container" style="position: relative; width: 100%; height: 22px; background: #111; border-radius: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); border: 2px solid #333;">
+                        <div class="mg-track-container" style="position: relative; width: 100%; height: 20px; background: #111; border-radius: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); border: 2px solid #333;">
                             <!-- 填滿進度條 -->
                             <div id="mg-progress-fill" style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #16a34a, #4ade80); border-radius: 15px; transition: width 0.5s ease-out;"></div>
                             
                             <!-- 站點標記 -->
                             <div class="mg-stations" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;">
                                 <!-- Island Labels -->
-                                <div id="mg-label-0" class="mg-station" style="left: 0%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">0島</div>
-                                <div id="mg-label-1" class="mg-station clickable-station" data-station="20" style="left: 14.28%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.8rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">20島</div>
-                                <div id="mg-label-2" class="mg-station clickable-station" data-station="50" style="left: 35.71%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.8rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">50島</div>
-                                <div id="mg-label-3" class="mg-station clickable-station" data-station="90" style="left: 64.28%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.8rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">90島</div>
-                                <div id="mg-label-extra" class="mg-station clickable-station hidden" data-station="260" style="left: 80%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.8rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">260島</div>
-                                <div id="mg-label-4" class="mg-station" style="left: 100%; position: absolute; top: 100%; transform: translateX(-100%); font-size: 0.75rem; color: #facc15; margin-top: 2px; font-weight: bold; white-space: nowrap; padding-right: 2px;">140島</div>
+                                <div id="mg-label-0" class="mg-station" style="left: 0%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">0島</div>
+                                <div id="mg-label-1" class="mg-station clickable-station" data-station="20" style="left: 14.28%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">20島</div>
+                                <div id="mg-label-2" class="mg-station clickable-station" data-station="50" style="left: 35.71%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">50島</div>
+                                <div id="mg-label-3" class="mg-station clickable-station" data-station="90" style="left: 64.28%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">90島</div>
+                                <div id="mg-label-extra" class="mg-station clickable-station hidden" data-station="260" style="left: 80%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">260島</div>
+                                <div id="mg-label-4" class="mg-station" style="left: 100%; position: absolute; top: 100%; transform: translateX(-100%); font-size: 0.7rem; color: #facc15; margin-top: 2px; font-weight: bold; white-space: nowrap; padding-right: 2px;">140島</div>
                                 
                                 <!-- 垂直標記線 -->
                                 <div id="mg-marker-0" style="position: absolute; left: 0%; height: 100%; width: 4px; background: rgba(255,255,255,0.6); transform: translateX(-50%); pointer-events: none;"></div>
@@ -138,7 +138,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> <!-- 結束 .left-column-area -->
 
                 </div>
 
