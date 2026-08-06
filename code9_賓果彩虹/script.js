@@ -118,6 +118,9 @@ function toggleGameMode() {
 }
 
 function updateModeUI() {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
     const wrapper = document.querySelector('.app-wrapper');
     const modeBtn = document.getElementById('btn-switch-mode');
     
@@ -132,6 +135,7 @@ function updateModeUI() {
         }
     }
     renderGameModulesLayout();
+    window.scrollTo(0, 0);
 }
 
 function switchActiveGame(targetId, setNum = 1) {
