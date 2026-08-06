@@ -69,15 +69,20 @@ html, body {
     height: 100%;
     overflow: hidden;
     margin-top: -35px !important; /* 整個遊戲框架往上移動約一個洗分按鈕的高度 */
+    position: relative;
+    z-index: 10;
 }
 
-/* 頂部資訊列 */
+/* 頂部資訊列 (最上方 LOGO 賓果彩虹字樣欄位) */
 .top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.8rem;
-    padding-bottom: 0.5rem;
+    position: relative;
+    z-index: 500;
+    margin-top: 0 !important;
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.3rem;
     border-bottom: 2px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -259,6 +264,9 @@ html, body {
     position: relative;
     width: 250px;
     height: 250px;
+    transform: scale(0.5); /* 縮小到目前的 1/2，完整顯示大轉盤全貌不被切掉下半部 */
+    transform-origin: top center;
+    margin-bottom: -120px; /* 補償 50% 縮放產生的下方空白區域 */
 }
 
 .sp-flash-bg {
