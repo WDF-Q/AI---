@@ -392,7 +392,7 @@ html, body {
     gap: 15px;
 }
 
-/* 左側整體直直欄位 (靠左貼齊，零多餘留白) */
+/* 左側區域 A (大轉盤整個框架)：往左移動 2/3 區域 A 寬度，區域 B、C、D 保持原位不動 */
 .left-column-area {
     display: flex;
     flex-direction: column;
@@ -401,7 +401,8 @@ html, body {
     flex-shrink: 0;
     position: relative;
     z-index: 100;
-    margin-left: 0 !important;
+    transform: translateX(-66.66%); /* 往左移動 2/3 區域 A 寬度 (-170px) */
+    margin-right: -170px; /* 確保右側區域 B、C、D 保持原位完全不動 */
 }
 
 /* 左側大轉盤主框架 (獨立深色卡片框) */
