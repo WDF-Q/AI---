@@ -1380,8 +1380,12 @@ html, body {
     filter: grayscale(100%);
 }
 
-/* Mini Game UI */
+/* Mini Game UI (獨立卡片：寬度 100% 對齊區域 A 左右邊框) */
 .mini-game-panel {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     transition: opacity 0.5s ease;
 }
 .mini-game-panel.hidden {
