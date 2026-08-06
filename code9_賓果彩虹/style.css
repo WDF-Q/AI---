@@ -420,30 +420,32 @@ html, body {
     gap: 15px;
 }
 
-/* 左側區域 A (大轉盤整個框架)：縮小為 0.7 倍 (原 220px × 0.7 = 155px) */
+/* 左側區域 A 欄位 (縮小為 0.7 倍 155px 寬) */
 .left-column-area {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    justify-content: space-between;
+    gap: 10px;
     width: 155px;
-    height: 440px;
+    height: 395px;
     flex-shrink: 0;
     position: relative;
     z-index: 100;
     margin-left: 0 !important;
 }
 
-/* 左側大轉盤主框架 */
+/* 左側大轉盤主框架 (區域 A：僅包含狀態與大轉盤，框線在大轉盤下方乾淨封口) */
 .left-panel {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.3rem;
     width: 100%;
-    height: 100%;
+    height: auto !important; /* 框線在大轉盤下方乾淨封口，不包覆 JP 小遊戲 */
+    flex: none !important;
     background: #1e293b;
-    padding: 4px;
+    padding: 6px;
     border-radius: 12px;
     border: 1px solid #334155;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
