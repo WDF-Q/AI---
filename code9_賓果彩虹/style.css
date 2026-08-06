@@ -411,12 +411,12 @@ html, body {
     gap: 15px;
 }
 
-/* 左側區域 A (大轉盤整個框架)：寬度 220px，高度 440px 緊湊縮放) */
+/* 左側區域 A (大轉盤整個框架)：縮小為 0.7 倍 (原 220px × 0.7 = 155px) */
 .left-column-area {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    width: 220px;
+    width: 155px;
     height: 440px;
     flex-shrink: 0;
     position: relative;
@@ -434,7 +434,7 @@ html, body {
     width: 100%;
     height: 100%;
     background: #1e293b;
-    padding: 6px;
+    padding: 4px;
     border-radius: 12px;
     border: 1px solid #334155;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -538,7 +538,7 @@ html, body {
     opacity: 0.85;
 }
 
-/* --- 模式 2 (2x3 豪華雙組模式: 總寬 1080px、總高 440px，100% 容納於 S10 Ultra 平板瀏覽器內，區域 C 與 區域 E 零遮擋) --- */
+/* --- 模式 2 (2x3 豪華雙組模式: 區域 D 垂直直向排列 1 欄 4 個備用遊戲: Set 1 的 2 個在上、Set 2 的 2 個在下) --- */
 .mode-2 .games-area-container {
     display: flex;
     flex-direction: row;
@@ -567,9 +567,9 @@ html, body {
     box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
-/* 模式 2 Set A 的兩個備用遊戲 (區域 D 上半部) */
+/* 模式 2 Set A 的兩個備用遊戲：放在區域 D (中間垂直單欄) 的上半部 (第 1、2 個) */
 .mode-2 .set-box.set-a .game-module.mini-1 {
-    left: 385px;
+    left: 388px;
     top: 0px;
     transform: scale(0.14);
     z-index: 5;
@@ -579,8 +579,8 @@ html, body {
 }
 
 .mode-2 .set-box.set-a .game-module.mini-2 {
-    left: 472px;
-    top: 0px;
+    left: 388px;
+    top: 98px;
     transform: scale(0.14);
     z-index: 5;
     cursor: pointer;
@@ -588,14 +588,14 @@ html, body {
     opacity: 0.9;
 }
 
-/* 模式 2 主遊戲 Set B (區域 C：寬 380px，高 440px，100% 完整顯示於畫面右側，零遮擋) */
+/* 模式 2 主遊戲 Set B (區域 C：寬 380px，高 440px，空出中間單欄 95px 空間) */
 .mode-2 .set-box.set-b {
     display: block !important;
     position: relative;
     width: 380px;
     height: 440px;
     flex-shrink: 0;
-    margin-left: 175px;
+    margin-left: 95px;
     transition: all 0.3s ease;
 }
 
@@ -607,10 +607,10 @@ html, body {
     box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
-/* 模式 2 Set B 的兩個備用遊戲 (區域 D 下半部) */
+/* 模式 2 Set B 的兩個備用遊戲：放在區域 D (中間垂直單欄) 的下半部 (第 3、4 個) */
 .mode-2 .set-box.set-b .game-module.mini-1 {
-    left: -170px;
-    top: 100px;
+    left: -87px;
+    top: 196px;
     transform: scale(0.14);
     z-index: 5;
     cursor: pointer;
@@ -619,8 +619,8 @@ html, body {
 }
 
 .mode-2 .set-box.set-b .game-module.mini-2 {
-    left: -83px;
-    top: 100px;
+    left: -87px;
+    top: 294px;
     transform: scale(0.14);
     z-index: 5;
     cursor: pointer;
