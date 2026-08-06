@@ -468,14 +468,15 @@ html, body {
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    width: auto;
+    width: auto !important;
+    flex-shrink: 0 !important;
     background: #1e293b;
-    padding: 6px 12px;
+    padding: 6px 14px !important;
     border-radius: 12px;
     border: 1px solid #334155;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    box-sizing: border-box;
-    margin-left: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
 }
 
 .roulette-container {
