@@ -483,11 +483,15 @@ function updateAppleUI() {
 }
 
 function updateMiniGameUI() {
+    let idleView = document.getElementById('mg-idle-view');
+    let activeView = document.getElementById('mg-active-view');
     if (appleBonusRoundsLeft <= 0) {
-        DOM.miniGamePanel.classList.add('hidden');
+        if (idleView) idleView.classList.remove('hidden');
+        if (activeView) activeView.classList.add('hidden');
         return;
     }
-    DOM.miniGamePanel.classList.remove('hidden');
+    if (idleView) idleView.classList.add('hidden');
+    if (activeView) activeView.classList.remove('hidden');
     DOM.mgRoundsLeft.textContent = appleBonusRoundsLeft;
     
     let amountEl = document.getElementById('mg-jp-amount');
