@@ -453,20 +453,20 @@ html, body {
     overflow: hidden;
 }
 
-/* 底部按鈕獨立框架 (區域 E：獨立框架卡片，與右側顏色球累計框間隔 30px = 1/2 續押按鈕寬度) */
+/* 底部按鈕與累計框 (區域 E：左側顏色球累計框，右側按鈕框架儘量靠右貼底) */
 .bottom-hud-area {
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    justify-content: space-between;
+    align-items: flex-end;
     width: 100%;
-    margin-top: 6px;
-    gap: 30px !important; /* 間隔約 1/2 續押按鈕寬度 */
+    margin-top: auto !important;
+    padding-bottom: 0px;
 }
 
 .left-controls-box {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: flex-end;
     gap: 8px;
     width: auto !important;
     flex-shrink: 0 !important;
@@ -477,6 +477,8 @@ html, body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     box-sizing: border-box !important;
     overflow: hidden;
+    margin-left: auto !important; /* 盡量靠右 */
+    margin-bottom: 0 !important; /* 盡量貼底 */
 }
 
 .roulette-container {

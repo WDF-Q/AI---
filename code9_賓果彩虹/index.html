@@ -927,16 +927,9 @@
                 </div>
             </div>
 
-            <!-- 底部控制與累計顏色球區 (按鈕框獨立卡片與右側累計框間隔 30px) -->
+            <!-- 底部控制與累計顏色球區 (位置互換：左側顏色球累計框，右側按鈕獨立卡片儘量靠右貼底) -->
             <div class="bottom-hud-area">
-                <!-- 左側控制按鈕獨立框架 (100% 完整容納開始遊戲按鈕，零溢出超出) -->
-                <div class="left-controls-box">
-                    <button id="btn-cycle-bet" class="chip-btn" style="padding: 5px 8px; font-size: 0.85rem; height: 36px; border-radius: 6px; border: 1px solid #64748b; background: #334155; white-space: nowrap;">切換加分(+1)</button>
-                    <button id="btn-repeat-bet" class="chip-btn" style="background: #0ea5e9; color: #fff; font-weight: bold; padding: 5px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #0284c7; white-space: nowrap; font-size: 0.95rem; height: 36px;">續押</button>
-                    <button id="btn-start" class="btn-start" style="padding: 5px 12px; font-size: 0.95rem; height: 36px; white-space: nowrap;">🚀 開始遊戲</button>
-                </div>
-
-                <!-- 右側全域 COUNT 與顏色球累計框 -->
+                <!-- 左側：全域 COUNT 與顏色球累計框 -->
                 <div class="global-hud-container" style="display: flex; align-items: center; gap: 12px; background: rgba(15, 23, 42, 0.85); padding: 6px 14px; border-radius: 12px; border: 1px solid #334155;">
                     <!-- COUNT block -->
                     <div class="hud-count-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-right: 10px; border-right: 1px solid #334155;">
@@ -967,6 +960,13 @@
                             <div class="track-square rainbow-block"><span id="track-rainbow" class="track-count">0</span></div>
                         </div>
                     </div>
+                </div>
+
+                <!-- 右側：控制按鈕獨立框架 (互換位置後：盡量靠右、盡量貼底) -->
+                <div class="left-controls-box">
+                    <button id="btn-cycle-bet" class="chip-btn" style="padding: 5px 8px; font-size: 0.85rem; height: 36px; border-radius: 6px; border: 1px solid #64748b; background: #334155; white-space: nowrap;">切換加分(+1)</button>
+                    <button id="btn-repeat-bet" class="chip-btn" style="background: #0ea5e9; color: #fff; font-weight: bold; padding: 5px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #0284c7; white-space: nowrap; font-size: 0.95rem; height: 36px;">續押</button>
+                    <button id="btn-start" class="btn-start" style="padding: 5px 12px; font-size: 0.95rem; height: 36px; white-space: nowrap;">🚀 開始遊戲</button>
                 </div>
             </div>
                 </div>
