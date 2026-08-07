@@ -483,11 +483,11 @@ html, body {
     overflow: hidden;
 }
 
-/* 模式 2 (2x3 雙組模式) 幾何對齊設定：按鈕卡片在右對齊二次 1.1倍區域 C (1184px)，累計框卡片在左對齊二次 1.1倍區域 B (685px) */
+/* 模式 2 (2x3 雙組模式) 幾何對齊設定：按鈕卡片與累計框卡片整體向上移動一個「開」字高度 (20px)，消除底部邊界遮擋 */
 .mode-2 .left-controls-box {
     position: absolute !important;
     left: 1184px !important; /* 右邊線 100% 垂直對齊區域 C 右邊線 (1184px) */
-    top: 531px !important;   /* 底部 100% 水平對齊 1.2倍大轉盤後的 JP 小遊戲底部邊線 */
+    top: 511px !important;   /* 向上移動 20px (1個「開」字高度) */
     transform: translateX(-100%) !important;
     margin: 0 !important;
     z-index: 500;
@@ -496,7 +496,7 @@ html, body {
 .mode-2 .global-hud-container {
     position: absolute !important;
     left: 680px !important;  /* 右邊線 100% 垂直對齊區域 B 右邊線 (685px) */
-    top: 496px !important;   /* 底部 100% 水平對齊 1.2倍大轉盤後的 JP 小遊戲底部邊線 */
+    top: 476px !important;   /* 向上移動 20px (1個「開」字高度) */
     transform: translateX(-100%) !important;
     margin: 0 !important;
     z-index: 500;
@@ -506,7 +506,7 @@ html, body {
 .mode-1 .left-controls-box {
     position: absolute !important;
     left: 890px !important;
-    top: 531px !important;
+    top: 511px !important;
     transform: translateX(-100%) !important;
     margin: 0 !important;
     z-index: 500;
@@ -515,7 +515,7 @@ html, body {
 .mode-1 .global-hud-container {
     position: absolute !important;
     left: 620px !important;
-    top: 496px !important;
+    top: 476px !important;
     transform: translateX(-100%) !important;
     margin: 0 !important;
     z-index: 500;
