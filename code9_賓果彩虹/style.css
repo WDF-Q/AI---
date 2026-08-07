@@ -454,13 +454,13 @@ html, body {
 }
 
 /* 底部按鈕與累計框 (區域 E：精準對齊區域 B/C 右邊框線與 JP 小遊戲底邊) */
-.bottom-hud-area {
+.top-gameplay-area {
     position: relative;
     width: 100%;
-    height: 44px;
-    margin-top: -44px;
-    pointer-events: none;
-    z-index: 200;
+}
+
+.bottom-hud-area {
+    position: static;
 }
 
 .left-controls-box, .global-hud-container {
@@ -483,38 +483,42 @@ html, body {
     overflow: hidden;
 }
 
-/* 模式 2 (2x3 雙組模式) 幾何對齊設定 */
+/* 模式 2 (2x3 雙組模式) 幾何對齊設定：實測與區域 B/C 右邊線及 JP 小遊戲底邊 100% 齊平 (0px 誤差) */
 .mode-2 .left-controls-box {
-    position: absolute;
-    left: 515px; /* 右邊線對齊區域 B 右邊線 */
-    transform: translateX(-100%);
-    bottom: 0;   /* 底部對齊 JP 小遊戲底部邊線 */
+    position: absolute !important;
+    left: 620px !important; /* 右邊線 100% 垂直對齊區域 B 右邊線 (625px) */
+    top: 511px !important;  /* 底部 100% 水平對齊 JP 小遊戲底部邊線 (626px) */
+    transform: translateX(-100%) !important;
     margin: 0 !important;
+    z-index: 500;
 }
 
 .mode-2 .global-hud-container {
-    position: absolute;
-    left: 950px; /* 右邊線對齊區域 C 右邊線 */
-    transform: translateX(-100%);
-    bottom: 0;   /* 底部對齊 JP 小遊戲底部邊線 */
+    position: absolute !important;
+    left: 1063px !important; /* 右邊線 100% 垂直對齊區域 C 右邊線 (1063px) */
+    top: 476px !important;   /* 底部 100% 水平對齊 JP 小遊戲底部邊線 (626px) */
+    transform: translateX(-100%) !important;
     margin: 0 !important;
+    z-index: 500;
 }
 
 /* 模式 1 (1x3 單組模式) 幾何對齊設定 */
 .mode-1 .left-controls-box {
-    position: absolute;
-    left: 515px;
-    transform: translateX(-100%);
-    bottom: 0;
+    position: absolute !important;
+    left: 620px !important;
+    top: 511px !important;
+    transform: translateX(-100%) !important;
     margin: 0 !important;
+    z-index: 500;
 }
 
 .mode-1 .global-hud-container {
-    position: absolute;
-    left: 785px;
-    transform: translateX(-100%);
-    bottom: 0;
+    position: absolute !important;
+    left: 890px !important;
+    top: 476px !important;
+    transform: translateX(-100%) !important;
     margin: 0 !important;
+    z-index: 500;
 }
 
 .roulette-container {
