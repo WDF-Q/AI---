@@ -483,10 +483,10 @@ html, body {
     overflow: hidden;
 }
 
-/* 模式 2 (2x3 雙組模式) 幾何對齊設定：按鈕卡片在右對齊 1.1倍區域 C (1111px)，累計框卡片在左對齊 1.1倍區域 B (649px) */
+/* 模式 2 (2x3 雙組模式) 幾何對齊設定：按鈕卡片在右對齊二次 1.1倍區域 C (1184px)，累計框卡片在左對齊二次 1.1倍區域 B (685px) */
 .mode-2 .left-controls-box {
     position: absolute !important;
-    left: 1111px !important; /* 右邊線 100% 垂直對齊區域 C 右邊線 (1111px) */
+    left: 1184px !important; /* 右邊線 100% 垂直對齊區域 C 右邊線 (1184px) */
     top: 511px !important;   /* 底部 100% 水平對齊 JP 小遊戲底部邊線 */
     transform: translateX(-100%) !important;
     margin: 0 !important;
@@ -495,7 +495,7 @@ html, body {
 
 .mode-2 .global-hud-container {
     position: absolute !important;
-    left: 644px !important;  /* 右邊線 100% 垂直對齊區域 B 右邊線 (649px) */
+    left: 680px !important;  /* 右邊線 100% 垂直對齊區域 B 右邊線 (685px) */
     top: 476px !important;   /* 底部 100% 水平對齊 JP 小遊戲底部邊線 */
     transform: translateX(-100%) !important;
     margin: 0 !important;
@@ -612,11 +612,11 @@ html, body {
     width: 100%;
 }
 
-/* 模式 2 主遊戲 Set A (區域 B：寬 374px，高 416px [1.1倍高度往下延展]) */
+/* 模式 2 主遊戲 Set A (區域 B：寬 411px，高 458px [再放大 1.1倍高度往下延展]) */
 .mode-2 .set-box.set-a {
     position: relative;
-    width: 374px;
-    height: 416px;
+    width: 411px;
+    height: 458px;
     flex-shrink: 0;
     transition: all 0.3s ease;
 }
@@ -624,14 +624,14 @@ html, body {
 .mode-2 .set-box.set-a .game-module.active {
     left: 0;
     top: 0;
-    transform: scale(0.644); /* 1.1倍垂直與水平比例放大全貌 */
+    transform: scale(0.708); /* 再放大 1.1倍垂直與水平比例全貌 */
     z-index: 10;
     box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
 
 /* 模式 2 Set A 的兩個備用遊戲：放在區域 D (中間垂直單欄) 的上半部 (第 1、2 個) */
 .mode-2 .set-box.set-a .game-module.mini-1 {
-    left: 380px;
+    left: 418px;
     top: 0px;
     transform: scale(0.125);
     z-index: 5;
@@ -641,7 +641,7 @@ html, body {
 }
 
 .mode-2 .set-box.set-a .game-module.mini-2 {
-    left: 380px;
+    left: 418px;
     top: 88px;
     transform: scale(0.125);
     z-index: 5;
@@ -650,12 +650,12 @@ html, body {
     opacity: 0.9;
 }
 
-/* 模式 2 主遊戲 Set B (區域 C：寬 374px，高 416px [1.1倍高度往下延展]，空出中間單欄 85px 空間) */
+/* 模式 2 主遊戲 Set B (區域 C：寬 411px，高 458px [再放大 1.1倍高度往下延展]，空出中間單欄 85px 空間) */
 .mode-2 .set-box.set-b {
     display: block !important;
     position: relative;
-    width: 374px;
-    height: 416px;
+    width: 411px;
+    height: 458px;
     flex-shrink: 0;
     margin-left: 85px;
     transition: all 0.3s ease;
@@ -664,7 +664,7 @@ html, body {
 .mode-2 .set-box.set-b .game-module.active {
     left: 0;
     top: 0;
-    transform: scale(0.644); /* 1.1倍垂直與水平比例放大全貌 */
+    transform: scale(0.708); /* 再放大 1.1倍垂直與水平比例全貌 */
     z-index: 10;
     box-shadow: 0 0 25px rgba(0,0,0,0.6);
 }
