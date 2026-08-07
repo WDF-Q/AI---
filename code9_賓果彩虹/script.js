@@ -53,12 +53,18 @@ let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
 let game1Bet = 0;
+let game1_2Bet = 0;
 let game2Bet = 0;
+let game2_2Bet = 0;
 let game2LvMaxCombo = 0;
 let game3Bet = 0;
+let game3_2Bet = 0;
 let previousGame1Bet = 0;
+let previousGame1_2Bet = 0;
 let previousGame2Bet = 0;
+let previousGame2_2Bet = 0;
 let previousGame3Bet = 0;
+let previousGame3_2Bet = 0;
 
 let allClearBonusCount = 0;
 
@@ -321,55 +327,97 @@ DOM.btnCycleBet.addEventListener('click', () => {
 
 document.querySelectorAll('.btn-add-bet').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        let gameId = parseInt(e.currentTarget.getAttribute('data-game'));
+        let gameId = e.currentTarget.getAttribute('data-game');
         handleAddBet(gameId);
     });
 });
 
-function handleAddBet(gameId) {
+function handleAddBet(gameIdInput) {
     if (isPlaying) return;
     checkAndResetWinsBeforeNewBet();
     let inc = BET_INCREMENTS[currentIncrementIndex];
-    if (gameId === 1) {
+    let gId = String(gameIdInput);
+    
+    if (gId === '1') {
         if (game1Bet === 0) game1Bet = 600;
         else { game1Bet += inc; if(game1Bet > 3000) game1Bet = 3000; }
         document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
         updateLadderRewards(game1Bet);
-        generateBetApples(1);
-    } else if (gameId === 2) {
+        generateBetApples('1');
+    } else if (gId === '1_2') {
+        if (game1_2Bet === 0) game1_2Bet = 600;
+        else { game1_2Bet += inc; if(game1_2Bet > 3000) game1_2Bet = 3000; }
+        document.querySelectorAll('.bet-value[data-game="1_2"]').forEach(el => el.textContent = game1_2Bet);
+        if (typeof updateLadderRewards_2 === 'function') updateLadderRewards_2(game1_2Bet);
+        else updateLadderRewards(game1_2Bet);
+        generateBetApples('1_2');
+    } else if (gId === '2') {
         if (game2Bet === 0) game2Bet = 600;
         else { game2Bet += inc; if(game2Bet > 3000) game2Bet = 3000; }
         document.querySelectorAll('.bet-value[data-game="2"]').forEach(el => el.textContent = game2Bet);
-        generateBetApples(2);
+        generateBetApples('2');
         updateGame2OddsPanel();
-    } else if (gameId === 3) {
+    } else if (gId === '2_2') {
+        if (game2_2Bet === 0) game2_2Bet = 600;
+        else { game2_2Bet += inc; if(game2_2Bet > 3000) game2_2Bet = 3000; }
+        document.querySelectorAll('.bet-value[data-game="2_2"]').forEach(el => el.textContent = game2_2Bet);
+        generateBetApples('2_2');
+        if (typeof updateGame2_2OddsPanel === 'function') updateGame2_2OddsPanel();
+        else updateGame2OddsPanel();
+    } else if (gId === '3') {
         if (game3Bet === 0) game3Bet = 600;
         else { game3Bet += inc; if(game3Bet > 3000) game3Bet = 3000; }
         document.querySelectorAll('.bet-value[data-game="3"]').forEach(el => el.textContent = game3Bet);
-        generateBetApples(3);
+        generateBetApples('3');
+    } else if (gId === '3_2') {
+        if (game3_2Bet === 0) game3_2Bet = 600;
+        else { game3_2Bet += inc; if(game3_2Bet > 3000) game3_2Bet = 3000; }
+        document.querySelectorAll('.bet-value[data-game="3_2"]').forEach(el => el.textContent = game3_2Bet);
+        generateBetApples('3_2');
     }
 }
 
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
     checkAndResetWinsBeforeNewBet();
-    if (previousGame1Bet > 0 || previousGame2Bet > 0 || previousGame3Bet > 0) {
+    let hasPrev = (previousGame1Bet > 0 || previousGame2Bet > 0 || previousGame3Bet > 0 ||
+                   previousGame1_2Bet > 0 || previousGame2_2Bet > 0 || previousGame3_2Bet > 0);
+    if (hasPrev) {
         if (previousGame1Bet > 0) {
             game1Bet = previousGame1Bet;
             document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
             updateLadderRewards(game1Bet);
-            generateBetApples(1);
+            generateBetApples('1');
+        }
+        if (previousGame1_2Bet > 0) {
+            game1_2Bet = previousGame1_2Bet;
+            document.querySelectorAll('.bet-value[data-game="1_2"]').forEach(el => el.textContent = game1_2Bet);
+            if (typeof updateLadderRewards_2 === 'function') updateLadderRewards_2(game1_2Bet);
+            else updateLadderRewards(game1_2Bet);
+            generateBetApples('1_2');
         }
         if (previousGame2Bet > 0) {
             game2Bet = previousGame2Bet;
             document.querySelectorAll('.bet-value[data-game="2"]').forEach(el => el.textContent = game2Bet);
-            generateBetApples(2);
+            generateBetApples('2');
             updateGame2OddsPanel();
+        }
+        if (previousGame2_2Bet > 0) {
+            game2_2Bet = previousGame2_2Bet;
+            document.querySelectorAll('.bet-value[data-game="2_2"]').forEach(el => el.textContent = game2_2Bet);
+            generateBetApples('2_2');
+            if (typeof updateGame2_2OddsPanel === 'function') updateGame2_2OddsPanel();
+            else updateGame2OddsPanel();
         }
         if (previousGame3Bet > 0) {
             game3Bet = previousGame3Bet;
             document.querySelectorAll('.bet-value[data-game="3"]').forEach(el => el.textContent = game3Bet);
-            generateBetApples(3);
+            generateBetApples('3');
+        }
+        if (previousGame3_2Bet > 0) {
+            game3_2Bet = previousGame3_2Bet;
+            document.querySelectorAll('.bet-value[data-game="3_2"]').forEach(el => el.textContent = game3_2Bet);
+            generateBetApples('3_2');
         }
     } else {
         alert("沒有上一局的押分紀錄");
@@ -875,9 +923,13 @@ function getAppleType() {
 }
 
 let topApplesState = new Array(COLS).fill(null);
+let topApplesState_2 = new Array(COLS).fill(null);
 let game1PreApples = [];
+let game1_2PreApples = [];
 let game2PreApples = [];
+let game2_2PreApples = [];
 let game3PreApples = [];
+let game3_2PreApples = [];
 
 let game2AppleThresholds = [];
 
@@ -1009,12 +1061,20 @@ function getRainbowAppleSVGHtml(sizeRem = '1.8rem') {
     return `<div class="apple-item apple-rainbow" style="font-size: ${sizeRem}; margin: 0;">🍎</div>`;
 }
 
-function generateBetApples(gameId) {
-    let container = document.querySelector(`.bet-apple-slots[data-game="${gameId}"]`);
+function generateBetApples(gameIdInput) {
+    let gId = String(gameIdInput);
+    let container = document.querySelector(`.bet-apple-slots[data-game="${gId}"]`);
     if (!container) return;
     
-    let currentBet = gameId === 1 ? game1Bet : (gameId === 2 ? game2Bet : game3Bet);
-    let preGenerated = gameId === 1 ? game1PreApples : (gameId === 2 ? game2PreApples : game3PreApples);
+    let currentBet = 0;
+    let preGenerated = null;
+    
+    if (gId === '1') { currentBet = game1Bet; preGenerated = game1PreApples; }
+    else if (gId === '1_2') { currentBet = game1_2Bet; preGenerated = game1_2PreApples; }
+    else if (gId === '2') { currentBet = game2Bet; preGenerated = game2PreApples; }
+    else if (gId === '2_2') { currentBet = game2_2Bet; preGenerated = game2_2PreApples; }
+    else if (gId === '3') { currentBet = game3Bet; preGenerated = game3PreApples; }
+    else if (gId === '3_2') { currentBet = game3_2Bet; preGenerated = game3_2PreApples; }
 
     if (currentBet === 0) {
         if (gameId === 1) game1PreApples = [];
@@ -1095,7 +1155,8 @@ function generateBetApples(gameId) {
     });
 
     if (gameId === 1) {
-        spawnApples();
+        spawnApples('game1-container');
+        spawnApples('game1_2-container');
     } else if (gameId === 2) {
         generateGame2AppleThresholds();
     } else if (gameId === 3) {
@@ -2163,7 +2224,8 @@ function applyRainbowAppleToTargetGame(targetGame) {
     }
 
     if (targetGame === 1) {
-        spawnApples();
+        spawnApples('game1-container');
+        spawnApples('game1_2-container');
     } else if (targetGame === 2) {
         generateGame2AppleThresholds();
         window.g2RainbowAppleActive = true;
@@ -2220,18 +2282,22 @@ async function startGame() {
             updateMiniGameUI();
         }
         
-        if (game1Bet === 0 && game2Bet === 0 && game3Bet === 0) {
+        let totalBet = (game1Bet + game2Bet + game3Bet) + (game1_2Bet + game2_2Bet + game3_2Bet);
+        if (totalBet === 0) {
             alert("請先押分！");
             return;
         }
-        if (credit < (game1Bet + game2Bet + game3Bet)) {
+        if (credit < totalBet) {
             alert("餘額不足！");
             return;
         }
         previousGame1Bet = game1Bet;
         previousGame2Bet = game2Bet;
         previousGame3Bet = game3Bet;
-        credit -= (game1Bet + game2Bet + game3Bet);
+        previousGame1_2Bet = game1_2Bet;
+        previousGame2_2Bet = game2_2Bet;
+        previousGame3_2Bet = game3_2Bet;
+        credit -= totalBet;
         updateCreditDisplay();
         
         isPlaying = true;
@@ -2273,7 +2339,8 @@ async function startGame() {
         }
         
         initBoard();
-        spawnApples();
+        spawnApples('game1-container');
+        spawnApples('game1_2-container');
         
         // ** 商店 (Shop System) 重置 **
         shopTriggeredForBall = {};
@@ -3417,8 +3484,8 @@ async function finishGameOverSequence() {
     game3TrailingRainbows = 0;
     Game3Manager.updateHitTable();
     updateLadderRewards(0);
-    generateBetApples(1);
-    generateBetApples(3);
+    generateBetApples('1');
+    generateBetApples('3');
 }
 
 function sleep(ms) {
