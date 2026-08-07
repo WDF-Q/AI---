@@ -483,11 +483,11 @@ html, body {
     overflow: hidden;
 }
 
-/* 模式 2 (2x3 雙組模式) 幾何對齊設定：實測與區域 B/C 右邊線及 JP 小遊戲底邊 100% 齊平 (0px 誤差) */
+/* 模式 2 (2x3 雙組模式) 幾何對齊設定：互換位置 (按鈕卡片在左對齊區域 B，累計框卡片在右對齊區域 C) */
 .mode-2 .left-controls-box {
     position: absolute !important;
     left: 620px !important; /* 右邊線 100% 垂直對齊區域 B 右邊線 (625px) */
-    top: 511px !important;  /* 底部 100% 水平對齊 JP 小遊戲底部邊線 (626px) */
+    top: 511px !important;  /* 底部 100% 水平對齊 JP 小遊戲底部邊線 */
     transform: translateX(-100%) !important;
     margin: 0 !important;
     z-index: 500;
@@ -496,7 +496,7 @@ html, body {
 .mode-2 .global-hud-container {
     position: absolute !important;
     left: 1063px !important; /* 右邊線 100% 垂直對齊區域 C 右邊線 (1063px) */
-    top: 476px !important;   /* 底部 100% 水平對齊 JP 小遊戲底部邊線 (626px) */
+    top: 476px !important;   /* 底部 100% 水平對齊 JP 小遊戲底部邊線 */
     transform: translateX(-100%) !important;
     margin: 0 !important;
     z-index: 500;
@@ -505,7 +505,7 @@ html, body {
 /* 模式 1 (1x3 單組模式) 幾何對齊設定 */
 .mode-1 .left-controls-box {
     position: absolute !important;
-    left: 620px !important;
+    left: 625px !important;
     top: 511px !important;
     transform: translateX(-100%) !important;
     margin: 0 !important;
