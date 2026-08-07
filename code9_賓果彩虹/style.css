@@ -453,14 +453,18 @@ html, body {
     overflow: hidden;
 }
 
-/* 底部按鈕與累計框 (區域 E：左側顏色球累計框，右側按鈕框架儘量靠右貼底) */
+/* 底部按鈕與累計框 (區域 E：精準對齊區域 B/C 右邊框線與 JP 小遊戲底邊) */
 .bottom-hud-area {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+    position: relative;
     width: 100%;
-    margin-top: auto !important;
-    padding-bottom: 0px;
+    height: 44px;
+    margin-top: -44px;
+    pointer-events: none;
+    z-index: 200;
+}
+
+.left-controls-box, .global-hud-container {
+    pointer-events: auto;
 }
 
 .left-controls-box {
@@ -477,8 +481,40 @@ html, body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     box-sizing: border-box !important;
     overflow: hidden;
-    margin-left: auto !important; /* 盡量靠右 */
-    margin-bottom: 0 !important; /* 盡量貼底 */
+}
+
+/* 模式 2 (2x3 雙組模式) 幾何對齊設定 */
+.mode-2 .left-controls-box {
+    position: absolute;
+    left: 515px; /* 右邊線對齊區域 B 右邊線 */
+    transform: translateX(-100%);
+    bottom: 0;   /* 底部對齊 JP 小遊戲底部邊線 */
+    margin: 0 !important;
+}
+
+.mode-2 .global-hud-container {
+    position: absolute;
+    left: 950px; /* 右邊線對齊區域 C 右邊線 */
+    transform: translateX(-100%);
+    bottom: 0;   /* 底部對齊 JP 小遊戲底部邊線 */
+    margin: 0 !important;
+}
+
+/* 模式 1 (1x3 單組模式) 幾何對齊設定 */
+.mode-1 .left-controls-box {
+    position: absolute;
+    left: 515px;
+    transform: translateX(-100%);
+    bottom: 0;
+    margin: 0 !important;
+}
+
+.mode-1 .global-hud-container {
+    position: absolute;
+    left: 785px;
+    transform: translateX(-100%);
+    bottom: 0;
+    margin: 0 !important;
 }
 
 .roulette-container {
