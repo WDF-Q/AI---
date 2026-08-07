@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌈 賓果彩虹消消樂 - 同心輪盤版</title>
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&family=Noto+Sans+HK:wght@900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=93">
+<script>window.onerror = function(msg, url, line, col, error) { fetch('http://127.0.0.1:8001/error', {method:'POST', body: msg + ' at ' + line + ':' + col}); return false; };</script></head>
+<body>
+    <div class="app-wrapper">
+        <!-- 頂部資訊列 -->
+        <header class="top-bar">
+            <div class="title-section" style="display: flex; align-items: center; gap: 14px;">
+                <h1>🌈 <span style="font-size: 0.5em;">賓果彩虹</span></h1>
+                <!-- 開分、洗分與測試按鈕區 (靠左貼齊 Logo) -->
+                <div class="credit-admin-btns">
+                    <button id="btn-deposit-credit" class="admin-btn btn-deposit">💳 開分</button>
+                    <button id="btn-clear-credit" class="admin-btn btn-clear">🧹 洗分</button>
+                    <button id="btn-switch-mode" class="admin-btn btn-mode" style="background: linear-gradient(180deg, #8b5cf6, #6d28d9); color: #ffffff; border: 1.5px solid #a78bfa; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center;">🎮 模式：單主頁 (1x3)</button>
+                    <button id="btn-debug-apple" class="admin-btn btn-debug-item">🍎 +1 (測)</button>
+                    <button id="btn-debug-rainbow" class="admin-btn btn-debug-item">🌈 測試彩虹蘋果 (100%)</button>
+                </div>
+            </div>
+            <div class="info-section">
+                <div class="credit-box">
+                    <span>CREDIT (總餘額)</span>
+                    <span id="credit-display" class="value highlight">10000</span>
+                </div>
+                <div class="win-box">
+                    <span>WIN (贏分)</span>
+                    <span id="win-display" class="value win-highlight">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 遊戲主要區塊 -->
+        <main class="game-container">
+            <!-- TOP GAMEPLAY AREA (Left Panel + Set A Box + Set B Box) -->
+            <div class="top-gameplay-area">
+                <div class="left-column-area" style="display: flex; flex-direction: column; gap: 10px; width: 255px; flex-shrink: 0;">
+                    <div class="left-panel">
+                
+                <!-- 狀態顯示與發球指示 -->
+                <div class="status-panel">
+                    <h3>目前狀態</h3>
+                    <div id="draw-status" class="draw-status" style="margin-bottom: 10px; color: #fff; font-size: 1.1rem; font-weight: bold;">等待開始...</div>
+                    <div id="safe-indicator" class="safe-indicator">前 3 球安全保障！</div>
+                    
+                    <!-- 蘋果收集進度 -->
+                    <div class="apple-bonus-tracker" style="margin-top: 10px; display: flex; gap: 5px; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px;">
+                        <div style="font-size: 0.85rem; color: #cbd5e1; display: flex; flex-direction: column; align-items: center; line-height: 1.2; font-weight: bold;">
+                            <span>蘋果</span>
+                            <span>進度</span>
+                        </div>
+                        <div id="apple-icons" style="display: flex; gap: 0px;">
+                            <span class="apple-icon dim">🍎</span>
+                            <span class="apple-icon dim">🍎</span>
+                            <span class="apple-icon dim">🍎</span>
+                            <span class="apple-icon dim">🍎</span>
+                            <span class="apple-icon dim">🍎</span>
+                            <span class="apple-icon dim">🍎</span>
+                            <span class="apple-icon dim">🍎</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roulette-wrapper-horizontal" style="display: flex; flex-direction: row; align-items: stretch; gap: 10px; margin-bottom: 10px;">
+                    <!-- 炫酷大轉盤 -->
+                    <div class="roulette-container" style="margin-bottom: 0;">
+                        <!-- 即時訊息欄位：置於大轉盤上方 (取消原 WAIT 欄位) -->
+                        <div class="roulette-result-box" id="roulette-result-box" style="margin-bottom: 8px; font-weight: bold; background: rgba(15, 23, 42, 0.9); padding: 4px 10px; border-radius: 8px; border: 1px solid #334155; text-align: center; color: #facc15; font-size: 0.95rem; width: 100%; box-sizing: border-radius;">
+                            進洞顏色：<span id="roulette-result-text" style="color: #fff;">等待發球</span>
+                        </div>
+                        <div id="jp-roulette-notice" class="hidden">進入JP轉盤遊戲</div>
+                        <div id="jp-roulette-jackpot" class="hidden">JACKPOT</div>
+                        <div class="roulette-wheel-wrapper">
+                            <!-- 閃爍背景 -->
+                            <div class="sp-flash-bg"></div>
+                            <!-- 外圈大轉盤 -->
+                            <div class="roulette-wheel-outer" id="roulette-wheel-outer"></div>
+                            <!-- 內圈小轉盤 -->
+                            <div class="roulette-wheel-inner" id="roulette-wheel-inner">
+                                <div class="inner-borders"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- 結束 區域 A (.left-panel) 框線 -->
+                
+                <!-- JP 小遊戲獨立框架 (位在大轉盤框架/區域 A 正下方，左右邊框 100% 對齊區域 A 邊框) -->
+                <div id="mini-game-panel" class="mini-game-panel" style="width: 100%; box-sizing: border-box; background: #1e293b; padding: 6px 4px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 15px rgba(0,0,0,0.3); min-height: 115px; display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease;">
+                    <div id="mg-idle-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #64748b;">
+                        <span style="font-size: 0.85rem; font-weight: bold; color: #94a3b8;">✨ JP 遊戲 (預留區) ✨</span>
+                        <span style="font-size: 0.7rem; color: #64748b;">蒐集 7 顆蘋果即可觸發</span>
+                    </div>
+
+                    <div id="mg-active-view" class="hidden">
+                        <h3 style="color: #4ade80; text-align: center; margin-bottom: 4px; text-shadow: 0 0 5px #4ade80; font-size: 0.9rem;">✨ JP 遊戲 (剩 <span id="mg-rounds-left">3</span> 局) ✨<br><span style="font-size: 0.8rem; color: #facc15; text-shadow: none;">JP獎金: <span id="mg-jp-amount">0</span></span></h3>
+                        
+                        <!-- 顏色步數提示板 -->
+                        <div id="mg-color-rules" style="display: flex; justify-content: space-around; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 6px; margin-bottom: 14px; font-weight: bold; font-size: 0.75rem;">
+                            <!-- JS 動態填入 -->
+                        </div>
+                        
+                        <!-- 長條圖軌道 -->
+                        <div class="mg-track-container" style="position: relative; width: 100%; height: 20px; background: #111; border-radius: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); border: 2px solid #333;">
+                            <!-- 填滿進度條 -->
+                            <div id="mg-progress-fill" style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #16a34a, #4ade80); border-radius: 15px; transition: width 0.5s ease-out;"></div>
+                            
+                            <!-- 站點標記 -->
+                            <div class="mg-stations" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0;">
+                                <!-- Island Labels -->
+                                <div id="mg-label-0" class="mg-station" style="left: 0%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">0島</div>
+                                <div id="mg-label-1" class="mg-station clickable-station" data-station="20" style="left: 14.28%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">20島</div>
+                                <div id="mg-label-2" class="mg-station clickable-station" data-station="50" style="left: 35.71%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">50島</div>
+                                <div id="mg-label-3" class="mg-station clickable-station" data-station="90" style="left: 64.28%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">90島</div>
+                                <div id="mg-label-extra" class="mg-station clickable-station hidden" data-station="260" style="left: 80%; position: absolute; top: 100%; transform: translateX(-50%); font-size: 0.75rem; color: #94a3b8; margin-top: 2px; cursor: pointer; font-weight: bold;">260島</div>
+                                <div id="mg-label-4" class="mg-station" style="left: 100%; position: absolute; top: 100%; transform: translateX(-100%); font-size: 0.7rem; color: #facc15; margin-top: 2px; font-weight: bold; white-space: nowrap; padding-right: 2px;">140島</div>
+                                
+                                <!-- 垂直標記線 -->
+                                <div id="mg-marker-0" style="position: absolute; left: 0%; height: 100%; width: 4px; background: rgba(255,255,255,0.6); transform: translateX(-50%); pointer-events: none;"></div>
+                                <div id="mg-marker-1" class="clickable-station" data-station="20" style="position: absolute; left: 14.28%; height: 100%; width: 12px; background: rgba(255,255,255,0.8); transform: translateX(-50%); cursor: pointer; border-radius: 4px; border: 1px solid #333;"></div>
+                                <div id="mg-marker-2" class="clickable-station" data-station="50" style="position: absolute; left: 35.71%; height: 100%; width: 12px; background: rgba(255,255,255,0.8); transform: translateX(-50%); cursor: pointer; border-radius: 4px; border: 1px solid #333;"></div>
+                                <div id="mg-marker-3" class="clickable-station" data-station="90" style="position: absolute; left: 64.28%; height: 100%; width: 12px; background: rgba(255,255,255,0.8); transform: translateX(-50%); cursor: pointer; border-radius: 4px; border: 1px solid #333;"></div>
+                                <div id="mg-marker-extra" class="clickable-station hidden" data-station="260" style="position: absolute; left: 80%; height: 100%; width: 12px; background: rgba(255,255,255,0.8); transform: translateX(-50%); cursor: pointer; border-radius: 4px; border: 1px solid #333;"></div>
+                                <div id="mg-marker-4" style="position: absolute; left: 100%; height: 100%; width: 12px; background: rgba(255,255,255,0.8); transform: translateX(-100%); border-radius: 4px; border: 1px solid #333; pointer-events: none;"></div>
+                                
+                                <!-- Tooltip container -->
+                                <div id="station-tooltip" style="position: absolute; top: -30px; z-index: 100; background: rgba(0,0,0,0.9); color: #facc15; padding: 2px 6px; border-radius: 6px; font-weight: bold; border: 1px solid #facc15; pointer-events: none; text-shadow: 1px 1px 2px #000; font-size: 0.85rem; white-space: nowrap; transform: translateX(-50%); transition: opacity 0.2s; opacity: 0;"></div>
+                            </div>
+                            
+                            <!-- 小狗公仔與步數計數器 -->
+                            <div id="mg-dog-container" style="position: absolute; top: -30px; left: 0%; transform: translateX(-50%); transition: left 0.5s linear; z-index: 10; display: flex; align-items: center; gap: 4px;">
+                                <div id="mg-dog-counter" style="background: rgba(0,0,0,0.7); color: #4ade80; padding: 1px 4px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; border: 1px solid #4ade80; text-shadow: none;">0</div>
+                                <div id="mg-dog" style="transform: scaleX(-1); font-size: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">🐕</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- 結束 .left-column-area -->
+
+                </div>
+
+
+
+
+                <!-- GAMES AREA CONTAINER -->
+                <div class="games-area-container" id="games-area-container">
+                    <!-- SET A BOX (第一組: 消消樂1-1, 九宮格2-1, 夾夾樂3-1) -->
+                    <div class="set-box set-a" id="set-a-box">
+                    <div class="game-module active" id="game1-container" onclick="switchActiveGame('game1')">
+                        <div class="board-with-ladder">
+                    <!-- 左側獎勵塔 -->
+                    <div class="left-ladder-col">
+                        <div class="all-clear-bonus-panel" style="text-align: center; margin-bottom: 0; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 12px; border: 2px solid #b8860b; box-shadow: 0 0 10px rgba(184, 134, 11, 0.5); box-sizing: border-box; width: 100%;">
+                            <div style="font-size: 1.1rem; font-weight: 900; margin-bottom: 5px; background: linear-gradient(180deg, #ffffcc 0%, #ffd700 25%, #ffb300 50%, #ff8f00 75%, #ffe066 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));">全消分數</div>
+                            <div id="all-clear-reward" class="chain-reward" style="font-size: 1.6rem; justify-content: center; text-align: center; width: 100%; margin: 0;">0</div>
+                        </div>
+                        
+                        <!-- 階梯獎勵 -->
+                        <div class="combo-ladder">
+                        <div class="ladder-step" data-chain="10">
+                            <div class="chain-label">
+                                <span class="chain-num">10</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-10">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="9">
+                            <div class="chain-label">
+                                <span class="chain-num">9</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-9">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="8">
+                            <div class="chain-label">
+                                <span class="chain-num">8</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-8">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="7">
+                            <div class="chain-label">
+                                <span class="chain-num">7</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-7">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="6">
+                            <div class="chain-label">
+                                <span class="chain-num">6</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-6">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="5">
+                            <div class="chain-label">
+                                <span class="chain-num">5</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-5">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="4">
+                            <div class="chain-label">
+                                <span class="chain-num">4</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-4">0</span>
+                        </div>
+                        <div class="ladder-title">連鎖獎勵塔</div>
+                    </div>
+                </div>
+
+                    <!-- 遊戲棋盤 -->
+                    <div class="board-wrapper">
+                        <div id="combo-overlay" class="combo-overlay"></div>
+                        <div id="out-overlay" class="out-overlay">OUT</div>
+                        <div class="win-drop-zone"></div>
+                        <div class="game-board-container">
+                            <!-- 鳥嘴與蘋果槽 (6格) -->
+                            <div class="bird-mouth-row" id="bird-mouth-row">
+                                <div class="bird-mouth-slot"><div id="bird-mouth" class="bird-mouth">SP光束</div></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                            </div>
+                            <div class="game-board" id="game-board">
+                                <div id="laser-beam" class="laser-beam hidden"></div>
+                                <div class="elimination-zone">消除觸發區域</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 底部區域 (置中對齊) -->
+                <div class="bottom-hud-container" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 12px;">
+                    <!-- NEW 3-Apple + Bet Area -->
+                    <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; position: relative;">
+                        <div class="bet-apple-slots" data-game="1" style="display: flex; gap: 3px; margin-right: 10px;">
+                            <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                            <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                            <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                        </div>
+                        <button class="chip-btn btn-add-bet" data-game="1" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                        <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                            <span class="bet-value" data-game="1" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                        </div>
+                        <div class="game-win-badge hidden" id="game1-win-badge" data-game="1">
+                            <span class="win-num" id="game1-win-text">0</span>
+                            <span class="win-lbl">WIN</span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- closes game1-container -->
+
+                <!-- 遊戲 2：連連樂 / 賓果連線 / 九宮格 -->
+                <div class="game-module mini" id="game2-container" onclick="switchActiveGame('game2')">
+                    <div id="game2-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); border: 4px solid #8b5cf6; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); padding: 8px 12px 12px 12px; box-sizing: border-box; justify-content: space-between; overflow: hidden;">
+                        
+                        <!-- 頂部與 HUD 區 (精簡高度，兩側欄位依據底邊 absolute bottom:0 精準對齊) -->
+                        <div style="display: flex; justify-content: center; align-items: flex-end; position: relative; width: 100%; z-index: 10; margin-top: 2px; padding-bottom: 0px;">
+                            <!-- 左上 HUD 區 (對齊備用棋盤底邊) -->
+                            <div style="position: absolute; left: 0; bottom: 0; min-width: 125px; display: flex; align-items: flex-end; justify-content: flex-start; z-index: 15;">
+                                <!-- 1) 無壓分時 (game2Bet === 0)：現在的 LINE 數 -->
+                                <div id="g2-line-count-hud" class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: center; min-width: 125px; transform: scale(0.95); transform-origin: bottom left;">
+                                    <div style="font-size: 0.85rem; font-weight: bold; color: #cbd5e1; border-bottom: 1.5px solid #64748b; padding-bottom: 3px; margin-bottom: 3px;">現在的LINE數</div>
+                                    <div style="display: flex; align-items: baseline; justify-content: center; gap: 5px;">
+                                        <span id="g2-line-count" style="font-size: 1.8rem; font-weight: 900; color: #f59e0b;">0</span>
+                                        <span style="font-size: 0.85rem; color: #94a3b8; font-weight: bold;">LINE</span>
+                                        <span id="g2-line-score" style="font-size: 1.8rem; font-weight: 900; color: #f97316; margin-left: 6px;">0</span>
+                                    </div>
+                                </div>
+
+                                <!-- 2) 有壓分時 (game2Bet > 0)：連連樂 BONUS 欄位 (對齊備用棋盤底邊) -->
+                                <div id="g2-bonus-panel" class="g2-bonus-box hidden" style="background: linear-gradient(180deg, #831843, #500724); border: 2.5px solid #ec4899; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.5), inset 0 0 10px rgba(0,0,0,0.8); text-align: center; min-width: 125px; transform: scale(1.02); transform-origin: bottom left;">
+                                    <div style="font-size: 0.85rem; font-weight: 900; color: #fef08a; text-shadow: 0 0 6px #ec4899, 1px 1px 0 #000; letter-spacing: 1px;">
+                                        連連樂<span style="color: #60a5fa; margin-left: 2px;">BONUS</span>
+                                    </div>
+                                    <div style="font-size: 1.15rem; font-weight: 900; color: #fde047; text-shadow: 1px 1px 0 #78350f; margin-top: -2px;">
+                                        30 <small style="font-size: 0.75rem; color: #fff;">LINE</small>
+                                    </div>
+                                    <div id="g2-bonus-amount" style="font-size: 1.7rem; font-weight: 900; color: #fef08a; text-shadow: 0 0 10px #f59e0b, 2px 2px 0 #000, -1px -1px 0 #000; line-height: 1; margin-top: 1px;">
+                                        18000
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (比例 1.0x 完美尺寸，為中央高度與底邊基準) -->
+                            <div class="g2-next-card-wrapper" style="position: relative; display: flex; flex-direction: column; align-items: center; z-index: 12; transform: scale(1.0); transform-origin: bottom center;">
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.76rem; font-weight: 900; padding: 2px 12px; border-radius: 6px 6px 0 0; border: 1.5px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEXT CARD</div>
+                                <div style="background: #0f172a; border: 2px solid #fde047; padding: 5px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
+                                    <div style="font-size: 0.85rem; color: #fde047; font-weight: 900; margin-bottom: 2px;">LV. <span id="g2-next-level">1</span></div>
+                                    <!-- 3x3 預覽 (完整 32px 邊長) -->
+                                    <div id="g2-next-grid" style="display: grid; grid-template-columns: repeat(3, 32px); gap: 2.5px;">
+                                        <div class="g2-mini-tile blue"></div>
+                                        <div class="g2-mini-tile yellow"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile green"></div>
+                                        <div class="g2-mini-tile blue"></div>
+                                        <div class="g2-mini-tile red"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile yellow"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右上 HUD: 蘋果門檻 (往左移動 34px / 約 1 個蘋果寬度，對齊備用棋盤底邊) -->
+                            <div style="position: absolute; right: 34px; bottom: 0; min-width: 115px; display: flex; align-items: flex-end; justify-content: flex-end; z-index: 15;">
+                                <div id="g2-apple-hud" class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 4px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: right; min-width: 115px; transform: scale(1.22); transform-origin: bottom right;">
+                                    <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">5 LINE <span style="font-size: 1.2rem;">🍏</span></div>
+                                    <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">4 LINE <span style="font-size: 1.2rem;">🍎</span></div>
+                                    <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15;">3 LINE <span style="font-size: 1.2rem;">🍏</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 中央：左側靠左對齊 ODDS 欄位 + 100% 左右置中 3x3 主卡區域 (緊湊 margin-top: 2px) -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2px; position: relative; width: 100%;">
+                            <!-- 左側靠左對齊：ODDS 賠率欄位 (靠左貼齊，與主棋盤保持適當空間，高度 368px) -->
+                            <div id="g2-odds-panel" class="hidden" style="position: absolute; left: 2px; bottom: 0; height: 368px; background: linear-gradient(180deg, #334155, #0f172a); border: 2.5px solid #64748b; border-radius: 12px; padding: 6px 5px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; width: 108px; box-sizing: border-box; z-index: 15;">
+                                <div style="font-size: 0.82rem; font-weight: 900; color: #f97316; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; border-bottom: 1.5px solid #475569; width: 100%; text-align: center; padding-bottom: 2px; margin-bottom: 4px;">
+                                    ODDS
+                                </div>
+                                <div id="g2-odds-list" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(100% - 24px); width: 100%;">
+                                    <div class="g2-odds-row" data-tier="8">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-8">20</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-8">3000</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="7">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-7">15</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-7">2100</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="6">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-6">10</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-6">1200</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="5">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-5">5</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-5">600</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="4">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-4">4</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-4">480</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="3">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-3">3</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-3">360</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="2">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-2">2</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-2">240</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="1">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-1">1</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-1">120</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 中央 100% 左右置中：3x3 主卡與石框 -->
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <!-- 當前等級 (含 LV MAX 連續消除 combo 浮動字框) -->
+                                <div style="font-size: 1.3rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 2px; z-index: 5; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <span>LV. <span id="g2-main-level" style="font-size: 1.8rem; color: #fff;">1</span></span>
+                                    <span id="g2-combo-badge" class="hidden" style="font-size: 1.05rem; font-weight: 900; color: #881337; background: linear-gradient(180deg, #fde047 0%, #f59e0b 100%); border: 2px solid #ffffff; border-radius: 20px; padding: 2px 10px; box-shadow: 0 0 12px #f43f5e, inset 0 0 6px #fff; text-shadow: 1px 1px 0 #fff; letter-spacing: 1px; font-family: 'Trebuchet MS', 'Impact', sans-serif;">combo 1</span>
+                                </div>
+
+                                <!-- 3x3 棋盤主體 -->
+                                <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4.5px solid #64748b; border-radius: 16px; padding: 9px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
+                                    <div id="g2-out-overlay" class="out-overlay">OUT</div>
+                                    <div id="g2-line-bars-container" style="position: absolute; top: 9px; left: 9px; width: 306px; height: 306px; pointer-events: none; z-index: 25; overflow: visible;"></div>
+                                    <svg id="g2-line-svg-overlay" viewBox="0 0 324 324" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; overflow: visible;">
+                                        <defs>
+                                            <linearGradient id="g2-line-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stop-color="#fef08a" />
+                                                <stop offset="50%" stop-color="#f59e0b" />
+                                                <stop offset="100%" stop-color="#ef4444" />
+                                            </linearGradient>
+                                        </defs>
+                                        <g id="g2-lines-group"></g>
+                                    </svg>
+                                    <div id="game2-grid" style="display: grid; grid-template-columns: repeat(3, 98px); grid-template-rows: repeat(3, 98px); gap: 6px;">
+                                        <!-- JS 動態生成 9 個方塊 -->
+                                    </div>
+
+                                    <!-- 當張棋盤連線即時獲得金額的拱型/橢圓勳章動畫 (字型變更為 Noto Sans HK Black / Times New Roman) -->
+                                    <div id="g2-card-win-overlay" class="hidden" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0); transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #ffffff 0%, #fffef0 60%, #fde047 100%); border: 6px solid #f59e0b; outline: 4px solid #78350f; border-radius: 50% / 45%; padding: 8px 25px; box-shadow: 0 0 45px rgba(253, 224, 71, 1), inset 0 0 25px #ffffff, 0 12px 35px rgba(0,0,0,0.9); text-align: center; min-width: 245px; max-width: 305px; box-sizing: border-box;">
+                                        <div id="g2-card-win-amount" style="font-size: 5.2rem; font-weight: 900; background: linear-gradient(180deg, #ffffff 0%, #fffef0 20%, #fef08a 45%, #fde047 75%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; -webkit-text-stroke: 2.8px #78350f; filter: drop-shadow(4px 4px 0px #78350f) drop-shadow(-2px -2px 0px #000000) drop-shadow(0 0 16px rgba(253, 224, 71, 1)); line-height: 0.92; letter-spacing: 1px; font-family: 'Noto Sans HK', 'Times New Roman', Times, serif;">120</div>
+                                        <div style="font-size: 2.8rem; font-weight: 900; background: linear-gradient(180deg, #ffffff 0%, #fef08a 40%, #fde047 80%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; -webkit-text-stroke: 1.8px #78350f; filter: drop-shadow(3px 3px 0px #78350f) drop-shadow(0 0 10px rgba(253, 224, 71, 0.9)); letter-spacing: 6px; margin-top: -4px; font-family: 'Noto Sans HK', 'Times New Roman', Times, serif;">WIN</div>
+                                    </div>
+                                </div>
+
+                                <!-- 底部卡號標籤 (字體大小縮小成 0.6倍 = 1.02rem) -->
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 1.02rem; font-weight: bold; padding: 2px 16px; border-radius: 12px; border: 1.5px solid #fde047; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+                                    <span id="g2-card-num-text">第 1 張</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 底部 BET 區域 -->
+                        <div class="new-bet-area" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-bottom: 2px; position: relative; width: max-content; align-self: center;">
+                            <div class="bet-apple-slots" data-game="2" style="display: flex; gap: 3px; margin-right: 10px;">
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                            </div>
+                            <button class="chip-btn btn-add-bet" data-game="2" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                            <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                                <span class="bet-value" data-game="2" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                            </div>
+                            <div class="game-win-badge hidden" id="game2-win-badge" data-game="2">
+                                <span class="win-num" id="game2-win-text">0</span>
+                                <span class="win-lbl">WIN</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 遊戲 3：夾夾樂 -->
+                <div class="game-module mini" id="game3-container" onclick="switchActiveGame('game3')">
+                    <!-- UI -->
+                    <div id="game3-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #0f172a; border: 4px solid #ef4444; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
+                        <div id="g3-out-overlay" class="out-overlay">OUT</div>
+                        <!-- 上方 9格區 -->
+                        <div id="game3-top-track" style="display: flex; justify-content: center; gap: 5px; padding: 10px; background: rgba(0,0,0,0.5); border-bottom: 2px solid #1e3a8a;">
+                            <div class="g3-slot empty"></div>
+                            <div class="g3-slot"></div><div class="g3-slot"></div><div class="g3-slot"></div>
+                            <div class="g3-slot"></div><div class="g3-slot"></div><div class="g3-slot"></div>
+                            <div class="g3-slot"></div>
+                            <div class="g3-slot fixed-50">x50</div>
+                        </div>
+                        
+                        <!-- 內容區 (左側 HIT, 中央視覺) -->
+                        <div style="display: flex; flex: 1;">
+                            <!-- 左側 8格 HIT 面板 -->
+                            <div style="width: 200px; padding: 10px; display: flex; flex-direction: column; gap: 5px;">
+                                <div class="g3-hit-header-wrapper" style="display: flex; align-items: center; gap: 8px;">
+                                    <div id="g3-hit-table-header" style="flex: 1; color: #fff; font-weight: bold; background: #ef4444; padding: 5px 12px; border-radius: 4px; display: flex; justify-content: space-between;">
+                                        <span>HIT</span>
+                                        <span>WIN</span>
+                                    </div>
+                                    <div style="width: 24px; height: 24px;"></div>
+                                </div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="8"><div id="g3-hit-8" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">8</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-8" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="7"><div id="g3-hit-7" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">7</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-7" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="6"><div id="g3-hit-6" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">6</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-6" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="5"><div id="g3-hit-5" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">5</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-5" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="4"><div id="g3-hit-4" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">4</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-4" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="3"><div id="g3-hit-3" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">3</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-3" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="2"><div id="g3-hit-2" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">2</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-2" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="1"><div id="g3-hit-1" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">1</span><span class="hit-val">OPEN</span></div><div class="g3-apple-slot" id="g3-apple-slot-1" style="width: 24px; height: 24px;"></div></div>
+                            </div>
+                            <!-- 中央主視覺：海盜船、小猴子、鋼爪吊繩與海底寶箱 -->
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; padding: 10px 10px 5px 10px;">
+                                <!-- 頂部：海盜船 (往上移動0.5個船的高度) 與站在船頂的猴子 -->
+                                <div class="g3-ship-wrapper" style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 160px; height: 95px; margin-top: 30px;">
+                                    <!-- 猴子站在船頂/甲板 -->
+                                    <span class="g3-monkey-icon" style="font-size: 3rem; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); z-index: 12; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6)); animation: monkeyBounce 2s infinite ease-in-out; display: inline-block;">🐒</span>
+                                    <!-- 2倍大完整海盜船 -->
+                                    <span class="g3-ship-icon" style="font-size: 6.5rem; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.7)); transform: scaleX(-1); display: block; position: absolute; bottom: -5px;">🚢</span>
+                                </div>
+                                
+                                <!-- 中央：鋼爪與拉繩組件 (頂部跟隨海盜船向上調) -->
+                                <div class="g3-claw-assembly" id="g3-claw-assembly" style="position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 8; display: flex; flex-direction: column; align-items: center; width: 40px; pointer-events: none;">
+                                    <!-- 繩索 -->
+                                    <div class="g3-rope" id="g3-rope" style="width: 3px; height: 10px; background: repeating-linear-gradient(0deg, #f59e0b, #f59e0b 3px, #78350f 3px, #78350f 6px); box-shadow: 0 0 4px rgba(0,0,0,0.6);"></div>
+                                    <!-- 爪子 -->
+                                    <div class="g3-claw-head" id="g3-claw-head" style="font-size: 2.2rem; margin-top: -6px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">🏗️</div>
+                                </div>
+
+                                <!-- 底部：寶箱 (放大放大) 與滿溢金幣寶石 -->
+                                <div class="g3-treasure-wrapper" style="position: relative; z-index: 5; margin-top: auto; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.9)); animation: treasureGlow 2.5s infinite alternate; transform: scale(0.95); transform-origin: bottom center;">
+                                    <!-- 滿出來的金幣寶石 -->
+                                    <div style="font-size: 1.7rem; line-height: 1; margin-bottom: -16px; z-index: 3; text-shadow: 0 0 10px #f59e0b, 0 0 20px #ffd700; white-space: nowrap; transform: scale(1.1);">
+                                        👑💎🪙💰🪙💎✨
+                                    </div>
+                                    <!-- 開啟寶箱體 -->
+                                    <div style="position: relative; width: 90px; height: 50px; background: linear-gradient(180deg, #b45309 0%, #78350f 100%); border: 3.5px solid #facc15; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 6px 15px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2;">
+                                        <!-- 開啟的上蓋 -->
+                                        <div style="position: absolute; top: -14px; left: -4px; width: 98px; height: 20px; background: linear-gradient(180deg, #d97706, #b45309); border: 3px solid #facc15; border-radius: 10px 10px 0 0; transform-origin: top left; transform: rotate(-25deg); box-shadow: 0 -2px 6px rgba(0,0,0,0.5);">
+                                            <div style="width: 100%; height: 3px; background: #facc15; margin-top: 5px;"></div>
+                                        </div>
+                                        <!-- 鎖孔塊 -->
+                                        <div style="width: 16px; height: 18px; background: #facc15; border-radius: 4px; border: 2px solid #78350f; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                            <div style="width: 4px; height: 7px; background: #451a03; border-radius: 2px;"></div>
+                                        </div>
+                                        <div style="position: absolute; left: 6px; top: 0; bottom: 0; width: 7px; background: #facc15; border-left: 1px solid #78350f; border-right: 1px solid #78350f;"></div>
+                                        <div style="position: absolute; right: 6px; top: 0; bottom: 0; width: 7px; background: #facc15; border-left: 1px solid #78350f; border-right: 1px solid #78350f;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- 本次目標 -->
+                                <div id="g3-target-display" style="z-index: 10; margin-bottom: 6px; font-size: 1.15rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.75); padding: 4px 12px; border-radius: 20px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                                    本次的目標是 <span id="g3-target-color-name" style="color: #ef4444;">紅色</span>
+                                </div>
+                                
+                                <!-- 選色面板 -->
+                                <div id="g3-color-selector" style="z-index: 10; display: flex; gap: 5px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px; border: 1px solid #475569; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #94a3b8; font-size: 0.85rem; margin-right: 5px;">目標:</span>
+                                    <div class="color-btn red-btn active" data-color="red" style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
+                                    <div class="color-btn pink-btn" data-color="pink" style="width: 24px; height: 24px; border-radius: 50%; background: #ec4899; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn yellow-btn" data-color="yellow" style="width: 24px; height: 24px; border-radius: 50%; background: #eab308; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn green-btn" data-color="green" style="width: 24px; height: 24px; border-radius: 50%; background: #22c55e; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn blue-btn" data-color="blue" style="width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn white-btn" data-color="white" style="width: 24px; height: 24px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid transparent;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 遊戲 3 下方 Bet 控制框 (以 Game 3 最外層左右邊框為基準，100% 正中央置中) -->
+                        <div style="display: flex; justify-content: center; align-items: center; width: 100%; padding-bottom: 6px; z-index: 10; margin-top: 4px;">
+                            <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; position: relative;">
+                                <div class="bet-apple-slots" data-game="3" style="display: flex; gap: 3px; margin-right: 10px;">
+                                    <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                    <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                    <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                </div>
+                                <button class="chip-btn btn-add-bet" data-game="3" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                                <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                                    <span class="bet-value" data-game="3" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                                </div>
+                                <div class="game-win-badge hidden" id="game3-win-badge" data-game="3">
+                                    <span class="win-num" id="game3-win-text">0</span>
+                                    <span class="win-lbl">WIN</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- 結束 game3-container -->
+
+                    </div>
+
+                    <!-- SET B BOX (第二組: 消消樂1-2, 九宮格2-2, 夾夾樂3-2) -->
+                    <div class="set-box set-b" id="set-b-box">
+                    <div class="game-module active" id="game1_2-container" onclick="switchActiveGame('game1_2', 2)">
+                        <div class="board-with-ladder">
+                    <!-- 左側獎勵塔 -->
+                    <div class="left-ladder-col">
+                        <div class="all-clear-bonus-panel" style="text-align: center; margin-bottom: 0; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 12px; border: 2px solid #b8860b; box-shadow: 0 0 10px rgba(184, 134, 11, 0.5); box-sizing: border-box; width: 100%;">
+                            <div style="font-size: 1.1rem; font-weight: 900; margin-bottom: 5px; background: linear-gradient(180deg, #ffffcc 0%, #ffd700 25%, #ffb300 50%, #ff8f00 75%, #ffe066 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));">全消分數</div>
+                            <div id="all-clear-reward_2" class="chain-reward" style="font-size: 1.6rem; justify-content: center; text-align: center; width: 100%; margin: 0;">0</div>
+                        </div>
+                        
+                        <!-- 階梯獎勵 -->
+                        <div class="combo-ladder">
+                        <div class="ladder-step" data-chain="10">
+                            <div class="chain-label">
+                                <span class="chain-num">10</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-10">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="9">
+                            <div class="chain-label">
+                                <span class="chain-num">9</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-9">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="8">
+                            <div class="chain-label">
+                                <span class="chain-num">8</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-8">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="7">
+                            <div class="chain-label">
+                                <span class="chain-num">7</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-7">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="6">
+                            <div class="chain-label">
+                                <span class="chain-num">6</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-6">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="5">
+                            <div class="chain-label">
+                                <span class="chain-num">5</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-5">0</span>
+                        </div>
+                        <div class="ladder-step" data-chain="4">
+                            <div class="chain-label">
+                                <span class="chain-num">4</span>
+                                <span class="chain-text">連鎖</span>
+                            </div>
+                            <span class="chain-reward" id="reward-4">0</span>
+                        </div>
+                        <div class="ladder-title">連鎖獎勵塔</div>
+                    </div>
+                </div>
+
+                    <!-- 遊戲棋盤 -->
+                    <div class="board-wrapper">
+                        <div id="combo-overlay_2" class="combo-overlay"></div>
+                        <div id="out-overlay_2" class="out-overlay">OUT</div>
+                        <div class="win-drop-zone"></div>
+                        <div class="game-board-container">
+                            <!-- 鳥嘴與蘋果槽 (6格) -->
+                            <div class="bird-mouth-row" id="bird-mouth-row_2">
+                                <div class="bird-mouth-slot"><div id="bird-mouth_2" class="bird-mouth">SP光束</div></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                                <div class="bird-mouth-slot"></div>
+                            </div>
+                            <div class="game-board" id="game-board_2">
+                                <div id="laser-beam" class="laser-beam hidden"></div>
+                                <div class="elimination-zone">消除觸發區域</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 底部區域 (置中對齊) -->
+                <div class="bottom-hud-container" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 12px;">
+                    <!-- NEW 3-Apple + Bet Area -->
+                    <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; position: relative;">
+                        <div class="bet-apple-slots" data-game="1_2" style="display: flex; gap: 3px; margin-right: 10px;">
+                            <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                            <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                            <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                        </div>
+                        <button class="chip-btn btn-add-bet" data-game="1_2" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                        <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                            <span class="bet-value" data-game="1_2" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                        </div>
+                        <div class="game-win-badge hidden" id="game1_2-win-badge" data-game="1_2">
+                            <span class="win-num" id="game1_2-win-text">0</span>
+                            <span class="win-lbl">WIN</span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- closes game1-container -->
+
+                <!-- 遊戲 2：連連樂 / 賓果連線 / 九宮格 -->
+                <div class="game-module mini" id="game2_2-container" onclick="switchActiveGame('game2_2', 2)">
+                    <div id="game2-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%); border: 4px solid #8b5cf6; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); padding: 8px 12px 12px 12px; box-sizing: border-box; justify-content: space-between; overflow: hidden;">
+                        
+                        <!-- 頂部與 HUD 區 (精簡高度，兩側欄位依據底邊 absolute bottom:0 精準對齊) -->
+                        <div style="display: flex; justify-content: center; align-items: flex-end; position: relative; width: 100%; z-index: 10; margin-top: 2px; padding-bottom: 0px;">
+                            <!-- 左上 HUD 區 (對齊備用棋盤底邊) -->
+                            <div style="position: absolute; left: 0; bottom: 0; min-width: 125px; display: flex; align-items: flex-end; justify-content: flex-start; z-index: 15;">
+                                <!-- 1) 無壓分時 (game2Bet === 0)：現在的 LINE 數 -->
+                                <div id="g2-line-count-hud" class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: center; min-width: 125px; transform: scale(0.95); transform-origin: bottom left;">
+                                    <div style="font-size: 0.85rem; font-weight: bold; color: #cbd5e1; border-bottom: 1.5px solid #64748b; padding-bottom: 3px; margin-bottom: 3px;">現在的LINE數</div>
+                                    <div style="display: flex; align-items: baseline; justify-content: center; gap: 5px;">
+                                        <span id="g2_2-line-count" style="font-size: 1.8rem; font-weight: 900; color: #f59e0b;">0</span>
+                                        <span style="font-size: 0.85rem; color: #94a3b8; font-weight: bold;">LINE</span>
+                                        <span id="g2_2-line-score" style="font-size: 1.8rem; font-weight: 900; color: #f97316; margin-left: 6px;">0</span>
+                                    </div>
+                                </div>
+
+                                <!-- 2) 有壓分時 (game2Bet > 0)：連連樂 BONUS 欄位 (對齊備用棋盤底邊) -->
+                                <div id="g2-bonus-panel" class="g2-bonus-box hidden" style="background: linear-gradient(180deg, #831843, #500724); border: 2.5px solid #ec4899; border-radius: 12px; padding: 6px 14px; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.5), inset 0 0 10px rgba(0,0,0,0.8); text-align: center; min-width: 125px; transform: scale(1.02); transform-origin: bottom left;">
+                                    <div style="font-size: 0.85rem; font-weight: 900; color: #fef08a; text-shadow: 0 0 6px #ec4899, 1px 1px 0 #000; letter-spacing: 1px;">
+                                        連連樂<span style="color: #60a5fa; margin-left: 2px;">BONUS</span>
+                                    </div>
+                                    <div style="font-size: 1.15rem; font-weight: 900; color: #fde047; text-shadow: 1px 1px 0 #78350f; margin-top: -2px;">
+                                        30 <small style="font-size: 0.75rem; color: #fff;">LINE</small>
+                                    </div>
+                                    <div id="g2-bonus-amount" style="font-size: 1.7rem; font-weight: 900; color: #fef08a; text-shadow: 0 0 10px #f59e0b, 2px 2px 0 #000, -1px -1px 0 #000; line-height: 1; margin-top: 1px;">
+                                        18000
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 頂部中央：NEXT CARD 拱門預備盤 (比例 1.0x 完美尺寸，為中央高度與底邊基準) -->
+                            <div class="g2-next-card-wrapper" style="position: relative; display: flex; flex-direction: column; align-items: center; z-index: 12; transform: scale(1.0); transform-origin: bottom center;">
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 0.76rem; font-weight: 900; padding: 2px 12px; border-radius: 6px 6px 0 0; border: 1.5px solid #fde047; text-shadow: 1px 1px 2px #000; letter-spacing: 1px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEXT CARD</div>
+                                <div style="background: #0f172a; border: 2px solid #fde047; padding: 5px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center;">
+                                    <div style="font-size: 0.85rem; color: #fde047; font-weight: 900; margin-bottom: 2px;">LV. <span id="g2_2-next-level">1</span></div>
+                                    <!-- 3x3 預覽 (完整 32px 邊長) -->
+                                    <div id="g2_2-next-grid" style="display: grid; grid-template-columns: repeat(3, 32px); gap: 2.5px;">
+                                        <div class="g2-mini-tile blue"></div>
+                                        <div class="g2-mini-tile yellow"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile green"></div>
+                                        <div class="g2-mini-tile blue"></div>
+                                        <div class="g2-mini-tile red"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile pink"></div>
+                                        <div class="g2-mini-tile yellow"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右上 HUD: 蘋果門檻 (往左移動 34px / 約 1 個蘋果寬度，對齊備用棋盤底邊) -->
+                            <div style="position: absolute; right: 34px; bottom: 0; min-width: 115px; display: flex; align-items: flex-end; justify-content: flex-end; z-index: 15;">
+                                <div id="g2-apple-hud" class="g2-stone-hud" style="background: linear-gradient(180deg, #475569, #1e293b); border: 2.5px solid #94a3b8; border-radius: 12px; padding: 4px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); text-align: right; min-width: 115px; transform: scale(1.22); transform-origin: bottom right;">
+                                    <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">5 LINE <span style="font-size: 1.2rem;">🍏</span></div>
+                                    <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15; margin-bottom: 1px;">4 LINE <span style="font-size: 1.2rem;">🍎</span></div>
+                                    <div style="font-size: 1.02rem; color: #e2e8f0; font-weight: bold; line-height: 1.15;">3 LINE <span style="font-size: 1.2rem;">🍏</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 中央：左側靠左對齊 ODDS 欄位 + 100% 左右置中 3x3 主卡區域 (緊湊 margin-top: 2px) -->
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2px; position: relative; width: 100%;">
+                            <!-- 左側靠左對齊：ODDS 賠率欄位 (靠左貼齊，與主棋盤保持適當空間，高度 368px) -->
+                            <div id="g2-odds-panel" class="hidden" style="position: absolute; left: 2px; bottom: 0; height: 368px; background: linear-gradient(180deg, #334155, #0f172a); border: 2.5px solid #64748b; border-radius: 12px; padding: 6px 5px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; width: 108px; box-sizing: border-box; z-index: 15;">
+                                <div style="font-size: 0.82rem; font-weight: 900; color: #f97316; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; border-bottom: 1.5px solid #475569; width: 100%; text-align: center; padding-bottom: 2px; margin-bottom: 4px;">
+                                    ODDS
+                                </div>
+                                <div id="g2-odds-list" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(100% - 24px); width: 100%;">
+                                    <div class="g2-odds-row" data-tier="8">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-8">20</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-8">3000</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="7">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-7">15</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-7">2100</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="6">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-6">10</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-6">1200</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="5">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-5">5</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-5">600</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="4">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-4">4</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-4">480</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="3">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-3">3</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-3">360</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="2">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-2">2</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-2">240</span>
+                                    </div>
+                                    <div class="g2-odds-row" data-tier="1">
+                                        <div class="g2-odds-label"><span id="g2-odds-line-1">1</span><small>LINE</small></div>
+                                        <span class="g2-odds-val" id="g2-odds-val-1">120</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 中央 100% 左右置中：3x3 主卡與石框 -->
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <!-- 當前等級 (含 LV MAX 連續消除 combo 浮動字框) -->
+                                <div style="font-size: 1.3rem; font-weight: 900; color: #fde047; text-shadow: 0 0 10px rgba(250, 204, 21, 0.8), 2px 2px 0 #000; margin-bottom: 2px; z-index: 5; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <span>LV. <span id="g2_2-main-level" style="font-size: 1.8rem; color: #fff;">1</span></span>
+                                    <span id="g2-combo-badge" class="hidden" style="font-size: 1.05rem; font-weight: 900; color: #881337; background: linear-gradient(180deg, #fde047 0%, #f59e0b 100%); border: 2px solid #ffffff; border-radius: 20px; padding: 2px 10px; box-shadow: 0 0 12px #f43f5e, inset 0 0 6px #fff; text-shadow: 1px 1px 0 #fff; letter-spacing: 1px; font-family: 'Trebuchet MS', 'Impact', sans-serif;">combo 1</span>
+                                </div>
+
+                                <!-- 3x3 棋盤主體 -->
+                                <div class="g2-card-frame" style="background: linear-gradient(180deg, #334155, #0f172a); border: 4.5px solid #64748b; border-radius: 16px; padding: 9px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 8px 20px rgba(0,0,0,0.6); position: relative;">
+                                    <div id="g2-out-overlay" class="out-overlay">OUT</div>
+                                    <div id="g2_2-line-bars-container" style="position: absolute; top: 9px; left: 9px; width: 306px; height: 306px; pointer-events: none; z-index: 25; overflow: visible;"></div>
+                                    <svg id="g2-line-svg-overlay" viewBox="0 0 324 324" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; overflow: visible;">
+                                        <defs>
+                                            <linearGradient id="g2-line-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stop-color="#fef08a" />
+                                                <stop offset="50%" stop-color="#f59e0b" />
+                                                <stop offset="100%" stop-color="#ef4444" />
+                                            </linearGradient>
+                                        </defs>
+                                        <g id="g2_2-lines-group"></g>
+                                    </svg>
+                                    <div id="game2_2-grid" style="display: grid; grid-template-columns: repeat(3, 98px); grid-template-rows: repeat(3, 98px); gap: 6px;">
+                                        <!-- JS 動態生成 9 個方塊 -->
+                                    </div>
+
+                                    <!-- 當張棋盤連線即時獲得金額的拱型/橢圓勳章動畫 (字型變更為 Noto Sans HK Black / Times New Roman) -->
+                                    <div id="g2_2-card-win-overlay" class="hidden" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0); transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #ffffff 0%, #fffef0 60%, #fde047 100%); border: 6px solid #f59e0b; outline: 4px solid #78350f; border-radius: 50% / 45%; padding: 8px 25px; box-shadow: 0 0 45px rgba(253, 224, 71, 1), inset 0 0 25px #ffffff, 0 12px 35px rgba(0,0,0,0.9); text-align: center; min-width: 245px; max-width: 305px; box-sizing: border-box;">
+                                        <div id="g2_2-card-win-amount" style="font-size: 5.2rem; font-weight: 900; background: linear-gradient(180deg, #ffffff 0%, #fffef0 20%, #fef08a 45%, #fde047 75%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; -webkit-text-stroke: 2.8px #78350f; filter: drop-shadow(4px 4px 0px #78350f) drop-shadow(-2px -2px 0px #000000) drop-shadow(0 0 16px rgba(253, 224, 71, 1)); line-height: 0.92; letter-spacing: 1px; font-family: 'Noto Sans HK', 'Times New Roman', Times, serif;">120</div>
+                                        <div style="font-size: 2.8rem; font-weight: 900; background: linear-gradient(180deg, #ffffff 0%, #fef08a 40%, #fde047 80%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; -webkit-text-stroke: 1.8px #78350f; filter: drop-shadow(3px 3px 0px #78350f) drop-shadow(0 0 10px rgba(253, 224, 71, 0.9)); letter-spacing: 6px; margin-top: -4px; font-family: 'Noto Sans HK', 'Times New Roman', Times, serif;">WIN</div>
+                                    </div>
+                                </div>
+
+                                <!-- 底部卡號標籤 (字體大小縮小成 0.6倍 = 1.02rem) -->
+                                <div style="background: linear-gradient(180deg, #b45309, #78350f); color: #fef08a; font-size: 1.02rem; font-weight: bold; padding: 2px 16px; border-radius: 12px; border: 1.5px solid #fde047; margin-top: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+                                    <span id="g2_2-card-num-text">第 1 張</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 底部 BET 區域 -->
+                        <div class="new-bet-area" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; margin-bottom: 2px; position: relative; width: max-content; align-self: center;">
+                            <div class="bet-apple-slots" data-game="2_2" style="display: flex; gap: 3px; margin-right: 10px;">
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                            </div>
+                            <button class="chip-btn btn-add-bet" data-game="2_2" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                            <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                                <span class="bet-value" data-game="2_2" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                            </div>
+                            <div class="game-win-badge hidden" id="game2_2-win-badge" data-game="2_2">
+                                <span class="win-num" id="game2_2-win-text">0</span>
+                                <span class="win-lbl">WIN</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 遊戲 3：夾夾樂 -->
+                <div class="game-module mini" id="game3_2-container" onclick="switchActiveGame('game3_2', 2)">
+                    <!-- UI -->
+                    <div id="game3-inner" style="width: 100%; height: 100%; display: flex; flex-direction: column; background: #0f172a; border: 4px solid #ef4444; border-radius: 12px; position: relative; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
+                        <div id="g3-out-overlay" class="out-overlay">OUT</div>
+                        <!-- 上方 9格區 -->
+                        <div id="game3_2-top-track" style="display: flex; justify-content: center; gap: 5px; padding: 10px; background: rgba(0,0,0,0.5); border-bottom: 2px solid #1e3a8a;">
+                            <div class="g3-slot empty"></div>
+                            <div class="g3-slot"></div><div class="g3-slot"></div><div class="g3-slot"></div>
+                            <div class="g3-slot"></div><div class="g3-slot"></div><div class="g3-slot"></div>
+                            <div class="g3-slot"></div>
+                            <div class="g3-slot fixed-50">x50</div>
+                        </div>
+                        
+                        <!-- 內容區 (左側 HIT, 中央視覺) -->
+                        <div style="display: flex; flex: 1;">
+                            <!-- 左側 8格 HIT 面板 -->
+                            <div style="width: 200px; padding: 10px; display: flex; flex-direction: column; gap: 5px;">
+                                <div class="g3-hit-header-wrapper" style="display: flex; align-items: center; gap: 8px;">
+                                    <div id="g3-hit-table-header" style="flex: 1; color: #fff; font-weight: bold; background: #ef4444; padding: 5px 12px; border-radius: 4px; display: flex; justify-content: space-between;">
+                                        <span>HIT</span>
+                                        <span>WIN</span>
+                                    </div>
+                                    <div style="width: 24px; height: 24px;"></div>
+                                </div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="8"><div id="g3-hit-8" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">8</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-8" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="7"><div id="g3-hit-7" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">7</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-7" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="6"><div id="g3-hit-6" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">6</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-6" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="5"><div id="g3-hit-5" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">5</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-5" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="4"><div id="g3-hit-4" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">4</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-4" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="3"><div id="g3-hit-3" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">3</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-3" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="2"><div id="g3-hit-2" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">2</span><span class="hit-val">0</span></div><div class="g3-apple-slot" id="g3-apple-slot-2" style="width: 24px; height: 24px;"></div></div>
+                                <div class="g3-hit-wrapper" style="display: flex; align-items: center; gap: 8px;" data-hitrow="1"><div id="g3-hit-1" class="g3-hit-row" style="flex: 1;"><span class="hit-lbl">1</span><span class="hit-val">OPEN</span></div><div class="g3-apple-slot" id="g3-apple-slot-1" style="width: 24px; height: 24px;"></div></div>
+                            </div>
+                            <!-- 中央主視覺：海盜船、小猴子、鋼爪吊繩與海底寶箱 -->
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; padding: 10px 10px 5px 10px;">
+                                <!-- 頂部：海盜船 (往上移動0.5個船的高度) 與站在船頂的猴子 -->
+                                <div class="g3-ship-wrapper" style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 160px; height: 95px; margin-top: 30px;">
+                                    <!-- 猴子站在船頂/甲板 -->
+                                    <span class="g3-monkey-icon" style="font-size: 3rem; position: absolute; top: -20px; left: 50%; transform: translateX(-50%); z-index: 12; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6)); animation: monkeyBounce 2s infinite ease-in-out; display: inline-block;">🐒</span>
+                                    <!-- 2倍大完整海盜船 -->
+                                    <span class="g3-ship-icon" style="font-size: 6.5rem; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.7)); transform: scaleX(-1); display: block; position: absolute; bottom: -5px;">🚢</span>
+                                </div>
+                                
+                                <!-- 中央：鋼爪與拉繩組件 (頂部跟隨海盜船向上調) -->
+                                <div class="g3-claw-assembly" id="g3-claw-assembly" style="position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 8; display: flex; flex-direction: column; align-items: center; width: 40px; pointer-events: none;">
+                                    <!-- 繩索 -->
+                                    <div class="g3-rope" id="g3-rope" style="width: 3px; height: 10px; background: repeating-linear-gradient(0deg, #f59e0b, #f59e0b 3px, #78350f 3px, #78350f 6px); box-shadow: 0 0 4px rgba(0,0,0,0.6);"></div>
+                                    <!-- 爪子 -->
+                                    <div class="g3-claw-head" id="g3-claw-head" style="font-size: 2.2rem; margin-top: -6px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">🏗️</div>
+                                </div>
+
+                                <!-- 底部：寶箱 (放大放大) 與滿溢金幣寶石 -->
+                                <div class="g3-treasure-wrapper" style="position: relative; z-index: 5; margin-top: auto; margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.9)); animation: treasureGlow 2.5s infinite alternate; transform: scale(0.95); transform-origin: bottom center;">
+                                    <!-- 滿出來的金幣寶石 -->
+                                    <div style="font-size: 1.7rem; line-height: 1; margin-bottom: -16px; z-index: 3; text-shadow: 0 0 10px #f59e0b, 0 0 20px #ffd700; white-space: nowrap; transform: scale(1.1);">
+                                        👑💎🪙💰🪙💎✨
+                                    </div>
+                                    <!-- 開啟寶箱體 -->
+                                    <div style="position: relative; width: 90px; height: 50px; background: linear-gradient(180deg, #b45309 0%, #78350f 100%); border: 3.5px solid #facc15; border-radius: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 6px 15px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2;">
+                                        <!-- 開啟的上蓋 -->
+                                        <div style="position: absolute; top: -14px; left: -4px; width: 98px; height: 20px; background: linear-gradient(180deg, #d97706, #b45309); border: 3px solid #facc15; border-radius: 10px 10px 0 0; transform-origin: top left; transform: rotate(-25deg); box-shadow: 0 -2px 6px rgba(0,0,0,0.5);">
+                                            <div style="width: 100%; height: 3px; background: #facc15; margin-top: 5px;"></div>
+                                        </div>
+                                        <!-- 鎖孔塊 -->
+                                        <div style="width: 16px; height: 18px; background: #facc15; border-radius: 4px; border: 2px solid #78350f; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                            <div style="width: 4px; height: 7px; background: #451a03; border-radius: 2px;"></div>
+                                        </div>
+                                        <div style="position: absolute; left: 6px; top: 0; bottom: 0; width: 7px; background: #facc15; border-left: 1px solid #78350f; border-right: 1px solid #78350f;"></div>
+                                        <div style="position: absolute; right: 6px; top: 0; bottom: 0; width: 7px; background: #facc15; border-left: 1px solid #78350f; border-right: 1px solid #78350f;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- 本次目標 -->
+                                <div id="g3-target-display" style="z-index: 10; margin-bottom: 6px; font-size: 1.15rem; font-weight: bold; color: #fff; background: rgba(0,0,0,0.75); padding: 4px 12px; border-radius: 20px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                                    本次的目標是 <span id="g3-target-color-name" style="color: #ef4444;">紅色</span>
+                                </div>
+                                
+                                <!-- 選色面板 -->
+                                <div id="g3-color-selector" style="z-index: 10; display: flex; gap: 5px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px; border: 1px solid #475569; align-items: center; margin-bottom: 8px;">
+                                    <span style="color: #94a3b8; font-size: 0.85rem; margin-right: 5px;">目標:</span>
+                                    <div class="color-btn red-btn active" data-color="red" style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
+                                    <div class="color-btn pink-btn" data-color="pink" style="width: 24px; height: 24px; border-radius: 50%; background: #ec4899; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn yellow-btn" data-color="yellow" style="width: 24px; height: 24px; border-radius: 50%; background: #eab308; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn green-btn" data-color="green" style="width: 24px; height: 24px; border-radius: 50%; background: #22c55e; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn blue-btn" data-color="blue" style="width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid transparent;"></div>
+                                    <div class="color-btn white-btn" data-color="white" style="width: 24px; height: 24px; border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid transparent;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 遊戲 3 下方 Bet 控制框 (以 Game 3 最外層左右邊框為基準，100% 正中央置中) -->
+                        <div style="display: flex; justify-content: center; align-items: center; width: 100%; padding-bottom: 6px; z-index: 10; margin-top: 4px;">
+                            <div class="new-bet-area" style="display: flex; align-items: center; background: linear-gradient(180deg, #6ee7b7, #10b981); padding: 5px 10px; border-radius: 8px; border: 2px solid #047857; box-shadow: inset 0px 2px 5px rgba(255,255,255,0.5); gap: 5px; position: relative;">
+                                <div class="bet-apple-slots" data-game="3_2" style="display: flex; gap: 3px; margin-right: 10px;">
+                                    <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                    <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                    <div class="apple-slot"><span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem;">🍎</span></div>
+                                </div>
+                                <button class="chip-btn btn-add-bet" data-game="3_2" style="background: linear-gradient(180deg, #0d6efd, #0b5ed7); color: #ffffff; border: 2px solid #004085; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.4), 0 3px 5px rgba(0,0,0,0.3); font-weight: 900; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); white-space: nowrap; display: flex; align-items: center; justify-content: center; line-height: 1;">BET</button>
+                                <div style="background: #064e3b; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; border: 2px solid #022c22; min-width: 60px; text-align: center; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                                    <span class="bet-value" data-game="3_2" style="font-size: 1rem; width: 100%; text-align: center;">0</span>
+                                </div>
+                                <div class="game-win-badge hidden" id="game3_2-win-badge" data-game="3_2">
+                                    <span class="win-num" id="game3_2-win-text">0</span>
+                                    <span class="win-lbl">WIN</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- 結束 game3-container -->
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部控制與累計顏色球區 (位置互換：左側顏色球累計框，右側按鈕獨立卡片儘量靠右貼底) -->
+            <div class="bottom-hud-area">
+                <!-- 左側：全域 COUNT 與顏色球累計框 -->
+                <div class="global-hud-container" style="display: flex; align-items: center; gap: 12px; background: rgba(15, 23, 42, 0.85); padding: 6px 14px; border-radius: 12px; border: 1px solid #334155;">
+                    <!-- COUNT block -->
+                    <div class="hud-count-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding-right: 10px; border-right: 1px solid #334155;">
+                        <span style="font-size: 0.75rem; font-weight: bold; color: #94a3b8; letter-spacing: 1px;">COUNT</span>
+                        <span id="ball-count-text" style="font-size: 1.8rem; font-weight: 900; color: #fff; text-shadow: 2px 2px 0 #000; line-height: 1;">0</span>
+                    </div>
+
+                    <!-- History Trackers + Recent Balls -->
+                    <div class="hud-tracker-area" style="display: flex; flex-direction: column; gap: 4px;">
+                        <!-- Recent Balls Track (The black bar) -->
+                        <div class="recent-balls-track" style="background: #111; border-radius: 8px; height: 28px; width: 257px; display: flex; align-items: center; padding: 0 4px; justify-content: flex-start; box-sizing: border-box;">
+                            <div id="ball-history" class="ball-history-container" style="display: flex; flex-direction: row; gap: 2px; overflow: hidden; width: 100%; height: 100%; padding: 0; align-items: center; justify-content: flex-start; min-height: unset;">
+                                <!-- JS 動態產生球 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 商店已購暫存蘋果容器 (掛在顏色球累計框左側) -->
+                        <div id="shop-staged-apples-container" class="staged-apples-container" style="display: flex; gap: 4px; align-items: center; margin-right: 6px;"></div>
+
+                        <!-- Square Color Trackers -->
+                        <div class="square-trackers" style="display: flex; gap: 2px;">
+                            <div class="track-square white-block"><span id="track-white" class="track-count">0</span></div>
+                            <div class="track-square pink-block"><span id="track-pink" class="track-count">0</span></div>
+                            <div class="track-square red-block"><span id="track-red" class="track-count">0</span></div>
+                            <div class="track-square yellow-block"><span id="track-yellow" class="track-count">0</span></div>
+                            <div class="track-square green-block"><span id="track-green" class="track-count">0</span></div>
+                            <div class="track-square blue-block"><span id="track-blue" class="track-count">0</span></div>
+                            <div class="track-square rainbow-block"><span id="track-rainbow" class="track-count">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 控制按鈕獨立框架 (切換加分 127px [2/3]，續押 81px [1.3倍]，開始遊戲 70px [4/5]) -->
+                <div class="left-controls-box">
+                    <button id="btn-cycle-bet" class="chip-btn" style="width: 127px; padding: 5px 4px; font-size: 0.88rem; height: 36px; border-radius: 6px; border: 1px solid #64748b; background: #334155; white-space: nowrap; display: flex; align-items: center; justify-content: center;">切換加分(+1)</button>
+                    <button id="btn-repeat-bet" class="chip-btn" style="width: 81px; background: #0ea5e9; color: #fff; font-weight: bold; padding: 5px 4px; border-radius: 6px; cursor: pointer; border: 1px solid #0284c7; white-space: nowrap; font-size: 0.95rem; height: 36px; display: flex; align-items: center; justify-content: center;">續押</button>
+                    <button id="btn-start" class="btn-start" style="width: 70px; padding: 5px 2px; font-size: 0.78rem; height: 36px; white-space: nowrap; display: flex; align-items: center; justify-content: center;">🚀 開始遊戲</button>
+                </div>
+            </div>
+                </div>
+            </div>
+                    </div>
+
+                </div>
+            </div>
+            </div>
+            
+
+        </main>
+    </div>
+
+    <!-- 全螢幕彩虹蘋果集氣登場 Cutscene -->
+    <div id="rainbow-apple-cutscene" class="rainbow-apple-cutscene">
+        <div class="rainbow-cutscene-glow"></div>
+        <div class="rainbow-big-apple" id="rainbow-big-apple-container"></div>
+        <div class="rainbow-cutscene-title">✨ 降臨！特別彩虹蘋果 ✨</div>
+        <div id="rainbow-cutscene-sub" class="rainbow-cutscene-sub">即將降臨至 遊戲1...</div>
+    </div>
+
+    <!-- 密碼輸入驗證彈窗 -->
+    <div id="password-modal" class="password-modal hidden">
+        <div class="password-modal-content">
+            <div class="password-modal-title" id="password-modal-title">🔒 請輸入授權密碼</div>
+            <input type="password" id="password-input" class="password-input" placeholder="請輸入密碼" maxlength="10" autocomplete="off" />
+            <div class="password-modal-actions">
+                <button id="btn-password-cancel" class="btn-pass-action btn-pass-cancel">取消</button>
+                <button id="btn-password-confirm" class="btn-pass-action btn-pass-confirm">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 懸浮商店 Popup (位於 底部控制區 / 切換壓分 正上方) -->
+    <div id="shop-modal" class="shop-modal hidden">
+        <div class="shop-awning">
+            <span>🛒 可以購買自己喜歡的物品</span>
+            <div class="shop-timer-bar"><div id="shop-timer-fill" class="shop-timer-fill"></div></div>
+            <div class="shop-timer-text">⏱️ 懸浮停留: <span id="shop-timer-sec">10</span> 秒 (點選或往上滑動確認)</div>
+        </div>
+        <div class="shop-grid-container">
+            <div class="shop-item-card card-nobuy" data-item="1">
+                <div class="shop-card-badge">免費</div>
+                <div class="shop-card-icon">✖</div>
+                <div class="shop-card-title">不買</div>
+                <div class="shop-card-desc">放棄本次購買</div>
+            </div>
+            <div class="shop-item-card card-clear" data-item="2">
+                <div class="shop-card-badge">600 BET</div>
+                <div class="shop-card-icon">消</div>
+                <div class="shop-card-title">全消閃爍球</div>
+                <div class="shop-card-desc">遊戲1: 3顆球變閃爍<br>消除時該色全清</div>
+            </div>
+            <div class="shop-item-card card-upgrade" data-item="3">
+                <div class="shop-card-badge">600 BET</div>
+                <div class="shop-card-icon">升</div>
+                <div class="shop-card-title">預備盤升級</div>
+                <div class="shop-card-desc">遊戲2: 備用棋盤<br>提升 +3 ~ +6 級</div>
+            </div>
+            <div class="shop-item-card card-claw" data-item="4">
+                <div class="shop-card-badge">600 BET</div>
+                <div class="shop-card-icon">夾</div>
+                <div class="shop-card-title">雙倍夾球數</div>
+                <div class="shop-card-desc">遊戲3: 下次進目標色<br>多得1球與金額</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./script.js?v=93"></script>
+</body>
+</html>
