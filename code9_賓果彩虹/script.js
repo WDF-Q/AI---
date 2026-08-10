@@ -345,7 +345,8 @@ function handleAddBet(gameIdInput) {
         if (game1Bet === 0) game1Bet = 600;
         else { game1Bet += inc; if(game1Bet > 3000) game1Bet = 3000; }
         document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
-        updateLadderRewards(game1Bet);
+        updateLadderRewards(game1Bet, false);
+    if (typeof game1_2Bet !== 'undefined') updateLadderRewards(game1_2Bet, true);
         generateBetApples('1');
     } else if (gId === '1_2') {
         if (game1_2Bet === 0) game1_2Bet = 600;
@@ -389,7 +390,8 @@ document.getElementById('btn-repeat-bet').addEventListener('click', () => {
         if (previousGame1Bet > 0) {
             game1Bet = previousGame1Bet;
             document.querySelectorAll('.bet-value[data-game="1"]').forEach(el => el.textContent = game1Bet);
-            updateLadderRewards(game1Bet);
+            updateLadderRewards(game1Bet, false);
+    if (typeof game1_2Bet !== 'undefined') updateLadderRewards(game1_2Bet, true);
             generateBetApples('1');
         }
         if (previousGame1_2Bet > 0) {
@@ -469,7 +471,8 @@ document.querySelectorAll('.color-btn').forEach(btn => {
 });
 
 DOM.btnStart.addEventListener('click', startGame);
-updateLadderRewards(game1Bet);
+updateLadderRewards(game1Bet, false);
+    if (typeof game1_2Bet !== 'undefined') updateLadderRewards(game1_2Bet, true);
 
 // --- Apple & Mini Game Logic ---
 DOM.btnDebugApple.addEventListener('click', () => {
@@ -724,16 +727,17 @@ async function applyMiniGameSteps(steps) {
     await sleep(200);
 }
 
-function updateLadderRewards(bet) {
+function updateLadderRewards(bet, isSetB = false) {
+    let effBet = bet === 0 ? 600 : bet;
     for (let chain = 4; chain <= 10; chain++) {
-        let el = document.getElementById(`reward-${chain}`);
+        let el = isSetB ? document.getElementById(`reward_2-${chain}`) : document.getElementById(`reward-${chain}`);
         if (el) {
-            el.textContent = Math.floor(bet * COMBO_MULTIPLIERS[chain]);
+            el.textContent = Math.floor(effBet * COMBO_MULTIPLIERS[chain]);
         }
     }
-    let acEl = document.getElementById('all-clear-reward');
+    let acEl = isSetB ? document.getElementById('all-clear-reward_2') : document.getElementById('all-clear-reward');
     if (acEl) {
-        acEl.textContent = Math.floor(bet * 30);
+        acEl.textContent = Math.floor(effBet * 30);
     }
 }
 
@@ -970,6 +974,7 @@ function initBoard(targetBoardId = 'game-board') {
             targetBoardArray[r][c] = createBlockForContainer(r, c, color, false, 0, false, false, boardContainer);
         }
     }
+    updateLadderRewards(currentBetVal, isSetB);
 }
 
 function getAppleType() {
@@ -2905,7 +2910,16 @@ async function startRightEngine() {
                         updateLadderActive(currentCombo);
                         DOM.drawStatus.textContent = `${currentCombo} 連鎖！(底部引爆)`;
                         showComboOverlay(currentCombo);
-                        await engineSleep(1000);
+                        await engineSleep(600);
+                        
+                        // 消除後立即進行重力下落與滿盤色球補充，絕不留空白！
+                        await applyGravity('game-board');
+                        await refillBoard('game-board', 0);
+                        if (document.getElementById('game-board_2')) {
+                            await applyGravity('game-board_2');
+                            await refillBoard('game-board_2', 0);
+                        }
+                        
                         batchEliminatedAny = true;
                     }
                 } else if (event.type === 'trigger_chains') {
@@ -3313,20 +3327,26 @@ function getSafeColorForRefill(r, c) {
     return getSafeColorForRefillOnArray(r, c, board);
 }
 
-async function refillBoard(finalCombo = 0) {
+async function refillBoard(targetBoardId = 'game-board', finalCombo = 0) {
+    let isSetB = targetBoardId === 'game-board_2';
+    let targetBoardArray = isSetB ? board_2 : board;
+    let targetBoardContainer = document.getElementById(targetBoardId);
+    if (!targetBoardContainer || !targetBoardArray) return;
+    
+    let currentBetVal = isSetB ? game1_2Bet : game1Bet;
     let hasEmpty = false;
     let guaranteedRewardValue = 0;
     
     if (finalCombo >= 4) {
         let lookupChain = finalCombo >= 10 ? 10 : finalCombo;
         let mult = COMBO_MULTIPLIERS[lookupChain];
-        guaranteedRewardValue = Math.floor((game1Bet === 0 ? 600 : game1Bet) * mult);
+        guaranteedRewardValue = Math.floor((currentBetVal === 0 ? 600 : currentBetVal) * mult);
     }
 
     let emptySpots = [];
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-            if (board[r][c] === null) {
+            if (targetBoardArray[r][c] === null) {
                 emptySpots.push({r, c});
                 hasEmpty = true;
             }
@@ -3335,8 +3355,6 @@ async function refillBoard(finalCombo = 0) {
     
     if (!hasEmpty) return;
 
-    // 嚴格排序空缺：從最底層開始填，同一層由左到右
-    // 這樣在 getSafeColorForRefill 時，下方與左方的方塊都已經是確定的顏色，才能完美避開 3 連線
     emptySpots.sort((a, b) => {
         if (b.r !== a.r) return b.r - a.r;
         return a.c - b.c;
@@ -3351,18 +3369,15 @@ async function refillBoard(finalCombo = 0) {
         } else {
             rewardSpotIndex = Math.floor(Math.random() * emptySpots.length);
         }
-        DOM.drawStatus.textContent = `⭐ 生成 ${currentCombo} 連鎖獎金球！`;
+        DOM.drawStatus.textContent = `⭐ 生成 ${finalCombo} 連鎖獎金球！`;
         await engineSleep(500);
     }
     
     let randomMoneySpots = new Set();
     let spawnMoneyBallsChance = Math.random() * 100;
-    // 提高機率至 35%：消除補充色球時，有 35% 機率補充 1~3 顆普通銀色金錢球
     if (spawnMoneyBallsChance < 35 && emptySpots.length > 0) {
-        let count = Math.floor(Math.random() * 3) + 1; // 1 to 3 balls
-        count = Math.min(count, emptySpots.length - (rewardSpotIndex !== -1 ? 1 : 0)); // Ensure enough empty spots
-        
-        // Pick available indices avoiding the reward spot
+        let count = Math.floor(Math.random() * 3) + 1;
+        count = Math.min(count, emptySpots.length - (rewardSpotIndex !== -1 ? 1 : 0));
         let availableIndices = [];
         for (let i = 0; i < emptySpots.length; i++) {
             if (i !== rewardSpotIndex) availableIndices.push(i);
@@ -3382,11 +3397,10 @@ async function refillBoard(finalCombo = 0) {
     let flashBallsCount = 0;
     if (Math.random() < 0.50) flashBallsCount = Math.floor(Math.random() * 3) + 1; 
     
-    // 預先在盤面上塞入佔位符，這樣 getSafeColorForRefill 才能判斷到剛生成的新球
     for (let i = 0; i < emptySpots.length; i++) {
         let {r, c} = emptySpots[i];
         if (i === rewardSpotIndex || randomMoneySpots.has(i)) {
-            board[r][c] = { isMoney: true }; // 佔位
+            targetBoardArray[r][c] = { isMoney: true };
         }
     }
     
@@ -3395,34 +3409,32 @@ async function refillBoard(finalCombo = 0) {
         let block;
         
         if (i === rewardSpotIndex) {
-            // 連鎖發生的金錢球：金色背景 + 金色框 (isChainReward = true)
-            block = createBlock(-1, c, null, true, guaranteedRewardValue, false, true);
+            block = createBlockForContainer(-1, c, null, true, guaranteedRewardValue, false, true, targetBoardContainer);
         } else if (randomMoneySpots.has(i)) {
-            // 消除補充機率產生的金錢球：保持普通銀色背景 + 銀色框 (isChainReward = false)
-            let randomValue = getRandomMoneyBallValue();
-            block = createBlock(-1, c, null, true, randomValue, false, false);
+            let randomValue = getRandomMoneyBallValueForBet(currentBetVal);
+            block = createBlockForContainer(-1, c, null, true, randomValue, false, false, targetBoardContainer);
         } else {
             let color = getSafeColorForRefillOnArray(r, c, targetBoardArray);
             let isFlash = false;
             if (flashBallsCount > 0) { isFlash = true; flashBallsCount--; }
-            block = createBlock(-1, c, color, false, 0, isFlash);
+            block = createBlockForContainer(-1, c, color, false, 0, isFlash, false, targetBoardContainer);
         }
         
         block.r = r;
         setTimeout(() => { block.el.style.top = `${r * (BLOCK_SIZE + GAP)}px`; }, 50);
-        board[r][c] = block; // 正式寫入完整 block，後續生成會參考到這個正確的 block
+        targetBoardArray[r][c] = block;
     }
     
-    // 處理蘋果掉落附著
+    let currentTopApples = isSetB ? topApplesState_2 : topApplesState;
     for (let c = 0; c < COLS; c++) {
-        if (topApplesState[c] !== null && topApplesState[c].readyToDrop) {
+        if (currentTopApples[c] !== null && currentTopApples[c].readyToDrop) {
             let newColorBlocksInCol = emptySpots.filter(spot => 
-                spot.c === c && board[spot.r][spot.c] && !board[spot.r][spot.c].isMoney
+                spot.c === c && targetBoardArray[spot.r][spot.c] && !targetBoardArray[spot.r][spot.c].isMoney
             );
             if (newColorBlocksInCol.length > 0) {
                 let randomSpot = newColorBlocksInCol[Math.floor(Math.random() * newColorBlocksInCol.length)];
-                let block = board[randomSpot.r][randomSpot.c];
-                block.attachedApple = topApplesState[c].type;
+                let block = targetBoardArray[randomSpot.r][randomSpot.c];
+                block.attachedApple = currentTopApples[c].type;
                 
                 let smallApple = document.createElement('div');
                 smallApple.className = `apple-item apple-${topApplesState[c].type}`;
