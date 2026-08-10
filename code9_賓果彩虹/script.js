@@ -113,6 +113,7 @@ let game3ApplesInPlay = [];
 let game3CurrentComboColor = null;
 let game3TrailingRainbows = 0;
 let game1Win = 0;
+let game1_2Win = 0;
 let game2Win = 0;
 
 // ** Mode State (模式 1 vs 模式 2) **
@@ -743,15 +744,20 @@ function updateWinDisplay() { DOM.win.textContent = totalWin; }
 
 function recalculateTotalWin() {
     let g1 = game1Bet > 0 ? game1Win : 0;
+    let g1_2 = game1_2Bet > 0 ? (typeof game1_2Win !== 'undefined' ? game1_2Win : 0) : 0;
     let g2 = game2Bet > 0 ? game2Win : 0;
+    let g2_2 = game2_2Bet > 0 ? (typeof game2_2Win !== 'undefined' ? game2_2Win : 0) : 0;
     let g3 = game3Bet > 0 ? game3TotalWin : 0;
-    totalWin = g1 + g2 + g3 + bonusWin;
+    let g3_2 = game3_2Bet > 0 ? (typeof game3_2TotalWin !== 'undefined' ? game3_2TotalWin : 0) : 0;
+    totalWin = g1 + g1_2 + g2 + g2_2 + g3 + g3_2 + bonusWin;
     updateWinDisplay();
 }
 
-function triggerClawDropAnimation() {
-    const clawAssy = document.getElementById('g3-claw-assembly');
-    const rope = document.getElementById('g3-rope');
+function triggerClawDropAnimation(containerId = 'game3-container') {
+    let container = document.getElementById(containerId) || document.getElementById('game3-container');
+    if (!container) return;
+    const clawAssy = container.querySelector('.g3-claw-assembly');
+    const rope = container.querySelector('.g3-rope');
     if (clawAssy && rope) {
         clawAssy.classList.remove('claw-grabbing');
         rope.classList.remove('rope-stretching');
@@ -782,11 +788,21 @@ function updateGame1WinDisplay() {
     const badge = document.getElementById('game1-win-badge');
     const text = document.getElementById('game1-win-text');
     if (badge && text) {
-        if (game1Win > 0) {
+        if (game1Win > 0 && game1Bet > 0) {
             badge.classList.remove('hidden');
             text.textContent = game1Win;
         } else {
             badge.classList.add('hidden');
+        }
+    }
+    const badge_2 = document.getElementById('game1_2-win-badge');
+    const text_2 = document.getElementById('game1_2-win-text');
+    if (badge_2 && text_2) {
+        if (typeof game1_2Win !== 'undefined' && game1_2Win > 0 && game1_2Bet > 0) {
+            badge_2.classList.remove('hidden');
+            text_2.textContent = game1_2Win;
+        } else {
+            badge_2.classList.add('hidden');
         }
     }
 }
@@ -800,6 +816,16 @@ function updateGame3WinDisplay() {
             text.textContent = game3TotalWin;
         } else {
             badge.classList.add('hidden');
+        }
+    }
+    const badge_2 = document.getElementById('game3_2-win-badge');
+    const text_2 = document.getElementById('game3_2-win-text');
+    if (badge_2 && text_2) {
+        if (typeof game3_2TotalWin !== 'undefined' && game3_2TotalWin > 0 && game3_2Bet > 0) {
+            badge_2.classList.remove('hidden');
+            text_2.textContent = game3_2TotalWin;
+        } else {
+            badge_2.classList.add('hidden');
         }
     }
 }
@@ -858,6 +884,7 @@ function checkAndResetWinsBeforeNewBet() {
         updateGame1WinDisplay();
         updateGame2WinDisplay();
         updateGame3WinDisplay();
+        recalculateTotalWin();
         hideAllOutOverlays();
     }
 }
@@ -1937,6 +1964,7 @@ const Game3Manager = {
         game3MaxMultiplier = 0;
         game3TotalWin = 0;
         updateGame3WinDisplay();
+        recalculateTotalWin();
         game3TotalTargetBalls = 0;
         game3MaxComboReached = 0;
         game3ApplesInPlay = [];
@@ -2105,7 +2133,7 @@ const Game3Manager = {
 
         if (!isRainbow && (logicalColor === game3TargetColor || (dualPair && dualPair.includes(game3TargetColor)))) {
             game3TotalTargetBalls++;
-            triggerClawDropAnimation();
+            triggerClawDropAnimation('game3_2-container');
 
             if (window.game3ExtraClawBallPending) {
                 window.game3ExtraClawBallPending = false;
@@ -2135,6 +2163,7 @@ const Game3Manager = {
             game3TotalWin = 0;
         }
         updateGame3WinDisplay();
+        recalculateTotalWin();
         recalculateTotalWin();
 
         this.updateUI();
@@ -2360,6 +2389,7 @@ async function startGame() {
         updateGame1WinDisplay();
         updateGame2WinDisplay();
         updateGame3WinDisplay();
+        recalculateTotalWin();
         updateLadderRewards(game1Bet === 0 ? 600 : game1Bet);
         updateLadderActive(0);
         updateHistoryUI();
@@ -2739,6 +2769,7 @@ async function startLeftEngine() {
                     // 批次發球 (初始 3球 / 彩色洞 3球) 全部進洞後，統一進行盤面連線檢定！
                     await Promise.all(promises);
                     Game2Manager.evaluateLineCheck();
+                    if (typeof Game2_2Manager !== 'undefined') Game2_2Manager.evaluateLineCheck();
                     
                     // 備註1: 檢定是否在批次期間連續觸發彩色洞，若有觸發，先彈出商店 (價格+20%) 再續發3球
                     let isRainbowEvent = (rainbowTriggeredCount > 0);
@@ -2821,15 +2852,35 @@ async function startRightEngine() {
                     
                     for (let color of event.colors) {
                         for (let c = 0; c < COLS; c++) {
-                            let block = board[ROWS - 1][c];
-                            if (block !== null && !block.isMoney && block.color === color) {
-                                if (block.isFlash) flashColorsTriggered.add(block.color);
-                                if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
-                                colElims[c]++;
-                                block.el.classList.add('eliminating');
-                                setTimeout((el) => el.remove(), 1000, block.el);
-                                board[ROWS - 1][c] = null;
-                                eliminatedAny = true;
+                            for (let r = ROWS - 1; r >= 0; r--) {
+                                let block = board[r][c];
+                                if (block !== null && !block.isMoney && block.color === color) {
+                                    if (block.isFlash) flashColorsTriggered.add(block.color);
+                                    if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
+                                    colElims[c]++;
+                                    block.el.classList.add('eliminating');
+                                    setTimeout((el) => el.remove(), 1000, block.el);
+                                    board[r][c] = null;
+                                    eliminatedAny = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (document.getElementById('game-board_2') && game1_2Bet > 0) {
+                        for (let color of event.colors) {
+                            for (let c = 0; c < COLS; c++) {
+                                for (let r = ROWS - 1; r >= 0; r--) {
+                                    let block = board_2[r][c];
+                                    if (block !== null && !block.isMoney && block.color === color) {
+                                        if (block.attachedApple && game3_2Bet > 0) collectApple(block.attachedApple, game3_2Bet);
+                                        block.el.classList.add('eliminating');
+                                        setTimeout((el) => el.remove(), 1000, block.el);
+                                        board_2[r][c] = null;
+                                        eliminatedAny = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -2864,14 +2915,22 @@ async function startRightEngine() {
                     }
                 } else if (event.type === 'trigger_chains') {
                     if (batchEliminatedAny) {
-                        await applyGravity();
+                        await applyGravity('game-board');
+                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
+                            await applyGravity('game-board_2');
+                        }
+                        
                         await checkMatchesAndChain();
                         
                         let finalCombo = currentCombo;
                         currentCombo = 0;
                         updateLadderActive(0);
                         
-                        await refillBoard(finalCombo);
+                        await refillBoard('game-board', finalCombo);
+                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
+                            await refillBoard('game-board_2', finalCombo);
+                        }
+                        
                         batchEliminatedAny = false;
                         currentCombo = 0;
                         updateLadderActive(0);
@@ -2989,17 +3048,20 @@ async function startRightEngine() {
     }
 }
 
-async function applyGravity() {
+async function applyGravity(targetBoardId = 'game-board') {
+    let isSetB = targetBoardId === 'game-board_2';
+    let targetBoard = isSetB ? board_2 : board;
+    if (!targetBoard || targetBoard.length === 0) return;
     let moved = false;
     for (let c = 0; c < COLS; c++) {
         let emptySpots = 0;
         for (let r = ROWS - 1; r >= 0; r--) {
-            if (board[r][c] === null) {
+            if (targetBoard[r][c] === null) {
                 emptySpots++;
             } else if (emptySpots > 0) {
-                const block = board[r][c];
-                board[r + emptySpots][c] = block;
-                board[r][c] = null;
+                const block = targetBoard[r][c];
+                targetBoard[r + emptySpots][c] = block;
+                targetBoard[r][c] = null;
                 block.r = r + emptySpots;
                 block.el.style.top = `${block.r * (BLOCK_SIZE + GAP)}px`;
                 moved = true;
@@ -3174,6 +3236,18 @@ async function checkMatchesAndChain() {
     }
 }
 
+function getRandomMoneyBallValueForBet(betVal) {
+    let baseBet = betVal === 0 ? 600 : betVal;
+    let r = Math.random() * 100; 
+    if (r < 50) return Math.floor(baseBet * (1/5));
+    if (r < 75) return Math.floor(baseBet * (2/5));
+    if (r < 85) return Math.floor(baseBet * (4/5));
+    if (r < 90) return Math.floor(baseBet * (6/5));
+    if (r < 94) return Math.floor(baseBet * (8/5));
+    if (r < 97) return Math.floor(baseBet * (10/5));
+    if (r < 99) return Math.floor(baseBet * (25/5));
+    return Math.floor(baseBet * (50/5));
+}
 function getRandomMoneyBallValue() {
     let r = Math.random() * 100; 
     if (r < 50) return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (1/5));
@@ -3519,6 +3593,7 @@ async function finishGameOverSequence() {
     updateGame1WinDisplay();
     updateGame2WinDisplay();
     updateGame3WinDisplay();
+        recalculateTotalWin();
     showRoundEndOutOverlays();
     DOM.btnStart.disabled = false;
     document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
@@ -4665,6 +4740,7 @@ const Game3_2Manager = {
         game3_2MaxMultiplier = 0;
         game3_2TotalWin = 0;
         updateGame3WinDisplay();
+        recalculateTotalWin();
         game3TotalTargetBalls = 0;
         game3MaxComboReached = 0;
         game3_2ApplesInPlay = [];
@@ -4833,7 +4909,7 @@ const Game3_2Manager = {
 
         if (!isRainbow && (logicalColor === game3_2TargetColor || (dualPair && dualPair.includes(game3_2TargetColor)))) {
             game3TotalTargetBalls++;
-            triggerClawDropAnimation();
+            triggerClawDropAnimation('game3_2-container');
 
             if (window.game3ExtraClawBallPending) {
                 window.game3ExtraClawBallPending = false;
@@ -4863,6 +4939,7 @@ const Game3_2Manager = {
             game3_2TotalWin = 0;
         }
         updateGame3WinDisplay();
+        recalculateTotalWin();
         recalculateTotalWin();
 
         this.updateUI();
