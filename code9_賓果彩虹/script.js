@@ -47,6 +47,7 @@ const COMBO_MULTIPLIERS = {
 };
 
 let board = [];
+let board_2 = [];
 let isPlaying = false;
 let currentCombo = 0;
 let totalWin = 0;
@@ -883,13 +884,43 @@ function createBlock(r, c, color, isMoney = false, moneyValue = 0, isFlash = fal
     return { r, c, color, isMoney, moneyValue, isFlash, isChainReward, el };
 }
 
-function initBoard() {
-    let blocks = DOM.board.querySelectorAll('.block');
-    blocks.forEach(b => b.remove());
-    board = [];
-    for (let r = 0; r < ROWS; r++) board.push(new Array(COLS).fill(null));
+function createBlockForContainer(r, c, color, isMoney = false, moneyValue = 0, isFlash = false, isChainReward = false, container = null) {
+    const el = document.createElement('div');
+    el.className = `block`;
+    if (isMoney) {
+        el.classList.add('money-ball');
+        if (isChainReward) {
+            el.classList.add('chain-money-ball');
+        } else {
+            el.classList.add('normal-money-ball');
+        }
+        el.textContent = moneyValue;
+    } else {
+        el.classList.add(`color-${color}`);
+        if (isFlash) el.classList.add('flash-ball');
+    }
+    el.style.left = `${OFFSET + c * (BLOCK_SIZE + GAP)}px`;
+    el.style.top = `${r * (BLOCK_SIZE + GAP)}px`;
+    if (container) container.appendChild(el);
+    else DOM.board.appendChild(el);
+    return { r, c, color, isMoney, moneyValue, isFlash, isChainReward, el };
+}
+
+function initBoard(targetBoardId = 'game-board') {
+    let isSetB = targetBoardId === 'game-board_2';
+    let boardContainer = document.getElementById(targetBoardId);
+    if (!boardContainer) return;
     
-    const initialMoneyValue = Math.floor((game1Bet === 0 ? 600 : game1Bet) / 5);
+    let blocks = boardContainer.querySelectorAll('.block');
+    blocks.forEach(b => b.remove());
+    
+    let targetBoardArray = [];
+    for (let r = 0; r < ROWS; r++) targetBoardArray.push(new Array(COLS).fill(null));
+    if (isSetB) board_2 = targetBoardArray;
+    else board = targetBoardArray;
+    
+    let currentBetVal = isSetB ? game1_2Bet : game1Bet;
+    const initialMoneyValue = Math.floor((currentBetVal === 0 ? 600 : currentBetVal) / 5);
     let colsPool = [0, 1, 2, 3, 4, 5];
     for (let i = colsPool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -898,17 +929,17 @@ function initBoard() {
     for (let i = 0; i < 4; i++) {
         let c = colsPool[i];
         let r = Math.floor(Math.random() * 3); 
-        board[r][c] = { isMoney: true, moneyValue: initialMoneyValue, r, c };
+        targetBoardArray[r][c] = { isMoney: true, moneyValue: initialMoneyValue, r, c };
     }
 
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-            if (board[r][c] !== null && board[r][c].isMoney) {
-                board[r][c] = createBlock(r, c, null, true, initialMoneyValue);
+            if (targetBoardArray[r][c] !== null && targetBoardArray[r][c].isMoney) {
+                targetBoardArray[r][c] = createBlockForContainer(r, c, null, true, initialMoneyValue, false, false, boardContainer);
                 continue;
             }
             let color = getSafeColorForRefill(r, c);
-            board[r][c] = createBlock(r, c, color, false);
+            targetBoardArray[r][c] = createBlockForContainer(r, c, color, false, 0, false, false, boardContainer);
         }
     }
 }
@@ -2338,9 +2369,14 @@ async function startGame() {
             DOM.safeIndicator.className = 'safe-indicator';
         }
         
-        initBoard();
+        initBoard('game-board');
+        if (document.getElementById('game-board_2')) {
+            initBoard('game-board_2');
+        }
         spawnApples('game1-container');
         spawnApples('game1_2-container');
+        if (typeof Game2_2Manager !== 'undefined') Game2_2Manager.init();
+        if (typeof Game3_2Manager !== 'undefined') Game3_2Manager.initNewGame();
         
         // ** 商店 (Shop System) 重置 **
         shopTriggeredForBall = {};
@@ -2567,7 +2603,9 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
             historyTracker.white++;
             addBallToHistoryUI('白色', 'white');
             Game2Manager.processBall('white', isBatchMode); // Game 2
+            if (typeof Game2_2Manager !== 'undefined') Game2_2Manager.processBall('white', isBatchMode);
             Game3Manager.processBall('white'); // Game 3
+            if (typeof Game3_2Manager !== 'undefined') Game3_2Manager.processBall('white');
             
             if (!isSafeMode) {
                 isGameOverTriggered = true;
@@ -2586,7 +2624,9 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
                 addBallToHistoryUI('彩色', 'rainbow');
                 
                 Game2Manager.processBall('rainbow', isBatchMode); // Game 2
+                if (typeof Game2_2Manager !== 'undefined') Game2_2Manager.processBall('rainbow', isBatchMode);
                 Game3Manager.processBall(game3TargetColor, true, null); // Game 3 rainbow wildcard
+                if (typeof Game3_2Manager !== 'undefined') Game3_2Manager.processBall(game3_2TargetColor || 'red', true, null);
                 
                 pendingEventsQueue.push({ type: 'laser_strike' });
                 if (DOM.drawStatus) DOM.drawStatus.textContent = '彩色球！獲得雷射！';
@@ -2609,7 +2649,9 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
                 // Game 2 and Game 3 processing for dual colors
                 Game2Manager.processBall(pair[0], isBatchMode);
                 Game2Manager.processBall(pair[1], isBatchMode);
+                if (typeof Game2_2Manager !== 'undefined') { Game2_2Manager.processBall(pair[0], isBatchMode); Game2_2Manager.processBall(pair[1], isBatchMode); }
                 Game3Manager.processBall(null, false, pair);
+                if (typeof Game3_2Manager !== 'undefined') Game3_2Manager.processBall(null, false, pair);
                 
                 pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
                 if (DOM.drawStatus) DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
@@ -2621,7 +2663,9 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
             historyTracker[color]++;
             addBallToHistoryUI(COLOR_ZH[color], color);
             Game2Manager.processBall(color, isBatchMode); // Game 2
+            if (typeof Game2_2Manager !== 'undefined') Game2_2Manager.processBall(color, isBatchMode);
             Game3Manager.processBall(color); // Game 3
+            if (typeof Game3_2Manager !== 'undefined') Game3_2Manager.processBall(color);
             
             if (appleBonusRoundsLeft > 0 && currentStepMapping[color]) {
                 await applyMiniGameSteps(currentStepMapping[color]);
@@ -4179,3 +4223,722 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+
+let game2_2Level = 1;
+let game2_2CardNum = 1;
+let game2_2Win = 0;
+let game2_2LineCount = 0;
+const Game2_2Manager = {
+    gridData: [],
+    nextGridData: [],
+    nextGridDataFull: [],
+    nextLevel: 2,
+    isCardChanging: false,
+    isLvMaxComboChain: false,
+    isLvMaxRefreshedCard: false,
+    winningMatchedPatterns: [],
+
+    init() {
+        this.isCardChanging = false;
+        this.isLvMaxComboChain = false;
+        this.isLvMaxRefreshedCard = false;
+        game2LvMaxCombo = 0;
+        updateGame2ComboBadge();
+        this.winningMatchedPatterns = [];
+        game2_2Level = 1;
+        game2_2CardNum = 1;
+        game2_2Win = 0;
+        game2_2LineCount = 0;
+        this.clearWinningLines();
+        this.generateCard(1); // 初始主體固定為 LV1 模板
+        let firstNextLvl = 1; // 第一張備用棋盤固定為 LV1
+        this.generateNextCard(firstNextLvl);
+        generateGame2AppleThresholds();
+        this.renderUI();
+        updateGame2WinDisplay();
+    },
+
+    generateCard(level) {
+        let lvlKey = level >= 9 ? 9 : Math.max(1, level);
+        let tList = G2_TEMPLATES[lvlKey] || G2_TEMPLATES[1];
+        let tLayout = tList[Math.floor(Math.random() * tList.length)];
+
+        // 顏色1~5 隨機分配不重複 (從 黃、藍、紅、綠、粉 5 種色球中抽出，不包含白)
+        let allColors = ['yellow', 'blue', 'red', 'green', 'pink'];
+        allColors.sort(() => Math.random() - 0.5);
+        let colorMap = {
+            'c1': allColors[0],
+            'c2': allColors[1],
+            'c3': allColors[2],
+            'c4': allColors[3],
+            'c5': allColors[4]
+        };
+
+        this.gridData = [];
+        for (let i = 0; i < 9; i++) {
+            let key = tLayout[i];
+            if (key === 'FREE') {
+                this.gridData.push({
+                    id: i,
+                    type: 'free',
+                    color: 'purple',
+                    spText: 'FREE',
+                    hit: true // FREE 預設即獲得
+                });
+            } else if (key === 'SP') {
+                this.gridData.push({
+                    id: i,
+                    type: 'sp',
+                    color: 'sp',
+                    spText: 'SP',
+                    hit: false
+                });
+            } else {
+                let assignedColor = colorMap[key];
+                this.gridData.push({
+                    id: i,
+                    type: 'color',
+                    color: assignedColor,
+                    spText: key,
+                    hit: false
+                });
+            }
+        }
+    },
+
+    generateNextCard(level) {
+        this.nextLevel = level >= 9 ? 9 : Math.max(1, level);
+        let lvlKey = this.nextLevel;
+        let tList = G2_TEMPLATES[lvlKey] || G2_TEMPLATES[1];
+        let tLayout = tList[Math.floor(Math.random() * tList.length)];
+        let allColors = ['yellow', 'blue', 'red', 'green', 'pink'];
+        allColors.sort(() => Math.random() - 0.5);
+        let colorMap = {
+            'c1': allColors[0], 'c2': allColors[1], 'c3': allColors[2], 'c4': allColors[3], 'c5': allColors[4]
+        };
+
+        this.nextGridData = [];
+        this.nextGridDataFull = [];
+
+        for (let i = 0; i < 9; i++) {
+            let key = tLayout[i];
+            if (key === 'FREE') {
+                this.nextGridData.push({ color: 'purple' });
+                this.nextGridDataFull.push({
+                    id: i, type: 'free', color: 'purple', spText: 'FREE', hit: true
+                });
+            } else if (key === 'SP') {
+                this.nextGridData.push({ color: 'sp' });
+                this.nextGridDataFull.push({
+                    id: i, type: 'sp', color: 'sp', spText: 'SP', hit: false
+                });
+            } else {
+                let assignedColor = colorMap[key];
+                this.nextGridData.push({ color: assignedColor });
+                this.nextGridDataFull.push({
+                    id: i, type: 'color', color: assignedColor, spText: key, hit: false
+                });
+            }
+        }
+        const nextLvlEl = document.getElementById('g2_2-next-level');
+        if (nextLvlEl) nextLvlEl.textContent = (this.nextLevel >= 9 ? 'MAX' : this.nextLevel);
+        this.renderNextGrid();
+    },
+
+    renderNextGrid() {
+        const container = document.getElementById('g2_2-next-grid');
+        if (!container) return;
+        container.innerHTML = '';
+        this.nextGridData.forEach(t => {
+            const d = document.createElement('div');
+            d.className = `g2-mini-tile ${t.color}`;
+            container.appendChild(d);
+        });
+    },
+
+    renderUI() {
+        const gridEl = document.getElementById('game2_2-grid');
+        if (!gridEl) return;
+        gridEl.innerHTML = '';
+
+        const mainLvlEl = document.getElementById('g2_2-main-level');
+        const cardNumEl = document.getElementById('g2_2-card-num-text');
+        const lineCountEl = document.getElementById('g2_2-line-count');
+        const lineScoreEl = document.getElementById('g2_2-line-score');
+
+        if (mainLvlEl) mainLvlEl.textContent = (game2_2Level >= 9 ? 'MAX' : game2_2Level);
+        if (cardNumEl) cardNumEl.textContent = `第 ${game2_2CardNum} 張`;
+        if (lineCountEl) lineCountEl.textContent = game2_2LineCount;
+        if (lineScoreEl) lineScoreEl.textContent = game2_2Win;
+
+        updateGame2OddsPanel();
+
+        let winningIndices = new Set();
+        if (this.winningMatchedPatterns && this.winningMatchedPatterns.length > 0) {
+            this.winningMatchedPatterns.forEach(pattern => {
+                pattern.forEach(idx => winningIndices.add(idx));
+            });
+        }
+
+        this.gridData.forEach((tile, index) => {
+            const div = document.createElement('div');
+            let isRainbowBorder = (tile.type === 'free' || tile.type === 'sp' || tile.color === 'sp' || tile.color === 'purple');
+            let isWinningTile = winningIndices.has(index);
+
+            if (tile.hit) {
+                div.className = `g2-tile hit ${isRainbowBorder ? 'rainbow-border' : tile.color} ${isWinningTile ? 'winning' : ''}`;
+                if (!isRainbowBorder) {
+                    div.style.borderColor = `var(--color-${tile.color}, #facc15)`;
+                } else {
+                    div.style.borderColor = 'transparent';
+                }
+                div.innerHTML = `<span class="g2-hit-text" style="font-size: 1.6rem; font-weight: 900; color: #facc15; text-shadow: 0 0 8px #facc15, 2px 2px 0 #000;">HIT</span>`;
+            } else {
+                div.className = `g2-tile ${tile.color} ${isWinningTile ? 'winning' : ''}`;
+                if (tile.type === 'sp') {
+                    div.innerHTML = `<div class="g2-sp-badge">SP</div>`;
+                } else if (tile.type === 'free') {
+                    div.innerHTML = `<span class="g2-free-text">FREE</span>`;
+                } else {
+                    div.innerHTML = `<div class="g2-paw-icon">🐾</div>`;
+                }
+            }
+            gridEl.appendChild(div);
+        });
+
+        if (this.winningMatchedPatterns && this.winningMatchedPatterns.length > 0) {
+            this.drawWinningLines(this.winningMatchedPatterns);
+        }
+    },
+
+    upgradeNextCardLevel(levelBoost = 1) {
+        if (this.nextLevel >= 9) {
+            // 已經達到 LV MAX (LV9)：重新生成 LV MAX 盤面（自動切換為其它顏色/排版組合）
+            this.generateNextCard(9);
+        } else {
+            // 提升等級（最多提升至 LV MAX = LV9）
+            let targetLevel = Math.min(9, this.nextLevel + levelBoost);
+            this.generateNextCard(targetLevel);
+        }
+    },
+
+    processBall(logicalColor, isBatchMode = false) {
+        if (!this.gridData || this.gridData.length === 0) return;
+
+        let hitMade = false;
+        let nextCardLevelBoost = 0;
+        let isMainCardLvMax = (game2_2Level >= 9);
+
+        if (logicalColor === 'rainbow') {
+            // 彩色洞：
+            let spAlreadyHit = this.gridData.some(tile => (tile.type === 'sp' || tile.color === 'sp') && tile.hit);
+
+            if (isMainCardLvMax || spAlreadyHit) {
+                nextCardLevelBoost += 2;
+            }
+
+            this.gridData.forEach(tile => {
+                if (!tile.hit && (tile.type === 'sp' || tile.color === 'sp')) {
+                    tile.hit = true;
+                    hitMade = true;
+                }
+            });
+        } else if (logicalColor && logicalColor !== 'white') {
+            // 標準單色洞（黃、藍、紅、綠、粉）：
+            let colorAlreadyHit = this.gridData.some(tile => tile.color === logicalColor && tile.hit);
+
+            if (isMainCardLvMax || colorAlreadyHit) {
+                nextCardLevelBoost += 1;
+            }
+
+            this.gridData.forEach(tile => {
+                if (!tile.hit && tile.color === logicalColor) {
+                    tile.hit = true;
+                    hitMade = true;
+                }
+            });
+        }
+
+        if (nextCardLevelBoost > 0 && !this.isCardChanging) {
+            this.upgradeNextCardLevel(nextCardLevelBoost);
+        }
+
+        if (hitMade) {
+            this.renderUI();
+        }
+
+        if (!isBatchMode) {
+            this.evaluateLineCheck();
+        }
+    },
+
+    drawWinningLines(matchedPatterns) {
+        const barsContainer = document.getElementById('g2_2-line-bars-container');
+        const svgGroup = document.getElementById('g2_2-lines-group');
+        const gridEl = document.getElementById('game2_2-grid');
+
+        if (barsContainer) barsContainer.innerHTML = '';
+        if (svgGroup) svgGroup.innerHTML = '';
+
+        const patternClassMap = {
+            '0,1,2': 'row-0',
+            '3,4,5': 'row-1',
+            '6,7,8': 'row-2',
+            '0,3,6': 'col-0',
+            '1,4,7': 'col-1',
+            '2,5,8': 'col-2',
+            '0,4,8': 'diag-1',
+            '2,4,6': 'diag-2'
+        };
+
+        matchedPatterns.forEach(pattern => {
+            let key = pattern.join(',');
+            let clsName = patternClassMap[key];
+
+            // 1. 生成 HTML 實體耀眼光條 (絕對層級覆蓋於方塊最頂層)
+            if (clsName && barsContainer) {
+                const bar = document.createElement('div');
+                bar.className = `g2-line-bar ${clsName}`;
+                barsContainer.appendChild(bar);
+            }
+
+            // 2. 生成 SVG 光雕線條
+            let coords = G2_LINE_COORDS[key];
+            if (coords && svgGroup) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', coords[0]);
+                line.setAttribute('y1', coords[1]);
+                line.setAttribute('x2', coords[2]);
+                line.setAttribute('y2', coords[3]);
+                line.setAttribute('class', 'g2-winning-stroke');
+                svgGroup.appendChild(line);
+            }
+
+            // 3. 給連線方塊加上黃金光圈與脈衝高亮
+            pattern.forEach(idx => {
+                if (gridEl && gridEl.children[idx]) {
+                    gridEl.children[idx].classList.add('winning');
+                }
+            });
+        });
+    },
+
+    clearWinningLines() {
+        const barsContainer = document.getElementById('g2_2-line-bars-container');
+        const svgGroup = document.getElementById('g2_2-lines-group');
+        if (barsContainer) barsContainer.innerHTML = '';
+        if (svgGroup) svgGroup.innerHTML = '';
+        this.winningMatchedPatterns = [];
+    },
+
+    evaluateLineCheck() {
+        if (this.isCardChanging) return;
+
+        const linePatterns = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        let matchedPatterns = [];
+        linePatterns.forEach(pattern => {
+            if (pattern.every(idx => this.gridData[idx] && this.gridData[idx].hit)) {
+                matchedPatterns.push(pattern);
+            }
+        });
+
+        if (matchedPatterns.length > 0) {
+            this.winningMatchedPatterns = matchedPatterns;
+            let completedLines = matchedPatterns.length;
+            let prevLines = game2_2LineCount;
+            game2_2LineCount += completedLines;
+
+            // 判斷是否是在 LV MAX 狀態下達成連線消除
+            if (game2_2Level >= 9) {
+                game2LvMaxCombo++;
+                this.isLvMaxComboChain = true;
+                updateGame2ComboBadge();
+            }
+
+            if (game2_2Bet > 0) {
+                game2_2Win = calculateGame2TotalPayout(game2_2Bet, game2_2LineCount);
+                let cardWin = game2_2Win - calculateGame2TotalPayout(game2_2Bet, prevLines);
+                updateGame2WinDisplay();
+                recalculateTotalWin();
+
+                if (cardWin > 0) {
+                    showGame2CardWinOverlay(cardWin);
+                }
+            }
+
+            if (game2_2Bet > 0) {
+                checkGame2AppleReward(completedLines);
+            }
+
+            // 1. 在對應格子上繪製黃金雷射連線光條與方塊脈衝動畫
+            this.drawWinningLines(matchedPatterns);
+
+            // 2. 觸發連線時【先停留 1 秒 (1000ms)】讓玩家清晰看清主棋盤連線狀況，之後再觸發銷毀！
+            setTimeout(() => {
+                this.triggerCardDestructionAndNextDrop();
+            }, 1000);
+        } else {
+            // 若未達成連線，但當前主棋盤是「LV MAX 刷新的 combo 延續卡」（生命週期僅限下一球/下一批發球）：
+            if (this.isLvMaxRefreshedCard) {
+                this.isLvMaxRefreshedCard = false;
+                this.isLvMaxComboChain = false;
+                game2LvMaxCombo = 0;
+                updateGame2ComboBadge();
+                // 該 LV MAX 刷新的主棋盤未能在下一球達成 combo，立即消滅，備用棋盤補充！
+                this.triggerCardDestructionAndNextDrop();
+            }
+        }
+    },
+
+    triggerCardDestructionAndNextDrop() {
+        if (this.isCardChanging) return;
+        this.isCardChanging = true;
+
+        // 當該張棋盤消失銷毀的同時，即時獲取金額勳章動畫同時消失！
+        hideGame2CardWinOverlay();
+
+        const frameEl = document.querySelector('.g2-card-frame');
+        if (frameEl) {
+            frameEl.classList.add('g2-card-destroying');
+        }
+
+        setTimeout(() => {
+            if (frameEl) frameEl.classList.remove('g2-card-destroying');
+            this.clearWinningLines();
+
+            game2_2CardNum++;
+
+            // 判斷是否是在 LV MAX 狀態下消除並觸發連擊 combo
+            if (this.isLvMaxComboChain) {
+                // 主棋盤在 LV MAX 狀態下消除：下一張棋盤【不會】從上方的備用棋盤補充！
+                // 自動更新一張同樣是 LV MAX 的棋盤，備用棋盤保持凍結保留！
+                game2_2Level = 9;
+                this.generateCard(9);
+                this.isLvMaxComboChain = false;
+                this.isLvMaxRefreshedCard = true; // 標記此新刷新卡生命週期僅限「下一球/下一批發球」！
+            } else {
+                // 若未達成 LV MAX 消除或 Combo 中斷，恢復正常從備用棋盤補充
+                game2LvMaxCombo = 0;
+                this.isLvMaxRefreshedCard = false;
+                updateGame2ComboBadge();
+
+                // 備用棋盤下降補充成為主體棋盤
+                game2_2Level = this.nextLevel;
+                this.gridData = this.nextGridDataFull;
+
+                // 第二張開始的備用棋盤，依據設定的權重機率抽 LV1 ~ LV MAX
+                let newNextLevel = getRandomGame2Level();
+                this.generateNextCard(newNextLevel);
+            }
+
+            // 重置卡片變更狀態標誌
+            this.isCardChanging = false;
+
+            // 重新渲染UI
+            this.renderUI();
+        }, 600);
+    }
+};
+
+
+let game3_2Combo = 0;
+let game3_2MaxMultiplier = 0;
+let game3_2TotalWin = 0;
+let game3_2TotalTargetBalls = 0;
+let game3_2MaxComboReached = 0;
+let game3_2ApplesInPlay = [];
+const Game3_2Manager = {
+    initNewGame() {
+        game3_2Combo = 0;
+        game3_2MaxMultiplier = 0;
+        game3_2TotalWin = 0;
+        updateGame3WinDisplay();
+        game3TotalTargetBalls = 0;
+        game3MaxComboReached = 0;
+        game3_2ApplesInPlay = [];
+        let applesToSpawn = game3_2PreApples.map(a => a.type);
+        if (applesToSpawn.length > 0 && game3_2Bet > 0) {
+            let startHitMin = game3_2TargetColor === 'white' ? 2 : 3;
+            let startHitMax = game3_2TargetColor === 'white' ? 5 : 7;
+            
+            let offsets = [0];
+            if (applesToSpawn.length >= 2) {
+                offsets.push(offsets[0] + (Math.random() < 0.20 ? 2 : 1));
+            }
+            if (applesToSpawn.length >= 3) {
+                offsets.push(offsets[1] + (Math.random() < 0.20 ? 2 : 1));
+            }
+            
+            let maxOffset = offsets[offsets.length - 1];
+            let maxX = 7 - maxOffset;
+            if (maxX > startHitMax) maxX = startHitMax;
+            if (maxX < startHitMin) maxX = startHitMin;
+            
+            let x = Math.floor(Math.random() * (maxX - startHitMin + 1)) + startHitMin;
+            
+            for (let i = 0; i < applesToSpawn.length; i++) {
+                game3_2ApplesInPlay.push({ hit: x + offsets[i], type: applesToSpawn[i] });
+            }
+        }
+        game3CurrentComboColor = null;
+        game3TrailingRainbows = 0;
+        game3SlotStyles = [];
+        game3MultiplierArray = new Array(9).fill(null);
+        
+        let startSlot = 0;
+        let startMultiplier = 0;
+        
+        if (game3_2TargetColor === 'white') {
+            startSlot = Math.floor(Math.random() * 5) + 1; // 1~5 (第2~6格)
+            startMultiplier = 2.0;
+        } else {
+            startSlot = Math.floor(Math.random() * 4) + 2; // 2~5 (第3~6格)
+            startMultiplier = Math.random() < 0.2 ? 1.5 : 2.0;
+        }
+        
+        game3MultiplierArray[8] = 50.0;
+        
+        let currentM = startMultiplier;
+        for (let i = startSlot; i < 8; i++) {
+            game3MultiplierArray[i] = currentM;
+            currentM += 1.0;
+            if (currentM > 2.0) {
+                currentM = Math.floor(currentM); // drop decimals after 2
+            }
+        }
+        
+        this.updateUI();
+        this.updateHitTable();
+    },
+    
+    processBall(color, isRainbow = false, dualPair = null) {
+        let logicalColor = color;
+        let matchFound = false;
+
+        if (isRainbow) {
+            matchFound = true;
+            logicalColor = Array.isArray(game3CurrentComboColor) ? game3CurrentComboColor[0] : (game3CurrentComboColor || (game3_2Bet === 0 ? 'red' : game3_2TargetColor));
+        } else if (dualPair) {
+            if (game3CurrentComboColor) {
+                if (Array.isArray(game3CurrentComboColor)) {
+                    let common = dualPair.filter(c => game3CurrentComboColor.includes(c));
+                    if (common.length > 0) {
+                        matchFound = true;
+                        logicalColor = common[0];
+                    }
+                } else {
+                    if (dualPair.includes(game3CurrentComboColor)) {
+                        matchFound = true;
+                        logicalColor = game3CurrentComboColor;
+                    }
+                }
+            }
+        } else {
+            if (game3CurrentComboColor) {
+                if (Array.isArray(game3CurrentComboColor)) {
+                    if (game3CurrentComboColor.includes(color)) {
+                        matchFound = true;
+                        logicalColor = color;
+                    }
+                } else {
+                    if (color === game3CurrentComboColor) {
+                        matchFound = true;
+                        logicalColor = color;
+                    }
+                }
+            }
+        }
+
+        if (matchFound || game3CurrentComboColor === null) {
+            if (game3CurrentComboColor === null) {
+                if (isRainbow) {
+                    game3CurrentComboColor = (game3_2Bet === 0 ? 'red' : game3_2TargetColor);
+                } else if (dualPair) {
+                    game3CurrentComboColor = dualPair;
+                } else {
+                    game3CurrentComboColor = color;
+                }
+            } else {
+                game3CurrentComboColor = logicalColor;
+            }
+            game3_2Combo++;
+        } else {
+            let previousTrailing = game3TrailingRainbows;
+            
+            if (dualPair) {
+                game3CurrentComboColor = dualPair;
+                logicalColor = dualPair[0];
+            } else {
+                game3CurrentComboColor = color;
+                logicalColor = color;
+            }
+            game3_2Combo = previousTrailing + 1;
+            
+            for (let i = 0; i < previousTrailing; i++) {
+                game3SlotStyles[i] = {
+                    bg: 'linear-gradient(45deg, red, orange, yellow, #22c55e, #3b82f6, #a855f7)',
+                    shadow: '#fff'
+                };
+            }
+        }
+        
+        if (isRainbow) {
+            game3TrailingRainbows++;
+        } else {
+            game3TrailingRainbows = 0;
+        }
+
+        let styleObj = { bg: '', shadow: '' };
+        if (isRainbow) {
+            styleObj.bg = 'linear-gradient(45deg, red, orange, yellow, #22c55e, #3b82f6, #a855f7)';
+            styleObj.shadow = '#fff';
+        } else if (dualPair) {
+            styleObj.bg = `linear-gradient(45deg, var(--color-${dualPair[0]}) 50%, var(--color-${dualPair[1]}) 50%)`;
+            styleObj.shadow = `var(--color-${logicalColor})`;
+        } else {
+            styleObj.bg = `var(--color-${logicalColor})`;
+            styleObj.shadow = `var(--color-${logicalColor})`;
+        }
+        game3SlotStyles[game3_2Combo - 1] = styleObj;
+
+        if (game3_2Combo > game3MaxComboReached) {
+            game3MaxComboReached = game3_2Combo;
+        }
+
+        let currentM = 1.0;
+        if (game3_2Combo > 9) {
+            currentM = 50.0;
+        } else {
+            let slotVal = game3MultiplierArray[game3_2Combo - 1];
+            if (slotVal !== null) {
+                currentM = slotVal;
+            }
+        }
+
+        if (currentM > game3_2MaxMultiplier) {
+            game3_2MaxMultiplier = currentM;
+        }
+
+        if (!isRainbow && (logicalColor === game3_2TargetColor || (dualPair && dualPair.includes(game3_2TargetColor)))) {
+            game3TotalTargetBalls++;
+            triggerClawDropAnimation();
+
+            if (window.game3ExtraClawBallPending) {
+                window.game3ExtraClawBallPending = false;
+                game3TotalTargetBalls++; // 商店特惠：額外多獲得 1 球與金額，不增加連續連鎖數
+                DOM.drawStatus.textContent = `🎯 商店特惠：夾夾樂額外加獲得 1 球與金額獎勵！ 🎯`;
+            }
+
+            // 凡是 HIT 門檻 <= 目前累積球數 (game3TotalTargetBalls) 的蘋果 (含彩虹蘋果)，全數收集！避免因商店多加1球跳過HIT門檻而漏抓！
+            let collectedApples = game3_2ApplesInPlay.filter(a => a.hit <= game3TotalTargetBalls);
+            if (collectedApples.length > 0) {
+                game3_2ApplesInPlay = game3_2ApplesInPlay.filter(a => a.hit > game3TotalTargetBalls);
+                if (game3_2Bet > 0) {
+                    collectedApples.forEach(collectedApple => {
+                        collectApple(collectedApple.type, game3_2Bet);
+                    });
+                    DOM.drawStatus.textContent = `🎯 夾中蘋果！已存入蘋果進度表！ 🎯`;
+                }
+                this.updateHitTable();
+            }
+        }
+
+        if (game3_2Bet > 0) {
+            let baseRate = (game3_2TargetColor === 'white') ? 1.0 : 0.5;
+            let maxM = game3_2MaxMultiplier > 0 ? game3_2MaxMultiplier : 1.0;
+            game3_2TotalWin = Math.floor((game3_2Bet * baseRate) * maxM) * Math.max(0, game3TotalTargetBalls - 1);
+        } else {
+            game3_2TotalWin = 0;
+        }
+        updateGame3WinDisplay();
+        recalculateTotalWin();
+
+        this.updateUI();
+        this.updateHitTable();
+    },
+    
+    updateUI() {
+        const slots = document.querySelectorAll('#game3-top-track .g3-slot');
+        slots.forEach((el, index) => {
+            el.classList.remove('active', 'achieved');
+            el.style.removeProperty('--slot-bg');
+            el.style.removeProperty('--slot-shadow');
+            
+            if (index < 8) {
+                let val = game3MultiplierArray[index];
+                el.textContent = val !== null ? `x${val}` : '';
+            } else if (index === 8) {
+                el.textContent = 'x50';
+            }
+            
+            // Permanently clear text for any slot that has been reached
+            if (index < game3MaxComboReached) {
+                el.textContent = '';
+            }
+            
+            if (index < game3_2Combo - 1) {
+                el.classList.add('achieved');
+                if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
+                    el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
+                    el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
+                }
+            } else if (index === game3_2Combo - 1 && game3_2Combo > 0) {
+                el.classList.add('active');
+                if (game3SlotStyles[index] && game3SlotStyles[index].bg) {
+                    el.style.setProperty('--slot-bg', game3SlotStyles[index].bg);
+                    el.style.setProperty('--slot-shadow', game3SlotStyles[index].shadow);
+                }
+            }
+        });
+    },
+    
+    updateHitTable() {
+        let startHit = Math.max(1, game3TotalTargetBalls);
+        let effTarget = game3_2Bet === 0 ? 'red' : game3_2TargetColor;
+        let effBet = game3_2Bet === 0 ? 600 : game3_2Bet;
+        let baseRate = (effTarget === 'white') ? 1.0 : 0.5;
+        let maxM = game3_2MaxMultiplier > 0 ? game3_2MaxMultiplier : 1.0;
+        
+        for (let i = 1; i <= 8; i++) {
+            let row = document.getElementById(`g3_2-hit-${i}`);
+            if (!row) continue;
+            
+            let currentBalls = startHit + (i - 1);
+            let lbl = row.querySelector('.hit-lbl');
+            if (lbl) lbl.textContent = currentBalls;
+            
+            let valEl = row.querySelector('.hit-val');
+            
+            let appleSlot = document.getElementById(`g3_2-apple-slot-${i}`);
+            if (appleSlot) {
+                let appleData = game3_2ApplesInPlay.find(a => a.hit === currentBalls);
+                if (appleData) {
+                    appleSlot.innerHTML = `<span class="apple-item apple-${appleData.type}" style="font-size: 1.5rem; display: block; animation: float 2s infinite ease-in-out;">🍎</span>`;
+                } else {
+                    appleSlot.innerHTML = '';
+                }
+            }
+            
+            if (valEl) {
+                if (currentBalls === 1) {
+                    valEl.textContent = 'OPEN';
+                } else {
+                    let score = Math.floor((effBet * baseRate) * maxM) * (currentBalls - 1);
+                    valEl.textContent = score;
+                }
+            }
+            
+            if (i === 1 && game3TotalTargetBalls > 0) {
+                row.classList.add('active');
+            } else {
+                row.classList.remove('active');
+            }
+        }
+    }
+};
