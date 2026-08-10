@@ -966,7 +966,7 @@ function initBoard(targetBoardId = 'game-board') {
                 targetBoardArray[r][c] = createBlockForContainer(r, c, null, true, initialMoneyValue, false, false, boardContainer);
                 continue;
             }
-            let color = getSafeColorForRefill(r, c);
+            let color = getSafeColorForRefillOnArray(r, c, targetBoardArray);
             targetBoardArray[r][c] = createBlockForContainer(r, c, color, false, 0, false, false, boardContainer);
         }
     }
@@ -2850,36 +2850,31 @@ async function startRightEngine() {
                     let flashColorsTriggered = new Set();
                     let colElims = new Array(COLS).fill(0);
                     
+                    // 依據規則：參照大轉盤顏色球，對第 1 層 (由下往上，最底列 ROWS - 1) 進行消除！
                     for (let color of event.colors) {
                         for (let c = 0; c < COLS; c++) {
-                            for (let r = ROWS - 1; r >= 0; r--) {
-                                let block = board[r][c];
-                                if (block !== null && !block.isMoney && block.color === color) {
-                                    if (block.isFlash) flashColorsTriggered.add(block.color);
-                                    if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
-                                    colElims[c]++;
-                                    block.el.classList.add('eliminating');
-                                    setTimeout((el) => el.remove(), 1000, block.el);
-                                    board[r][c] = null;
-                                    eliminatedAny = true;
-                                    break;
-                                }
+                            let block = board[ROWS - 1][c];
+                            if (block !== null && !block.isMoney && block.color === color) {
+                                if (block.isFlash) flashColorsTriggered.add(block.color);
+                                if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
+                                colElims[c]++;
+                                block.el.classList.add('eliminating');
+                                setTimeout((el) => el.remove(), 1000, block.el);
+                                board[ROWS - 1][c] = null;
+                                eliminatedAny = true;
                             }
                         }
                     }
                     if (document.getElementById('game-board_2') && game1_2Bet > 0) {
                         for (let color of event.colors) {
                             for (let c = 0; c < COLS; c++) {
-                                for (let r = ROWS - 1; r >= 0; r--) {
-                                    let block = board_2[r][c];
-                                    if (block !== null && !block.isMoney && block.color === color) {
-                                        if (block.attachedApple && game3_2Bet > 0) collectApple(block.attachedApple, game3_2Bet);
-                                        block.el.classList.add('eliminating');
-                                        setTimeout((el) => el.remove(), 1000, block.el);
-                                        board_2[r][c] = null;
-                                        eliminatedAny = true;
-                                        break;
-                                    }
+                                let block = board_2[ROWS - 1][c];
+                                if (block !== null && !block.isMoney && block.color === color) {
+                                    if (block.attachedApple && game3_2Bet > 0) collectApple(block.attachedApple, game3_2Bet);
+                                    block.el.classList.add('eliminating');
+                                    setTimeout((el) => el.remove(), 1000, block.el);
+                                    board_2[ROWS - 1][c] = null;
+                                    eliminatedAny = true;
                                 }
                             }
                         }
@@ -2920,7 +2915,10 @@ async function startRightEngine() {
                             await applyGravity('game-board_2');
                         }
                         
-                        await checkMatchesAndChain();
+                        await checkMatchesAndChain('game-board');
+                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
+                            await checkMatchesAndChain('game-board_2');
+                        }
                         
                         let finalCombo = currentCombo;
                         currentCombo = 0;
@@ -3019,7 +3017,10 @@ async function startRightEngine() {
                     }
                     
                     await applyGravity();
-                    await checkMatchesAndChain();
+                    await checkMatchesAndChain('game-board');
+                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
+                            await checkMatchesAndChain('game-board_2');
+                        }
                     
                     let finalCombo = currentCombo;
                     currentCombo = 0;
@@ -3032,7 +3033,10 @@ async function startRightEngine() {
                     
                 } else if (event.type === 'game_over') {
                     boardState = 'SETTLING';
-                    await checkMatchesAndChain(); // 結算最後盤面
+                    await checkMatchesAndChain('game-board');
+                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
+                            await checkMatchesAndChain('game-board_2');
+                        } // 結算最後盤面
                     await finishGameOverSequence();
                     boardState = 'IDLE';
                     continue;
@@ -3071,7 +3075,7 @@ async function applyGravity(targetBoardId = 'game-board') {
     if (moved) await engineSleep(400);
 }
 
-function findConnectedComponents() {
+function findConnectedComponents(targetBoardArray = board) {
     let visited = new Array(ROWS).fill(0).map(() => new Array(COLS).fill(false));
     let components = [];
     const dr = [-1, 1, 0, 0];
@@ -3079,7 +3083,7 @@ function findConnectedComponents() {
     
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-            let block = board[r][c];
+            let block = targetBoardArray[r][c];
             if (block !== null && !block.isMoney && !visited[r][c]) {
                 let color = block.color;
                 let currentComponent = [];
@@ -3088,13 +3092,13 @@ function findConnectedComponents() {
                 
                 while(queue.length > 0) {
                     let curr = queue.shift();
-                    currentComponent.push(board[curr.r][curr.c]);
+                    currentComponent.push(targetBoardArray[curr.r][curr.c]);
                     
                     for (let i = 0; i < 4; i++) {
                         let nr = curr.r + dr[i];
                         let nc = curr.c + dc[i];
                         if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                            let nextBlock = board[nr][nc];
+                            let nextBlock = targetBoardArray[nr][nc];
                             if (nextBlock !== null && !nextBlock.isMoney && !visited[nr][nc] && nextBlock.color === color) {
                                 visited[nr][nc] = true;
                                 queue.push({r: nr, c: nc});
@@ -3111,18 +3115,23 @@ function findConnectedComponents() {
     return components;
 }
 
-async function checkMatchesAndChain() {
+async function checkMatchesAndChain(targetBoardId = 'game-board') {
+    let isSetB = targetBoardId === 'game-board_2';
+    let targetBoardArray = isSetB ? board_2 : board;
+    let targetBetVal = isSetB ? game1_2Bet : game1Bet;
+    if (!targetBoardArray || targetBoardArray.length === 0) return;
+
     let hasMatches = true;
     while (hasMatches && isPlaying) {
         let moneyBlocksToEliminate = [];
         for (let c = 0; c < COLS; c++) {
-            let block = board[ROWS - 1][c];
+            let block = targetBoardArray[ROWS - 1][c];
             if (block && block.isMoney) {
                 moneyBlocksToEliminate.push(block);
             }
         }
         
-        let components = findConnectedComponents();
+        let components = findConnectedComponents(targetBoardArray);
         
         if (components.length > 0 || moneyBlocksToEliminate.length > 0) {
             currentCombo++;
@@ -3141,15 +3150,16 @@ async function checkMatchesAndChain() {
             
             // 處理金錢球
             for (let block of moneyBlocksToEliminate) {
-                if (game1Bet > 0) {
-                    game1Win += block.moneyValue;
+                if (targetBetVal > 0) {
+                    if (isSetB) game1_2Win += block.moneyValue;
+                    else game1Win += block.moneyValue;
                     updateGame1WinDisplay();
                     recalculateTotalWin();
                 }
                 block.el.style.transform = 'scale(1.5)';
                 block.el.style.opacity = '0';
                 setTimeout((el) => el.remove(), 1000, block.el);
-                board[block.r][block.c] = null;
+                targetBoardArray[block.r][block.c] = null;
             }
             if (moneyBlocksToEliminate.length > 0) {
                 updateWinDisplay();
@@ -3171,7 +3181,7 @@ async function checkMatchesAndChain() {
                     DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
                     for (let r = 0; r < ROWS; r++) {
                         for (let c = 0; c < COLS; c++) {
-                            let block = board[r][c];
+                            let block = targetBoardArray[r][c];
                             if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
                                 blocksToEliminate.add(block);
                             }
@@ -3181,24 +3191,24 @@ async function checkMatchesAndChain() {
                 
                 let colElims = new Array(COLS).fill(0);
                 for (let block of blocksToEliminate) {
-                    if (block.attachedApple && game3Bet > 0) {
-                        collectApple(block.attachedApple, game3Bet);
+                    if (block.attachedApple && (isSetB ? game3_2Bet : game3Bet) > 0) {
+                        collectApple(block.attachedApple, isSetB ? game3_2Bet : game3Bet);
                     }
                     colElims[block.c]++;
                     block.el.classList.add('eliminating');
                     setTimeout((el) => el.remove(), 1000, block.el);
-                    board[block.r][block.c] = null;
+                    targetBoardArray[block.r][block.c] = null;
                 }
                 updateApplesHP(colElims);
             }
             
             await engineSleep(1000);
-            await applyGravity();
+            await applyGravity(targetBoardId);
             
             let isAllClear = true;
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
-                    if (board[r][c] !== null) {
+                    if (targetBoardArray[r][c] !== null) {
                         isAllClear = false;
                         break;
                     }
@@ -3207,27 +3217,25 @@ async function checkMatchesAndChain() {
             }
             if (isAllClear && allClearBonusCount < 2) {
                 allClearBonusCount++;
-                let bonus = (game1Bet === 0 ? 600 : game1Bet) * 30;
-                if (game1Bet > 0) {
-                    game1Win += bonus;
+                let bonus = (targetBetVal === 0 ? 600 : targetBetVal) * 30;
+                if (targetBetVal > 0) {
+                    if (isSetB) game1_2Win += bonus;
+                    else game1Win += bonus;
                     updateGame1WinDisplay();
                     recalculateTotalWin();
                 }
                 DOM.drawStatus.textContent = `🎊 全盤清除！額外獲得 ${bonus} 🎊`;
                 
-                let gameBoardEl = document.getElementById('game-board');
-                gameBoardEl.classList.add('all-clear-shake');
-                
-                let acOverlay = document.createElement('div');
-                acOverlay.className = 'all-clear-overlay';
-                acOverlay.textContent = '恭喜獲得全消';
-                gameBoardEl.appendChild(acOverlay);
-                
-                await engineSleep(3000);
-                
-                gameBoardEl.classList.remove('all-clear-shake');
-                if (acOverlay.parentNode) {
-                    acOverlay.remove();
+                let gameBoardEl = document.getElementById(targetBoardId);
+                if (gameBoardEl) {
+                    gameBoardEl.classList.add('all-clear-shake');
+                    let acOverlay = document.createElement('div');
+                    acOverlay.className = 'all-clear-overlay';
+                    acOverlay.textContent = '恭喜獲得全消';
+                    gameBoardEl.appendChild(acOverlay);
+                    await engineSleep(3000);
+                    gameBoardEl.classList.remove('all-clear-shake');
+                    if (acOverlay.parentNode) acOverlay.remove();
                 }
             }
         } else {
@@ -3260,13 +3268,12 @@ function getRandomMoneyBallValue() {
     return Math.floor((game1Bet === 0 ? 600 : game1Bet) * (50/5));
 }
 
-function getSafeColorForRefill(r, c) {
+function getSafeColorForRefillOnArray(r, c, targetBoardArray) {
     let availableColors = [...COLORS];
     for (let i = availableColors.length - 1; i >= 0; i--) {
         let color = availableColors[i];
         
-        // 暫時擺放該顏色以進行洪水填充模擬
-        board[r][c] = { color: color, isMoney: false };
+        targetBoardArray[r][c] = { color: color, isMoney: false };
         
         let visited = new Array(ROWS).fill(0).map(() => new Array(COLS).fill(false));
         let count = 0;
@@ -3282,7 +3289,7 @@ function getSafeColorForRefill(r, c) {
                 let nr = curr.r + dr[d];
                 let nc = curr.c + dc[d];
                 if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                    let nextBlock = board[nr][nc];
+                    let nextBlock = targetBoardArray[nr][nc];
                     if (nextBlock && !nextBlock.isMoney && !visited[nr][nc] && nextBlock.color === color) {
                         visited[nr][nc] = true;
                         queue.push({r: nr, c: nc});
@@ -3291,33 +3298,19 @@ function getSafeColorForRefill(r, c) {
             }
         }
         
-        // 移除暫時擺放的色塊
-        board[r][c] = null;
+        targetBoardArray[r][c] = null;
         
-        // 如果有任何形狀達到 3 個或以上相連，就絕對禁止這個顏色！
         if (count >= 3) {
             availableColors.splice(i, 1);
         }
     }
     
     if (availableColors.length === 0) return COLORS[Math.floor(Math.random() * COLORS.length)];
-    
-    // Attempt 10% grouping logic if neighbors have safe colors
-    if (r !== undefined && c !== undefined && Math.random() < 0.10) {
-        let neighbors = [];
-        if (r > 0 && board[r-1][c] && !board[r-1][c].isMoney) neighbors.push(board[r-1][c].color);
-        if (r < ROWS-1 && board[r+1][c] && !board[r+1][c].isMoney) neighbors.push(board[r+1][c].color);
-        if (c > 0 && board[r][c-1] && !board[r][c-1].isMoney) neighbors.push(board[r][c-1].color);
-        if (c < COLS-1 && board[r][c+1] && !board[r][c+1].isMoney) neighbors.push(board[r][c+1].color);
-        
-        // Filter neighbors to only include SAFE colors
-        let safeNeighbors = neighbors.filter(col => availableColors.includes(col));
-        if (safeNeighbors.length > 0) {
-            return safeNeighbors[Math.floor(Math.random() * safeNeighbors.length)];
-        }
-    }
-    
     return availableColors[Math.floor(Math.random() * availableColors.length)];
+}
+
+function getSafeColorForRefill(r, c) {
+    return getSafeColorForRefillOnArray(r, c, board);
 }
 
 async function refillBoard(finalCombo = 0) {
@@ -3409,7 +3402,7 @@ async function refillBoard(finalCombo = 0) {
             let randomValue = getRandomMoneyBallValue();
             block = createBlock(-1, c, null, true, randomValue, false, false);
         } else {
-            let color = getSafeColorForRefill(r, c);
+            let color = getSafeColorForRefillOnArray(r, c, targetBoardArray);
             let isFlash = false;
             if (flashBallsCount > 0) { isFlash = true; flashBallsCount--; }
             block = createBlock(-1, c, color, false, 0, isFlash);
@@ -3456,7 +3449,10 @@ async function refillBoard(finalCombo = 0) {
     await engineSleep(500);
     // 恢復 checkMatchesAndChain 作為安全網，雖然演算法已保證不連鎖，
     // 若機率極低發生顏色庫耗盡而 fallback 的情況，也能正確清除避免盤面卡死
-    await checkMatchesAndChain(); 
+    await checkMatchesAndChain('game-board');
+                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
+                            await checkMatchesAndChain('game-board_2');
+                        } 
 }
 
 function showComboOverlay(combo) {
