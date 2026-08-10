@@ -2312,3 +2312,21 @@ html, body {
     text-shadow: none !important;
     border-color: #86efac !important;
 }
+
+
+/* === SET-H 與 SET-K 遊戲 1、2、3 邊框線徑加粗 2 倍 (原 4px -> 加粗為 8px) === */
+#game1-container, #game1_2-container {
+    border: 8px solid #3b82f6 !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6) !important;
+    border-radius: 16px;
+}
+
+#game2-inner, #game2_2-container #game2-inner {
+    border: 8px solid #8b5cf6 !important;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6) !important;
+}
+
+#game3-inner, #game3_2-container #game3-inner {
+    border: 8px solid #ef4444 !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+}

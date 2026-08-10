@@ -60,6 +60,7 @@ let game2_2Bet = 0;
 let game2LvMaxCombo = 0;
 let game3Bet = 0;
 let game3_2Bet = 0;
+let game3_2TargetColor = "red";
 let previousGame1Bet = 0;
 let previousGame1_2Bet = 0;
 let previousGame2Bet = 0;
@@ -1185,14 +1186,19 @@ function generateBetApples(gameIdInput) {
         }
     });
 
-    if (gameId === 1) {
+    if (gId === '1') {
         spawnApples('game1-container');
+    } else if (gId === '1_2') {
         spawnApples('game1_2-container');
-    } else if (gameId === 2) {
+    } else if (gId === '2' || gId === '2_2') {
         generateGame2AppleThresholds();
-    } else if (gameId === 3) {
+    } else if (gId === '3') {
         if (typeof Game3Manager !== 'undefined') {
             Game3Manager.updateHitTable();
+        }
+    } else if (gId === '3_2') {
+        if (typeof Game3_2Manager !== 'undefined') {
+            Game3_2Manager.updateHitTable();
         }
     }
 }
