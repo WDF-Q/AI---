@@ -50,6 +50,7 @@ let board = [];
 let board_2 = [];
 let isPlaying = false;
 let currentCombo = 0;
+let currentCombo_2 = 0;
 let totalWin = 0;
 let ballCount = 0;
 let credit = 10000;
@@ -2475,8 +2476,12 @@ async function startGame() {
     }
 }
 
-function updateLadderActive(combo) {
-    document.querySelectorAll('.ladder-step').forEach(step => {
+function updateLadderActive(combo, isSetB = false) {
+    let containerId = isSetB ? 'game1_2-container' : 'game1-container';
+    let container = document.getElementById(containerId);
+    if (!container) return;
+    let steps = container.querySelectorAll('.ladder-step');
+    steps.forEach(step => {
         step.classList.remove('active');
         if (parseInt(step.dataset.chain) === combo) step.classList.add('active');
     });
@@ -2855,6 +2860,9 @@ async function startRightEngine() {
                     let flashColorsTriggered = new Set();
                     let colElims = new Array(COLS).fill(0);
                     
+                                        let eliminatedAny_H = false;
+                    let eliminatedAny_K = false;
+
                     // 依據規則：參照大轉盤顏色球，對第 1 層 (由下往上，最底列 ROWS - 1) 進行消除！
                     for (let color of event.colors) {
                         for (let c = 0; c < COLS; c++) {
@@ -2866,7 +2874,7 @@ async function startRightEngine() {
                                 block.el.classList.add('eliminating');
                                 setTimeout((el) => el.remove(), 1000, block.el);
                                 board[ROWS - 1][c] = null;
-                                eliminatedAny = true;
+                                eliminatedAny_H = true;
                             }
                         }
                     }
@@ -2879,73 +2887,56 @@ async function startRightEngine() {
                                     block.el.classList.add('eliminating');
                                     setTimeout((el) => el.remove(), 1000, block.el);
                                     board_2[ROWS - 1][c] = null;
-                                    eliminatedAny = true;
+                                    eliminatedAny_K = true;
                                 }
                             }
                         }
                     }
-                    updateApplesHP(colElims);
-                    
-                    if (flashColorsTriggered.size > 0) {
-                        DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
-                        let flashColElims = new Array(COLS).fill(0);
-                        for (let r = 0; r < ROWS; r++) {
-                            for (let c = 0; c < COLS; c++) {
-                                let block = board[r][c];
-                                if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                                    if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
-                                    flashColElims[c]++;
-                                    block.el.classList.add('eliminating');
-                                    setTimeout((el) => el.remove(), 1000, block.el);
-                                    board[r][c] = null;
-                                    eliminatedAny = true;
-                                }
-                            }
-                        }
-                        updateApplesHP(flashColElims);
-                    }
-                    
-                    if (eliminatedAny) {
+
+                    if (eliminatedAny_H) {
                         currentCombo = 1;
-                        updateLadderActive(currentCombo);
-                        DOM.drawStatus.textContent = `${currentCombo} 連鎖！(底部引爆)`;
+                        updateLadderActive(currentCombo, false);
+                        DOM.drawStatus.textContent = `${currentCombo} 連鎖！(SET-H 底部引爆)`;
                         showComboOverlay(currentCombo);
                         await engineSleep(600);
-                        
-                        // 消除後立即進行重力下落與滿盤色球補充，絕不留空白！
                         await applyGravity('game-board');
                         await refillBoard('game-board', 0);
-                        if (document.getElementById('game-board_2')) {
-                            await applyGravity('game-board_2');
-                            await refillBoard('game-board_2', 0);
-                        }
-                        
+                        batchEliminatedAny = true;
+                    }
+
+                    if (eliminatedAny_K) {
+                        currentCombo_2 = 1;
+                        updateLadderActive(currentCombo_2, true);
+                        DOM.drawStatus.textContent = `${currentCombo_2} 連鎖！(SET-K 底部引爆)`;
+                        showComboOverlay(currentCombo_2);
+                        await engineSleep(600);
+                        await applyGravity('game-board_2');
+                        await refillBoard('game-board_2', 0);
                         batchEliminatedAny = true;
                     }
                 } else if (event.type === 'trigger_chains') {
                     if (batchEliminatedAny) {
-                        await applyGravity('game-board');
+                        // 處理 SET-H (獨立連鎖、獨立下落與獨立補球)
+                        if (game1Bet > 0) {
+                            await applyGravity('game-board');
+                            await checkMatchesAndChain('game-board');
+                            let finalCombo_H = currentCombo;
+                            currentCombo = 0;
+                            updateLadderActive(0, false);
+                            await refillBoard('game-board', finalCombo_H);
+                        }
+                        
+                        // 處理 SET-K (獨立連鎖、獨立下落與獨立補球)
                         if (document.getElementById('game-board_2') && game1_2Bet > 0) {
                             await applyGravity('game-board_2');
-                        }
-                        
-                        await checkMatchesAndChain('game-board');
-                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
                             await checkMatchesAndChain('game-board_2');
-                        }
-                        
-                        let finalCombo = currentCombo;
-                        currentCombo = 0;
-                        updateLadderActive(0);
-                        
-                        await refillBoard('game-board', finalCombo);
-                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
-                            await refillBoard('game-board_2', finalCombo);
+                            let finalCombo_K = currentCombo_2;
+                            currentCombo_2 = 0;
+                            updateLadderActive(0, true);
+                            await refillBoard('game-board_2', finalCombo_K);
                         }
                         
                         batchEliminatedAny = false;
-                        currentCombo = 0;
-                        updateLadderActive(0);
                     }
                 } else if (event.type === 'laser_strike') {
                     let birdMouth = document.getElementById('bird-mouth');
@@ -3148,19 +3139,25 @@ async function checkMatchesAndChain(targetBoardId = 'game-board') {
         let components = findConnectedComponents(targetBoardArray);
         
         if (components.length > 0 || moneyBlocksToEliminate.length > 0) {
-            currentCombo++;
-            updateLadderActive(currentCombo >= 10 ? 10 : currentCombo);
-            
-            let statusText = `${currentCombo} 連鎖！`;
-            if (components.length > 0 && moneyBlocksToEliminate.length > 0) {
-                statusText += ` (金錢+消除)`;
-            } else if (moneyBlocksToEliminate.length > 0) {
-                statusText += ` (收集金錢球)`;
+            if (isSetB) {
+                currentCombo_2++;
+                updateLadderActive(currentCombo_2 >= 10 ? 10 : currentCombo_2, true);
+                let statusText = `${currentCombo_2} 連鎖！(SET-K)`;
+                if (components.length > 0 && moneyBlocksToEliminate.length > 0) statusText += ` (金錢+消除)`;
+                else if (moneyBlocksToEliminate.length > 0) statusText += ` (收集金錢球)`;
+                else statusText += ` (消除)`;
+                DOM.drawStatus.textContent = statusText;
+                showComboOverlay(currentCombo_2);
             } else {
-                statusText += ` (消除)`;
+                currentCombo++;
+                updateLadderActive(currentCombo >= 10 ? 10 : currentCombo, false);
+                let statusText = `${currentCombo} 連鎖！(SET-H)`;
+                if (components.length > 0 && moneyBlocksToEliminate.length > 0) statusText += ` (金錢+消除)`;
+                else if (moneyBlocksToEliminate.length > 0) statusText += ` (收集金錢球)`;
+                else statusText += ` (消除)`;
+                DOM.drawStatus.textContent = statusText;
+                showComboOverlay(currentCombo);
             }
-            DOM.drawStatus.textContent = statusText;
-            showComboOverlay(currentCombo);
             
             // 處理金錢球
             for (let block of moneyBlocksToEliminate) {
