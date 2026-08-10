@@ -358,7 +358,7 @@ function handleAddBet(gameIdInput) {
         else { game1_2Bet += inc; if(game1_2Bet > 3000) game1_2Bet = 3000; }
         document.querySelectorAll('.bet-value[data-game="1_2"]').forEach(el => el.textContent = game1_2Bet);
         if (typeof updateLadderRewards_2 === 'function') updateLadderRewards_2(game1_2Bet);
-        else updateLadderRewards(game1_2Bet);
+        else updateLadderRewards(game1_2Bet, true);
         generateBetApples('1_2');
     } else if (gId === '2') {
         if (game2Bet === 0) game2Bet = 600;
@@ -403,7 +403,7 @@ document.getElementById('btn-repeat-bet').addEventListener('click', () => {
             game1_2Bet = previousGame1_2Bet;
             document.querySelectorAll('.bet-value[data-game="1_2"]').forEach(el => el.textContent = game1_2Bet);
             if (typeof updateLadderRewards_2 === 'function') updateLadderRewards_2(game1_2Bet);
-            else updateLadderRewards(game1_2Bet);
+            else updateLadderRewards(game1_2Bet, true);
             generateBetApples('1_2');
         }
         if (previousGame2Bet > 0) {
@@ -2911,6 +2911,22 @@ async function startRightEngine_H() {
                     }
                     updateApplesHP(colElims);
                     if (eliminatedAny) {
+                        if (flashColors.size > 0) {
+                            DOM.drawStatus.textContent = `⚡ 閃爍發光球全爆破！ ⚡`;
+                            for (let r = 0; r < ROWS; r++) {
+                                for (let c = 0; c < COLS; c++) {
+                                    let block = board[r][c];
+                                    if (block !== null && !block.isMoney && flashColors.has(block.color)) {
+                                        if (block.attachedApple && game1Bet > 0) collectApple(block.attachedApple, game1Bet);
+                                        colElims[c]++;
+                                        block.el.classList.add('eliminating');
+                                        setTimeout((el) => el.remove(), 1000, block.el);
+                                        board[r][c] = null;
+                                    }
+                                }
+                            }
+                        }
+                        updateApplesHP(colElims);
                         currentCombo = 1;
                         updateLadderActive(currentCombo, false);
                         showComboOverlay(currentCombo, 'game-board');
@@ -2971,6 +2987,20 @@ async function startRightEngine_K() {
                         }
                     }
                     if (eliminatedAny) {
+                        if (flashColors.size > 0) {
+                            DOM.drawStatus.textContent = `⚡ SET-K 閃爍發光球全爆破！ ⚡`;
+                            for (let r = 0; r < ROWS; r++) {
+                                for (let c = 0; c < COLS; c++) {
+                                    let block = board_2[r][c];
+                                    if (block !== null && !block.isMoney && flashColors.has(block.color)) {
+                                        if (block.attachedApple && game1_2Bet > 0) collectApple(block.attachedApple, game1_2Bet);
+                                        block.el.classList.add('eliminating');
+                                        setTimeout((el) => el.remove(), 1000, block.el);
+                                        board_2[r][c] = null;
+                                    }
+                                }
+                            }
+                        }
                         currentCombo_2 = 1;
                         updateLadderActive(currentCombo_2, true);
                         showComboOverlay(currentCombo_2, 'game-board_2');
@@ -3283,6 +3313,9 @@ async function refillBoard(targetBoardId = 'game-board', finalCombo = 0) {
     let targetBoardArray = isSetB ? board_2 : board;
     let targetBoardContainer = document.getElementById(targetBoardId);
     if (!targetBoardContainer || !targetBoardArray) return;
+    
+    // 確保現有色球已完全向下下落堆疊至底部，再進行新球與金錢球補充
+    await applyGravity(targetBoardId);
     
     let currentBetVal = isSetB ? game1_2Bet : game1Bet;
     let hasEmpty = false;
