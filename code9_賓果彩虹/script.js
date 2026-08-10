@@ -841,29 +841,38 @@ function updateGame3WinDisplay() {
 
 function showRoundEndOutOverlays() {
     let b1 = previousGame1Bet > 0 ? previousGame1Bet : game1Bet;
+    let b1_2 = previousGame1_2Bet > 0 ? previousGame1_2Bet : game1_2Bet;
     let b2 = previousGame2Bet > 0 ? previousGame2Bet : game2Bet;
+    let b2_2 = previousGame2_2Bet > 0 ? previousGame2_2Bet : game2_2Bet;
     let b3 = previousGame3Bet > 0 ? previousGame3Bet : game3Bet;
+    let b3_2 = previousGame3_2Bet > 0 ? previousGame3_2Bet : game3_2Bet;
 
+    // SET-H
     if (b1 > 0) {
         const out1 = document.getElementById('out-overlay');
-        if (out1) {
-            out1.textContent = 'OUT';
-            out1.classList.add('show');
-        }
+        if (out1) { out1.textContent = 'OUT'; out1.classList.add('show'); }
     }
     if (b2 > 0) {
         const out2 = document.getElementById('g2-out-overlay');
-        if (out2) {
-            out2.textContent = 'OUT';
-            out2.classList.add('show');
-        }
+        if (out2) { out2.textContent = 'OUT'; out2.classList.add('show'); }
     }
     if (b3 > 0) {
         const out3 = document.getElementById('g3-out-overlay');
-        if (out3) {
-            out3.textContent = 'OUT';
-            out3.classList.add('show');
-        }
+        if (out3) { out3.textContent = 'OUT'; out3.classList.add('show'); }
+    }
+
+    // SET-K
+    if (b1_2 > 0) {
+        const out1_2 = document.getElementById('out-overlay_2');
+        if (out1_2) { out1_2.textContent = 'OUT'; out1_2.classList.add('show'); }
+    }
+    if (b2_2 > 0) {
+        const out2_2 = document.getElementById('g2-out-overlay_2');
+        if (out2_2) { out2_2.textContent = 'OUT'; out2_2.classList.add('show'); }
+    }
+    if (b3_2 > 0) {
+        const out3_2 = document.getElementById('g3-out-overlay_2');
+        if (out3_2) { out3_2.textContent = 'OUT'; out3_2.classList.add('show'); }
     }
 }
 
@@ -2826,7 +2835,11 @@ async function startLeftEngine() {
                     let res = await shootBallAsync(isSafeMode);
                     updateHistoryUI();
                     
-                    // 備註2: 若剛好在第 10, 20, 30 球進彩色洞，商店先出來 (價格+20%)，之後才加入並發射3球
+                    if (res === 'game_over') {
+                        isGameOverTriggered = true;
+                        break;
+                    }
+                    
                     let isRainbowHitOnThreshold = (res === 'rainbow' && [10, 20, 30].includes(ballCount));
                     await checkAndTriggerShop(ballCount, isRainbowHitOnThreshold);
                     
@@ -2837,7 +2850,7 @@ async function startLeftEngine() {
                             pendingInitialBatch += 3;
                         } else {
                             pendingEventsQueue_H.push({ type: 'trigger_chains' });
-                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
+                            if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
                         }
                     } else {
                         pendingEventsQueue_H.push({ type: 'trigger_chains' });
@@ -2857,6 +2870,16 @@ async function startLeftEngine() {
             }
         }
     }
+    
+    // 等待雙獨立引擎結束事件佇列
+    while (pendingEventsQueue_H.length > 0 || pendingEventsQueue_K.length > 0 || boardState_H !== 'IDLE' || boardState_K !== 'IDLE') {
+        await sleep(200);
+    }
+    
+    if (isGameOverTriggered) {
+        await finishGameOverSequence();
+    }
+    
     leftEngineActive = false;
 }
 
@@ -3395,12 +3418,17 @@ async function refillBoard(targetBoardId = 'game-board', finalCombo = 0) {
                         } 
 }
 
-function showComboOverlay(combo) {
-    DOM.comboOverlay.textContent = `${combo} COMBO!`;
-    DOM.comboOverlay.classList.remove('show');
-    void DOM.comboOverlay.offsetWidth;
-    DOM.comboOverlay.classList.add('show');
-    setTimeout(() => { DOM.comboOverlay.classList.remove('show'); }, 500);
+function showComboOverlay(combo, containerId = 'game-board') {
+    let container = document.getElementById(containerId) || document.getElementById('game-board');
+    if (!container) return;
+    let overlay = container.querySelector('.combo-overlay');
+    if (overlay) {
+        overlay.textContent = `${combo} COMBO!`;
+        overlay.classList.remove('show');
+        void overlay.offsetWidth;
+        overlay.classList.add('show');
+        setTimeout(() => { overlay.classList.remove('show'); }, 500);
+    }
 }
 
 async function finishGameOverSequence() {
