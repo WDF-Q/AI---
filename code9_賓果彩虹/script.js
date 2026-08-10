@@ -49,6 +49,12 @@ const COMBO_MULTIPLIERS = {
 let board = [];
 let board_2 = [];
 let isPlaying = false;
+let boardState_H = 'IDLE';
+let boardState_K = 'IDLE';
+let pendingEventsQueue_H = [];
+let pendingEventsQueue_K = [];
+let batchEliminatedAny_H = false;
+let batchEliminatedAny_K = false;
 let currentCombo = 0;
 let currentCombo_2 = 0;
 let totalWin = 0;
@@ -203,8 +209,6 @@ function renderGameModulesLayout() {
 
 // ** Decoupled Engine States **
 let leftEngineActive = false;
-let boardState = 'IDLE'; 
-let pendingEventsQueue = []; 
 let isGameOverTriggered = false; 
 let pendingInitialBatch = 0; 
 let pendingDrawsQueue = 0;
@@ -2315,7 +2319,7 @@ function applyRainbowAppleToTargetGame(targetGame) {
 
 async function startGame() {
     try {
-        if (leftEngineActive || boardState !== 'IDLE') return;
+        if (leftEngineActive || boardState_H !== 'IDLE' || boardState_K !== 'IDLE') return;
         
         if (queuedJPPackages.length > 0 && appleBonusRoundsLeft === 0) {
             appleBonusRoundsLeft = 3;
@@ -2383,8 +2387,10 @@ async function startGame() {
         batchEliminatedAny = false;
         if (DOM.ballCountText) DOM.ballCountText.textContent = ballCount;
         isGameOverTriggered = false;
-        pendingEventsQueue = [];
-        boardState = 'IDLE';
+        pendingEventsQueue_H = [];
+        pendingEventsQueue_K = [];
+        boardState_H = 'IDLE';
+        boardState_K = 'IDLE';
         
         // 初始化 Game 2 (連連樂) 與 Game 3 (夾夾樂)
         Game2Manager.init();
@@ -2469,7 +2475,8 @@ async function startGame() {
         console.error("Error in startGame:", err);
         isPlaying = false;
         leftEngineActive = false;
-        boardState = 'IDLE';
+        boardState_H = 'IDLE';
+        boardState_K = 'IDLE';
         if (DOM.btnStart) DOM.btnStart.disabled = false;
         document.querySelectorAll('.chip-btn').forEach(btn => btn.disabled = false);
         document.querySelectorAll('.color-btn').forEach(btn => btn.style.pointerEvents = 'auto');
@@ -2655,7 +2662,8 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
             
             if (!isSafeMode) {
                 isGameOverTriggered = true;
-                pendingEventsQueue.push({ type: 'game_over' });
+                pendingEventsQueue_H.push({ type: 'game_over' });
+                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'game_over' });
                 if (DOM.drawStatus) DOM.drawStatus.textContent = '抽中 OUT！等待盤面結算...';
                 return 'game_over';
             } else {
@@ -2674,7 +2682,7 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
                 Game3Manager.processBall(game3TargetColor, true, null); // Game 3 rainbow wildcard
                 if (typeof Game3_2Manager !== 'undefined') Game3_2Manager.processBall(game3_2TargetColor || 'red', true, null);
                 
-                pendingEventsQueue.push({ type: 'laser_strike' });
+                pendingEventsQueue_H.push({ type: 'laser_strike' });
                 if (DOM.drawStatus) DOM.drawStatus.textContent = '彩色球！獲得雷射！';
                 return 'rainbow';
             } else {
@@ -2699,7 +2707,8 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
                 Game3Manager.processBall(null, false, pair);
                 if (typeof Game3_2Manager !== 'undefined') Game3_2Manager.processBall(null, false, pair);
                 
-                pendingEventsQueue.push({ type: 'layer8_hit', colors: pair });
+                pendingEventsQueue_H.push({ type: 'layer8_hit', colors: pair });
+                    if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'layer8_hit', colors: pair });
                 if (DOM.drawStatus) DOM.drawStatus.textContent = '小轉盤：同步消除雙色！';
                 return 'sp';
             }
@@ -2717,7 +2726,8 @@ async function shootBallAsync(isSafeMode, isBatchMode = false) {
                 await applyMiniGameSteps(currentStepMapping[color]);
             }
             
-            pendingEventsQueue.push({ type: 'layer8_hit', colors: [color] });
+            pendingEventsQueue_H.push({ type: 'layer8_hit', colors: [color] });
+            if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'layer8_hit', colors: [color] });
             if (DOM.drawStatus) DOM.drawStatus.textContent = `抽中 ${COLOR_ZH[color]}！`;
             return 'color';
         }
@@ -2789,12 +2799,14 @@ async function startLeftEngine() {
                         pendingDrawsQueue += (rainbowTriggeredCount * 3);
                         pendingInitialBatch += (rainbowTriggeredCount * 3);
                     } else {
-                        pendingEventsQueue.push({ type: 'trigger_chains' });
+                        pendingEventsQueue_H.push({ type: 'trigger_chains' });
+                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
                     }
                     
                     if (pendingInitialBatch === 0 && ballCount >= 40) {
                         isGameOverTriggered = true;
-                        pendingEventsQueue.push({ type: 'game_over' });
+                        pendingEventsQueue_H.push({ type: 'game_over' });
+                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'game_over' });
                         DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
                     }
                     
@@ -2824,15 +2836,18 @@ async function startLeftEngine() {
                             pendingDrawsQueue += 3;
                             pendingInitialBatch += 3;
                         } else {
-                            pendingEventsQueue.push({ type: 'trigger_chains' });
+                            pendingEventsQueue_H.push({ type: 'trigger_chains' });
+                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
                         }
                     } else {
-                        pendingEventsQueue.push({ type: 'trigger_chains' });
+                        pendingEventsQueue_H.push({ type: 'trigger_chains' });
+                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
                     }
 
                     if (pendingInitialBatch === 0 && ballCount >= 40) {
                         isGameOverTriggered = true;
-                        pendingEventsQueue.push({ type: 'game_over' });
+                        pendingEventsQueue_H.push({ type: 'game_over' });
+                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'game_over' });
                         DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
                         break;
                     }
@@ -2847,239 +2862,130 @@ async function startLeftEngine() {
 
 let batchEliminatedAny = false;
 
-async function startRightEngine() {
+async function startRightEngine_H() {
     while (isPlaying) {
-        if (boardState === 'IDLE' && pendingEventsQueue.length > 0) {
-            boardState = 'BUSY';
-            
+        if (boardState_H === 'IDLE' && pendingEventsQueue_H.length > 0) {
+            boardState_H = 'BUSY';
             try {
-                let event = pendingEventsQueue.shift();
-            
+                let event = pendingEventsQueue_H.shift();
                 if (event.type === 'layer8_hit') {
                     let eliminatedAny = false;
-                    let flashColorsTriggered = new Set();
+                    let flashColors = new Set();
                     let colElims = new Array(COLS).fill(0);
-                    
-                                        let eliminatedAny_H = false;
-                    let eliminatedAny_K = false;
-                    let flashColors_H = new Set();
-                    let flashColors_K = new Set();
-                    let colElims_H = new Array(COLS).fill(0);
-
-                    // 同步同時在 SET-H 與 SET-K 檢查第 1 層 (最底列 ROWS - 1) 爆破！
                     for (let color of event.colors) {
-                        // SET-H 消除檢查
                         for (let c = 0; c < COLS; c++) {
                             let block = board[ROWS - 1][c];
                             if (block !== null && !block.isMoney && block.color === color) {
-                                if (block.isFlash) flashColors_H.add(block.color);
+                                if (block.isFlash) flashColors.add(block.color);
                                 if (block.attachedApple && game1Bet > 0) collectApple(block.attachedApple, game1Bet);
-                                colElims_H[c]++;
+                                colElims[c]++;
                                 block.el.classList.add('eliminating');
                                 setTimeout((el) => el.remove(), 1000, block.el);
                                 board[ROWS - 1][c] = null;
-                                eliminatedAny_H = true;
-                            }
-                        }
-                        // SET-K 消除檢查
-                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
-                            for (let c = 0; c < COLS; c++) {
-                                let block = board_2[ROWS - 1][c];
-                                if (block !== null && !block.isMoney && block.color === color) {
-                                    if (block.isFlash) flashColors_K.add(block.color);
-                                    if (block.attachedApple && game1_2Bet > 0) collectApple(block.attachedApple, game1_2Bet);
-                                    block.el.classList.add('eliminating');
-                                    setTimeout((el) => el.remove(), 1000, block.el);
-                                    board_2[ROWS - 1][c] = null;
-                                    eliminatedAny_K = true;
-                                }
+                                eliminatedAny = true;
                             }
                         }
                     }
-
-                    updateApplesHP(colElims_H);
-
-                    // 同步處理連鎖數與 UI overlay
-                    if (eliminatedAny_H) {
+                    updateApplesHP(colElims);
+                    if (eliminatedAny) {
                         currentCombo = 1;
                         updateLadderActive(currentCombo, false);
                         showComboOverlay(currentCombo, 'game-board');
-                        batchEliminatedAny = true;
-                    }
-                    if (eliminatedAny_K) {
-                        currentCombo_2 = 1;
-                        updateLadderActive(currentCombo_2, true);
-                        showComboOverlay(currentCombo_2, 'game-board_2');
-                        batchEliminatedAny = true;
-                    }
-
-                    // 只要有任何一邊消除，使用 Promise.all 讓 SET-H 與 SET-K 的重力下落與滿盤補球【100% 同時平行進行】！
-                    if (eliminatedAny_H || eliminatedAny_K) {
-                        DOM.drawStatus.textContent = `⚡ 雙主頁同步引爆！ ⚡`;
+                        DOM.drawStatus.textContent = `${currentCombo} 連鎖！(SET-H 底部引爆)`;
                         await engineSleep(600);
-                        
-                        let syncPromises = [];
-                        if (eliminatedAny_H) {
-                            syncPromises.push((async () => {
-                                await applyGravity('game-board');
-                                await refillBoard('game-board', 0);
-                            })());
-                        }
-                        if (eliminatedAny_K) {
-                            syncPromises.push((async () => {
-                                await applyGravity('game-board_2');
-                                await refillBoard('game-board_2', 0);
-                            })());
-                        }
-                        await Promise.all(syncPromises);
+                        await applyGravity('game-board');
+                        await refillBoard('game-board', 0);
+                        batchEliminatedAny_H = true;
                     }
                 } else if (event.type === 'trigger_chains') {
-                    if (batchEliminatedAny) {
-                        // 使用 Promise.all 讓 SET-H 與 SET-K 的連鎖爆破與補充【100% 同時平行進行】！
-                        let chainPromises = [];
-                        
-                        if (game1Bet > 0) {
-                            chainPromises.push((async () => {
-                                await applyGravity('game-board');
-                                await checkMatchesAndChain('game-board');
-                                let finalCombo_H = currentCombo;
-                                currentCombo = 0;
-                                updateLadderActive(0, false);
-                                await refillBoard('game-board', finalCombo_H);
-                            })());
-                        }
-                        
-                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
-                            chainPromises.push((async () => {
-                                await applyGravity('game-board_2');
-                                await checkMatchesAndChain('game-board_2');
-                                let finalCombo_K = currentCombo_2;
-                                currentCombo_2 = 0;
-                                updateLadderActive(0, true);
-                                await refillBoard('game-board_2', finalCombo_K);
-                            })());
-                        }
-                        
-                        await Promise.all(chainPromises);
-                        batchEliminatedAny = false;
+                    if (batchEliminatedAny_H) {
+                        await applyGravity('game-board');
+                        await checkMatchesAndChain('game-board');
+                        let finalCombo = currentCombo;
+                        currentCombo = 0;
+                        updateLadderActive(0, false);
+                        await refillBoard('game-board', finalCombo);
+                        batchEliminatedAny_H = false;
                     }
-                } else if (event.type === 'laser_strike') {
-                    let birdMouth = document.getElementById('bird-mouth');
-                    if (birdMouth) birdMouth.classList.add('bird-charging');
-                    
-                    await engineSleep(500); // 讓鳥嘴集氣膨脹
-                    
-                    let targetCol = 0;
-                    if (birdMouth && birdMouth.parentElement) {
-                        let slots = Array.from(document.querySelectorAll('.bird-mouth-slot'));
-                        targetCol = slots.indexOf(birdMouth.parentElement);
-                        if (targetCol === -1) targetCol = 0;
-                    }
-                    
-                    let laserBeam = document.getElementById('laser-beam');
-                    if (laserBeam) {
-                        laserBeam.style.left = `${OFFSET + targetCol * (BLOCK_SIZE + GAP)}px`;
-                        laserBeam.classList.remove('hidden');
-                        laserBeam.style.animation = 'none';
-                        void laserBeam.offsetWidth;
-                        laserBeam.style.animation = 'laser-flash 0.6s ease-out forwards';
-                    }
-                    
-                    DOM.drawStatus.textContent = `⚡ 鳥嘴雷射發射！ ⚡`;
-                    await engineSleep(400); // 等待雷射特效到達最大
-                    if (birdMouth) birdMouth.classList.remove('bird-charging');
-                    
-                    let moneyCollected = 0;
-                    let flashColorsTriggered = new Set();
-                    let laserColElims = new Array(COLS).fill(0);
-                    
-                    for (let r = 0; r < ROWS; r++) {
-                        let block = board[r][targetCol];
-                        if (block !== null) {
-                            if (block.isMoney) {
-                                moneyCollected += block.moneyValue;
-                                if (game1Bet > 0) {
-                                    game1Win += block.moneyValue;
-                                    updateGame1WinDisplay();
-                                    recalculateTotalWin();
-                                }
-                                DOM.drawStatus.textContent = `雷射命中！獲得獎金 +${block.moneyValue}！`;
-                            } else {
-                                if (block.isFlash) flashColorsTriggered.add(block.color);
-                                if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
-                                laserColElims[targetCol]++;
-                            }
-                            block.el.classList.add('eliminating');
-                            setTimeout((el) => el.remove(), 500, block.el);
-                            board[r][targetCol] = null;
-                        }
-                    }
-                    updateApplesHP(laserColElims);
-                    
-                    if (flashColorsTriggered.size > 0) {
-                        DOM.drawStatus.textContent = `⚡ 發光球引爆！ ⚡`;
-                        let flashColElims = new Array(COLS).fill(0);
-                        for (let r = 0; r < ROWS; r++) {
-                            for (let c = 0; c < COLS; c++) {
-                                let block = board[r][c];
-                                if (block !== null && !block.isMoney && flashColorsTriggered.has(block.color)) {
-                                    if (block.attachedApple && game3Bet > 0) collectApple(block.attachedApple, game3Bet);
-                                    flashColElims[c]++;
-                                    block.el.classList.add('eliminating');
-                                    setTimeout((el) => el.remove(), 500, block.el);
-                                    board[r][c] = null;
-                                }
-                            }
-                        }
-                        updateApplesHP(flashColElims);
-                    }
-                    
-                    if (moneyCollected > 0) {
-                        updateWinDisplay();
-                    }
-                    
-                    await engineSleep(500);
-                    
-                    laserBeam.classList.add('hidden');
-                    
-                    if (appleBonusRoundsLeft > 0) {
-                        await jumpToNextIsland();
-                    }
-                    
-                    await applyGravity();
-                    await checkMatchesAndChain('game-board');
-                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
-                            await checkMatchesAndChain('game-board_2');
-                        }
-                    
-                    let finalCombo = currentCombo;
-                    currentCombo = 0;
-                    updateLadderActive(0);
-                    
-                    await refillBoard(finalCombo);
-                    
-                    currentCombo = 0;
-                    updateLadderActive(0);
-                    
                 } else if (event.type === 'game_over') {
-                    boardState = 'SETTLING';
+                    boardState_H = 'SETTLING';
                     await checkMatchesAndChain('game-board');
-                        if (document.getElementById('game-board_2') && game1_2Bet > 0) {
-                            await checkMatchesAndChain('game-board_2');
-                        } // 結算最後盤面
-                    await finishGameOverSequence();
-                    boardState = 'IDLE';
+                    boardState_H = 'IDLE';
                     continue;
                 }
             } catch (err) {
-                console.error("Right engine error:", err);
+                console.error("Right engine H error:", err);
             }
-            
-            boardState = 'IDLE';
+            boardState_H = 'IDLE';
         } else {
             await sleep(100);
         }
     }
+}
+
+async function startRightEngine_K() {
+    while (isPlaying) {
+        if (boardState_K === 'IDLE' && pendingEventsQueue_K.length > 0) {
+            boardState_K = 'BUSY';
+            try {
+                let event = pendingEventsQueue_K.shift();
+                if (event.type === 'layer8_hit') {
+                    let eliminatedAny = false;
+                    let flashColors = new Set();
+                    let colElims = new Array(COLS).fill(0);
+                    for (let color of event.colors) {
+                        for (let c = 0; c < COLS; c++) {
+                            let block = board_2[ROWS - 1][c];
+                            if (block !== null && !block.isMoney && block.color === color) {
+                                if (block.isFlash) flashColors.add(block.color);
+                                if (block.attachedApple && game1_2Bet > 0) collectApple(block.attachedApple, game1_2Bet);
+                                colElims[c]++;
+                                block.el.classList.add('eliminating');
+                                setTimeout((el) => el.remove(), 1000, block.el);
+                                board_2[ROWS - 1][c] = null;
+                                eliminatedAny = true;
+                            }
+                        }
+                    }
+                    if (eliminatedAny) {
+                        currentCombo_2 = 1;
+                        updateLadderActive(currentCombo_2, true);
+                        showComboOverlay(currentCombo_2, 'game-board_2');
+                        DOM.drawStatus.textContent = `${currentCombo_2} 連鎖！(SET-K 底部引爆)`;
+                        await engineSleep(600);
+                        await applyGravity('game-board_2');
+                        await refillBoard('game-board_2', 0);
+                        batchEliminatedAny_K = true;
+                    }
+                } else if (event.type === 'trigger_chains') {
+                    if (batchEliminatedAny_K) {
+                        await applyGravity('game-board_2');
+                        await checkMatchesAndChain('game-board_2');
+                        let finalCombo = currentCombo_2;
+                        currentCombo_2 = 0;
+                        updateLadderActive(0, true);
+                        await refillBoard('game-board_2', finalCombo);
+                        batchEliminatedAny_K = false;
+                    }
+                } else if (event.type === 'game_over') {
+                    boardState_K = 'SETTLING';
+                    await checkMatchesAndChain('game-board_2');
+                    boardState_K = 'IDLE';
+                    continue;
+                }
+            } catch (err) {
+                console.error("Right engine K error:", err);
+            }
+            boardState_K = 'IDLE';
+        } else {
+            await sleep(100);
+        }
+    }
+}
+
+async function startRightEngine() {
+    startRightEngine_H();
+    startRightEngine_K();
 }
 
 async function applyGravity(targetBoardId = 'game-board') {
@@ -3648,7 +3554,7 @@ function sleep(ms) {
 }
 
 function getEngineSpeedMultiplier() {
-    let pendingBalls = pendingEventsQueue.filter(e => e.type === 'layer8_hit' || e.type === 'laser_strike').length;
+    let pendingBalls = pendingEventsQueue_H.filter(e => e.type === 'layer8_hit' || e.type === 'laser_strike').length;
     if (pendingBalls >= 6) return 4;
     if (pendingBalls >= 4) return 3;
     if (pendingBalls >= 2) return 2;
