@@ -1155,15 +1155,17 @@ function generateBetApples(gameIdInput) {
     else if (gId === '3_2') { currentBet = game3_2Bet; preGenerated = game3_2PreApples; }
 
     if (currentBet === 0) {
-        if (gameId === 1) game1PreApples = [];
-        else if (gameId === 2) game2PreApples = [];
-        else game3PreApples = [];
+        if (gId === '1') game1PreApples = [];
+        else if (gId === '1_2') game1_2PreApples = [];
+        else if (gId === '2') game2PreApples = [];
+        else if (gId === '2_2') game2_2PreApples = [];
+        else if (gId === '3') game3PreApples = [];
+        else if (gId === '3_2') game3_2PreApples = [];
         
         let slots = container.querySelectorAll('.apple-slot');
         slots.forEach(slot => {
             slot.innerHTML = `<span style="filter: grayscale(1) opacity(0.5); font-size: 1.8rem; line-height: 1;">🍎</span>`;
         });
-        if (gameId === 2) generateGame2AppleThresholds();
         return;
     }
 
@@ -1249,32 +1251,29 @@ function generateBetApples(gameIdInput) {
     }
 }
 
-function spawnApples() {
-    DOM.birdMouthSlots.forEach(slot => {
-        slot.innerHTML = '';
-    });
-    topApplesState.fill(null);
+function spawnApplesForSet(isSetB = false) {
+    let slotsRowId = isSetB ? '#bird-mouth-row_2 .bird-mouth-slot' : '#bird-mouth-row .bird-mouth-slot';
+    let slots = document.querySelectorAll(slotsRowId);
+    let betVal = isSetB ? game1_2Bet : game1Bet;
+    let preApples = isSetB ? game1_2PreApples : game1PreApples;
+    let topApples = isSetB ? topApplesState_2 : topApplesState;
+    let birdMouthId = isSetB ? 'bird-mouth_2' : 'bird-mouth';
     
-    // 遊戲開始前 (!isPlaying) 消除框上方鳥嘴列保持隱藏，遊戲開始後才顯示
+    slots.forEach(slot => slot.innerHTML = '');
+    topApples.fill(null);
+    
     if (!isPlaying) return;
-    
-    let slotsArray = Array.from(DOM.birdMouthSlots);
+    let slotsArray = Array.from(slots);
     if (slotsArray.length === 0) return;
     
     let beakIndex = Math.floor(Math.random() * slotsArray.length);
-    
     let beakEl = document.createElement('div');
     beakEl.className = 'bird-mouth';
-    beakEl.id = 'bird-mouth';
+    beakEl.id = birdMouthId;
     beakEl.textContent = 'SP光束';
     slotsArray[beakIndex].appendChild(beakEl);
     
-    DOM.birdMouth = beakEl;
-
-    // 消消樂 (Game 1) 若未壓分 (game1Bet === 0)，上方絕對不產生蘋果！
-    if (game1Bet === 0) {
-        return;
-    }
+    if (betVal === 0) return;
     
     let availableSlots = [];
     for (let i = 0; i < slotsArray.length; i++) {
@@ -1282,8 +1281,8 @@ function spawnApples() {
     }
     availableSlots.sort(() => Math.random() - 0.5);
     
-    let applesToSpawn = game1PreApples.length > 0 ? game1PreApples : [];
-    if (applesToSpawn.length === 0 && game1Bet > 0) {
+    let applesToSpawn = preApples.length > 0 ? preApples : [];
+    if (applesToSpawn.length === 0 && betVal > 0) {
         let count = Math.random() < 0.1 ? 2 : 3;
         for (let i = 0; i < count; i++) {
             applesToSpawn.push({ type: getAppleType(), hp: Math.floor(Math.random() * 10) + 6 });
@@ -1298,7 +1297,7 @@ function spawnApples() {
         availableSlots[i].appendChild(appleEl);
         
         let colIndex = slotsArray.indexOf(availableSlots[i]);
-        topApplesState[colIndex] = {
+        topApples[colIndex] = {
             type: appleData.type,
             hp: appleData.hp,
             el: appleEl,
@@ -1308,15 +1307,23 @@ function spawnApples() {
     }
 }
 
-function updateApplesHP(colCounts) {
+function spawnApples() {
+    spawnApplesForSet(false);
+    if (document.getElementById('game-board_2')) {
+        spawnApplesForSet(true);
+    }
+}
+
+function updateApplesHP(colCounts, isSetB = false) {
+    let topApples = isSetB ? topApplesState_2 : topApplesState;
     for (let c = 0; c < COLS; c++) {
-        if (colCounts[c] > 0 && topApplesState[c] !== null && !topApplesState[c].readyToDrop) {
-            topApplesState[c].hp -= colCounts[c];
-            if (topApplesState[c].hp <= 0) {
-                topApplesState[c].hp = 0;
-                topApplesState[c].readyToDrop = true;
+        if (colCounts[c] > 0 && topApples[c] !== null && !topApples[c].readyToDrop) {
+            topApples[c].hp -= colCounts[c];
+            if (topApples[c].hp <= 0) {
+                topApples[c].hp = 0;
+                topApples[c].readyToDrop = true;
             }
-            topApplesState[c].numEl.textContent = topApplesState[c].hp;
+            topApples[c].numEl.textContent = topApples[c].hp;
         }
     }
 }
@@ -2946,6 +2953,43 @@ async function startRightEngine_H() {
                         await refillBoard('game-board', finalCombo);
                         batchEliminatedAny_H = false;
                     }
+                } else if (event.type === 'laser_strike') {
+                    let birdMouth = document.getElementById('bird-mouth');
+                    if (birdMouth) birdMouth.classList.add('bird-charging');
+                    await engineSleep(500);
+                    
+                    let targetCol = 0;
+                    if (birdMouth && birdMouth.parentElement) {
+                        let slots = Array.from(document.querySelectorAll('#bird-mouth-row .bird-mouth-slot'));
+                        targetCol = slots.indexOf(birdMouth.parentElement);
+                        if (targetCol === -1) targetCol = 0;
+                    }
+                    
+                    let beam = document.createElement('div');
+                    beam.className = 'laser-beam';
+                    beam.style.left = `${targetCol * (BLOCK_SIZE + GAP) + (BLOCK_SIZE / 2) - 10}px`;
+                    let gameBoardEl = document.getElementById('game-board');
+                    if (gameBoardEl) gameBoardEl.appendChild(beam);
+                    await engineSleep(300);
+                    
+                    let colElims = new Array(COLS).fill(0);
+                    for (let r = 0; r < ROWS; r++) {
+                        let block = board[r][targetCol];
+                        if (block !== null && !block.isMoney) {
+                            if (block.attachedApple && game1Bet > 0) collectApple(block.attachedApple, game1Bet);
+                            colElims[targetCol]++;
+                            block.el.classList.add('eliminating');
+                            setTimeout((el) => el.remove(), 1000, block.el);
+                            board[r][targetCol] = null;
+                        }
+                    }
+                    updateApplesHP(colElims, false);
+                    await engineSleep(500);
+                    if (beam.parentNode) beam.remove();
+                    if (birdMouth) birdMouth.classList.remove('bird-charging');
+                    
+                    await applyGravity('game-board');
+                    await refillBoard('game-board', 0);
                 } else if (event.type === 'game_over') {
                     boardState_H = 'SETTLING';
                     await checkMatchesAndChain('game-board');
@@ -3020,6 +3064,43 @@ async function startRightEngine_K() {
                         await refillBoard('game-board_2', finalCombo);
                         batchEliminatedAny_K = false;
                     }
+                } else if (event.type === 'laser_strike') {
+                    let birdMouth = document.getElementById('bird-mouth_2');
+                    if (birdMouth) birdMouth.classList.add('bird-charging');
+                    await engineSleep(500);
+                    
+                    let targetCol = 0;
+                    if (birdMouth && birdMouth.parentElement) {
+                        let slots = Array.from(document.querySelectorAll('#bird-mouth-row_2 .bird-mouth-slot'));
+                        targetCol = slots.indexOf(birdMouth.parentElement);
+                        if (targetCol === -1) targetCol = 0;
+                    }
+                    
+                    let beam = document.createElement('div');
+                    beam.className = 'laser-beam';
+                    beam.style.left = `${targetCol * (BLOCK_SIZE + GAP) + (BLOCK_SIZE / 2) - 10}px`;
+                    let gameBoardEl = document.getElementById('game-board_2');
+                    if (gameBoardEl) gameBoardEl.appendChild(beam);
+                    await engineSleep(300);
+                    
+                    let colElims = new Array(COLS).fill(0);
+                    for (let r = 0; r < ROWS; r++) {
+                        let block = board_2[r][targetCol];
+                        if (block !== null && !block.isMoney) {
+                            if (block.attachedApple && game1_2Bet > 0) collectApple(block.attachedApple, game1_2Bet);
+                            colElims[targetCol]++;
+                            block.el.classList.add('eliminating');
+                            setTimeout((el) => el.remove(), 1000, block.el);
+                            board_2[r][targetCol] = null;
+                        }
+                    }
+                    updateApplesHP(colElims, true);
+                    await engineSleep(500);
+                    if (beam.parentNode) beam.remove();
+                    if (birdMouth) birdMouth.classList.remove('bird-charging');
+                    
+                    await applyGravity('game-board_2');
+                    await refillBoard('game-board_2', 0);
                 } else if (event.type === 'game_over') {
                     boardState_K = 'SETTLING';
                     await checkMatchesAndChain('game-board_2');
