@@ -2479,7 +2479,7 @@ async function startGame() {
             await playRainbowAppleCutscene(rainbowAppleTargetGame);
         }
 
-        pendingDrawsQueue = 3;
+        pendingDrawsQueue = 40;
         pendingInitialBatch = 3;
         
         if (DOM.drawStatus) DOM.drawStatus.textContent = '遊戲開始！';
