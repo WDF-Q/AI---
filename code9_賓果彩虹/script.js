@@ -893,16 +893,21 @@ function hideAllOutOverlays() {
 }
 
 function checkAndResetWinsBeforeNewBet() {
-    if (!isPlaying && (game1Win > 0 || game2Win > 0 || game3TotalWin > 0 || totalWin > 0)) {
+    if (!isPlaying) {
         game1Win = 0;
+        game1_2Win = 0;
         game2Win = 0;
+        game2_2Win = 0;
         game3TotalWin = 0;
+        game3_2TotalWin = 0;
         totalWin = 0;
         bonusWin = 0;
+        
         updateWinDisplay();
         updateGame1WinDisplay();
         updateGame2WinDisplay();
         updateGame3WinDisplay();
+        if (typeof updateGame2_2WinDisplay === 'function') updateGame2_2WinDisplay();
         recalculateTotalWin();
         hideAllOutOverlays();
     }
