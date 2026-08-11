@@ -388,6 +388,7 @@ function handleAddBet(gameIdInput) {
 
 document.getElementById('btn-repeat-bet').addEventListener('click', () => {
     if (isPlaying) return;
+    hideAllOutOverlays();
     checkAndResetWinsBeforeNewBet();
     let hasPrev = (previousGame1Bet > 0 || previousGame2Bet > 0 || previousGame3Bet > 0 ||
                    previousGame1_2Bet > 0 || previousGame2_2Bet > 0 || previousGame3_2Bet > 0);
@@ -2765,116 +2766,130 @@ async function checkAndTriggerShop(currentBall, forceRainbowEvent = false) {
 }
 
 async function startLeftEngine() {
-    while (leftEngineActive && !isGameOverTriggered) {
-        if (pendingDrawsQueue === 0) pendingDrawsQueue = 1;
-        
-        while (pendingDrawsQueue > 0 && !isGameOverTriggered) {
-            try {
-                if (pendingInitialBatch > 0) {
-                    let batchCount = pendingInitialBatch;
-                    pendingInitialBatch = 0;
-                    pendingDrawsQueue -= batchCount;
-                    
-                    let promises = [];
-                    let rainbowTriggeredCount = 0;
-                    
-                    for (let i = 0; i < batchCount; i++) {
-                        if (isGameOverTriggered) break;
-                        ballCount++;
-                        let currentShotNumber = ballCount;
-                        DOM.ballCountText.textContent = ballCount;
-                        
-                        let isSafeMode = true; 
-                        
-                        let p = shootBallAsync(isSafeMode, true).then(res => {
-                            if (res === 'rainbow') {
-                                let expectedTotal = currentShotNumber + (batchCount - 1 - i) + (rainbowTriggeredCount * 3);
-                                if (expectedTotal <= 40) {
-                                    rainbowTriggeredCount++;
-                                }
-                            }
-                            updateHistoryUI();
-                        }).catch(e => console.error("Left engine batch error:", e));
-                        promises.push(p);
-                        
-                        if (i < batchCount - 1) {
-                            await sleep(800);
-                        }
-                    }
-                    
-                    // 批次發球 (初始 3球 / 彩色洞 3球) 全部進洞後，統一進行盤面連線檢定！
-                    await Promise.all(promises);
-                    Game2Manager.evaluateLineCheck();
-                    if (typeof Game2_2Manager !== 'undefined') Game2_2Manager.evaluateLineCheck();
-                    
-                    // 備註1: 檢定是否在批次期間連續觸發彩色洞，若有觸發，先彈出商店 (價格+20%) 再續發3球
-                    let isRainbowEvent = (rainbowTriggeredCount > 0);
-                    await checkAndTriggerShop(ballCount, isRainbowEvent);
-                    
-                    if (rainbowTriggeredCount > 0) {
-                        pendingDrawsQueue += (rainbowTriggeredCount * 3);
-                        pendingInitialBatch += (rainbowTriggeredCount * 3);
-                    } else {
-                        pendingEventsQueue_H.push({ type: 'trigger_chains' });
-                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
-                    }
-                    
-                    if (pendingInitialBatch === 0 && ballCount >= 40) {
-                        isGameOverTriggered = true;
-                        pendingEventsQueue_H.push({ type: 'game_over' });
-                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'game_over' });
-                        DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
-                    }
-                    
-                } else {
-                    let randomInterval = Math.floor(Math.random() * 1000) + 500; 
-                    await sleep(randomInterval);
-                    
+    if (leftEngineActive) return;
+    leftEngineActive = true;
+    
+    let rainbowTriggeredCount = 0;
+    
+    while (pendingDrawsQueue > 0 && isPlaying) {
+        try {
+            if (pendingInitialBatch > 0) {
+                let batchCount = pendingInitialBatch;
+                pendingInitialBatch = 0;
+                pendingDrawsQueue -= batchCount;
+                
+                let promises = [];
+                let batchColors = [];
+                
+                for (let i = 0; i < batchCount; i++) {
+                    if (isGameOverTriggered) break;
                     ballCount++;
+                    let currentShotNumber = ballCount;
                     DOM.ballCountText.textContent = ballCount;
-                    let isSafeMode = (ballCount <= 3); 
                     
-                    if (!isSafeMode) {
-                        DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
-                        DOM.safeIndicator.className = 'safe-indicator danger';
-                    }
+                    let isSafeMode = true; 
                     
-                    let res = await shootBallAsync(isSafeMode);
-                    updateHistoryUI();
-                    
-                    if (res === 'game_over') {
-                        isGameOverTriggered = true;
-                        break;
-                    }
-                    
-                    let isRainbowHitOnThreshold = (res === 'rainbow' && [10, 20, 30].includes(ballCount));
-                    await checkAndTriggerShop(ballCount, isRainbowHitOnThreshold);
-                    
-                    pendingDrawsQueue--;
-                    if (res === 'rainbow') {
-                        if (ballCount <= 40) {
-                            pendingDrawsQueue += 3;
-                            pendingInitialBatch += 3;
-                        } else {
-                            pendingEventsQueue_H.push({ type: 'trigger_chains' });
-                            if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
+                    let p = shootBallAsync(isSafeMode, true).then(res => {
+                        if (res === 'rainbow') {
+                            let expectedTotal = currentShotNumber + (batchCount - 1 - i) + (rainbowTriggeredCount * 3);
+                            if (expectedTotal <= 40) {
+                                rainbowTriggeredCount++;
+                            }
                         }
-                    } else {
-                        pendingEventsQueue_H.push({ type: 'trigger_chains' });
-                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
-                    }
-
-                    if (pendingInitialBatch === 0 && ballCount >= 40) {
-                        isGameOverTriggered = true;
-                        pendingEventsQueue_H.push({ type: 'game_over' });
-                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'game_over' });
-                        DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
-                        break;
+                        updateHistoryUI();
+                    }).catch(e => console.error("Left engine batch error:", e));
+                    promises.push(p);
+                    
+                    if (i < batchCount - 1) {
+                        await sleep(800);
                     }
                 }
-            } catch (err) {
-                console.error("Left engine error:", err);
+                
+                // 批次發球 (初始 3球 / 彩色洞 3球) 全部進洞後，統一觸發消除！
+                await Promise.all(promises);
+                Game2Manager.evaluateLineCheck();
+                if (typeof Game2_2Manager !== 'undefined') Game2_2Manager.evaluateLineCheck();
+                
+                pendingEventsQueue_H.push({ type: 'trigger_chains' });
+                if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
+                
+                // 【關鍵規範 5 & 6】：嚴格等待雙主頁盤面完全爆破、下落、補球、連鎖及靜止結算完畢！
+                while (pendingEventsQueue_H.length > 0 || pendingEventsQueue_K.length > 0 || boardState_H !== 'IDLE' || boardState_K !== 'IDLE') {
+                    await sleep(100);
+                }
+                
+                // 【關鍵規範 4】：盤面 100% 補充填滿並靜止後，才彈出商店！
+                let isRainbowEvent = (rainbowTriggeredCount > 0);
+                await checkAndTriggerShop(ballCount, isRainbowEvent);
+                
+                if (rainbowTriggeredCount > 0) {
+                    pendingDrawsQueue += (rainbowTriggeredCount * 3);
+                    pendingInitialBatch += (rainbowTriggeredCount * 3);
+                    rainbowTriggeredCount = 0;
+                }
+                
+                if (pendingInitialBatch === 0 && ballCount >= 40) {
+                    isGameOverTriggered = true;
+                    pendingEventsQueue_H.push({ type: 'game_over' });
+                    if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'game_over' });
+                    DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
+                    break;
+                }
+                
+            } else {
+                let randomInterval = Math.floor(Math.random() * 1000) + 500; 
+                await sleep(randomInterval);
+                
+                ballCount++;
+                DOM.ballCountText.textContent = ballCount;
+                let isSafeMode = (ballCount <= 3); 
+                
+                if (!isSafeMode) {
+                    DOM.safeIndicator.textContent = '危險區：抽中白球即結束！';
+                    DOM.safeIndicator.className = 'safe-indicator danger';
+                }
+                
+                let res = await shootBallAsync(isSafeMode);
+                updateHistoryUI();
+                
+                if (res === 'game_over') {
+                    isGameOverTriggered = true;
+                    break;
+                }
+                
+                pendingDrawsQueue--;
+                if (res === 'rainbow') {
+                    if (ballCount <= 40) {
+                        pendingDrawsQueue += 3;
+                        pendingInitialBatch += 3;
+                    } else {
+                        pendingEventsQueue_H.push({ type: 'trigger_chains' });
+                        if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
+                    }
+                } else {
+                    pendingEventsQueue_H.push({ type: 'trigger_chains' });
+                    if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'trigger_chains' });
+                }
+                
+                // 【關鍵規範 5 & 6】：單球觸發後，嚴格等待盤面 100% 爆破、下落、補球與連鎖靜止！
+                while (pendingEventsQueue_H.length > 0 || pendingEventsQueue_K.length > 0 || boardState_H !== 'IDLE' || boardState_K !== 'IDLE') {
+                    await sleep(100);
+                }
+
+                // 【關鍵規範 4】：盤面 100% 補滿且靜止後，若剛好在第 10, 20, 30 球，彈出商店！
+                let isRainbowHitOnThreshold = (res === 'rainbow' && [10, 20, 30].includes(ballCount));
+                await checkAndTriggerShop(ballCount, isRainbowHitOnThreshold);
+
+                if (pendingInitialBatch === 0 && ballCount >= 40) {
+                    isGameOverTriggered = true;
+                    pendingEventsQueue_H.push({ type: 'game_over' });
+                    if (document.getElementById('game-board_2')) pendingEventsQueue_K.push({ type: 'game_over' });
+                    DOM.drawStatus.textContent = '已達 40 球上限！等待盤面結算...';
+                    break;
+                }
             }
+        } catch (err) {
+            console.error("Left engine error:", err);
         }
     }
     
@@ -2967,7 +2982,7 @@ async function startRightEngine_H() {
                     
                     let beam = document.createElement('div');
                     beam.className = 'laser-beam';
-                    beam.style.left = `${targetCol * (BLOCK_SIZE + GAP) + (BLOCK_SIZE / 2) - 10}px`;
+                    beam.style.left = `${targetCol * (BLOCK_SIZE + GAP)}px`;
                     let gameBoardEl = document.getElementById('game-board');
                     if (gameBoardEl) gameBoardEl.appendChild(beam);
                     await engineSleep(300);
@@ -3078,7 +3093,7 @@ async function startRightEngine_K() {
                     
                     let beam = document.createElement('div');
                     beam.className = 'laser-beam';
-                    beam.style.left = `${targetCol * (BLOCK_SIZE + GAP) + (BLOCK_SIZE / 2) - 10}px`;
+                    beam.style.left = `${targetCol * (BLOCK_SIZE + GAP)}px`;
                     let gameBoardEl = document.getElementById('game-board_2');
                     if (gameBoardEl) gameBoardEl.appendChild(beam);
                     await engineSleep(300);

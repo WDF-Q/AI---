@@ -1107,7 +1107,7 @@ html, body {
 /* 方塊 (立體圓球) */
 .block {
     position: absolute;
-    width: 54px;
+    width: 48px;
     height: 54px;
     border-radius: 50%;
     display: flex;
@@ -1355,7 +1355,7 @@ html, body {
 .laser-beam {
     position: absolute;
     top: 0;
-    width: 54px;
+    width: 48px;
     height: 100%;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(56, 189, 248, 0.9) 20%, rgba(56, 189, 248, 0.2) 100%);
     z-index: 25;
@@ -1381,7 +1381,7 @@ html, body {
     justify-content: center;
 }
 .bird-mouth-slot {
-    width: 54px;
+    width: 48px;
     height: 54px;
     background: rgba(0,0,0,0.2);
     border-radius: 8px;
