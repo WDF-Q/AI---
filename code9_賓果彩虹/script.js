@@ -2485,7 +2485,7 @@ async function startGame() {
         if (DOM.drawStatus) DOM.drawStatus.textContent = '遊戲開始！';
         await sleep(1000);
         
-        leftEngineActive = true;
+        leftEngineActive = false;
         startLeftEngine();
         startRightEngine();
     } catch (err) {

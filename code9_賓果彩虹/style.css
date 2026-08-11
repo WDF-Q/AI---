@@ -1107,7 +1107,7 @@ html, body {
 /* 方塊 (立體圓球) */
 .block {
     position: absolute;
-    width: 48px;
+    width: 54px;
     height: 54px;
     border-radius: 50%;
     display: flex;
@@ -1381,7 +1381,7 @@ html, body {
     justify-content: center;
 }
 .bird-mouth-slot {
-    width: 48px;
+    width: 54px;
     height: 54px;
     background: rgba(0,0,0,0.2);
     border-radius: 8px;
